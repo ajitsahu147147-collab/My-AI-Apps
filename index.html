@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code-Weaver AI Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></script>
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --sidebar-color: #161b22;
+            --accent-blue: #1f6feb;
+            --accent-green: #238636;
+            --border-color: #30363d;
+            --text-main: #c9d1d9;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 320px;
+            background: var(--sidebar-color);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            color: #58a6ff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .section-header {
+            font-size: 11px;
+            font-weight: 600;
+            color: #8b949e;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Project List */
+        #projectList {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .project-item {
+            background: #21262d;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+        }
+
+        .project-item:hover {
+            border-color: #8b949e;
+            background: #30363d;
+        }
+
+        .project-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .project-name {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Input Section */
+        .input-box {
+            background: #010409;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            resize: none;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            transition: 0.2s;
+        }
+
+        .btn-run { background: var(--accent-green); color: white; }
+        .btn-run:hover { background: #2ea043; }
+        .btn-save { background: var(--accent-blue); color: white; }
+        .btn-download { background: #30363d; color: white; border: 1px solid var(--border-color); }
+
+        /* Main Preview Area */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .top-bar {
+            background: var(--sidebar-color);
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .status-dot {
+            height: 8px;
+            width: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .loader { display: none; margin-right: 10px; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-microchip"></i>
+            <span>Code-Weaver AI</span>
+        </div>
+
+        <div class="section-header">My Saved Projects</div>
+        <div id="projectList">
+            </div>
+
+        <div class="input-box">
+            <textarea id="promptInput" rows="4" placeholder="Describe your game... (e.g. 'Simple Snake game with neon colors')"></textarea>
+        </div>
+
+        <button class="btn btn-run" onclick="generateGame()">
+            <i class="fas fa-play"></i> Run AI Generate
+        </button>
+        
+        <div style="display: flex; gap: 8px;">
+            <button class="btn btn-save" style="flex: 1;" onclick="saveProject()">
+                <i class="fas fa-save"></i> Save
+            </button>
+            <button class="btn btn-download" style="flex: 1;" onclick="downloadCode()">
+                <i class="fas fa-download"></i> DL
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <span id="activeProjectName">New Project</span>
+            </div>
+            <div>
+                <i class="fas fa-spinner loader" id="loader"></i>
+                <span id="statusLabel"><span class="status-dot" style="background: #8b949e;"></span>Ready</span>
+            </div>
+        </div>
+        <iframe id="previewFrame" srcdoc="<body style='display:flex; justify-content:center; align-items:center; height:90vh; font-family:sans-serif; color:#888;'><h2>Your Game Preview Will Appear Here</h2></body>"></iframe>
+    </div>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        // IMPORTANT: Replace with your actual Gemini API Key
+        const API_KEY = "YOUR_GEMINI_API_KEY"; 
+        const genAI = new GoogleGenerativeAI(API_KEY);
+
+        let currentCode = "";
+        let projects = JSON.parse(localStorage.getItem('weaver_data')) || [];
+
+        window.onload = () => { renderProjects(); };
+
+        // 1. Generate Game with Gemini
+        window.generateGame = async () => {
+            const prompt = document.getElementById('promptInput').value;
+            if(!prompt) return alert("Please enter a description!");
+
+            const loader = document.getElementById('loader');
+            const statusLabel = document.getElementById('statusLabel');
+            
+            loader.style.display = "inline-block";
+            statusLabel.innerHTML = "AI is Coding...";
+
+            try {
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const fullPrompt = `Create a complete, single-file HTML5 game based on this: ${prompt}. Include CSS and JavaScript inside the HTML. Return ONLY the code, no explanation.`;
+                
+                const result = await model.generateContent(fullPrompt);
+                const response = await result.response;
+                currentCode = response.text().replace(/```html|```/g, "").trim();
+
+                document.getElementById('previewFrame').srcdoc = currentCode;
+                statusLabel.innerHTML = '<span class="status-dot" style="background: #238636;"></span>Live Preview';
+                document.getElementById('activeProjectName').innerText = prompt.substring(0, 20) + "...";
+            } catch (err) {
+                console.error(err);
+                alert("AI Error: Check your API Key or Connection.");
+                statusLabel.innerHTML = "Error Occurred";
+            }
+            loader.style.display = "none";
+        };
+
+        // 2. Save to Local Storage (Permanent)
+        window.saveProject = () => {
+            if(!currentCode) return alert("Nothing to save! Generate a game first.");
+            
+            const name = prompt("Enter Project Name:", "My Awesome Game");
+            if(!name) return;
+
+            const newProj = {
+                id: Date.now(),
+                name: name,
+                code: currentCode,
+                date: new Date().toLocaleDateString()
+            };
+
+            projects.unshift(newProj); // Add to beginning
+            localStorage.setItem('weaver_data', JSON.stringify(projects));
+            renderProjects();
+            alert("Project saved successfully!");
+        };
+
+        // 3. Render Project List in Sidebar
+        function renderProjects() {
+            const list = document.getElementById('projectList');
+            list.innerHTML = "";
+            
+            if(projects.length === 0) {
+                list.innerHTML = '<div style="font-size:12px; color:#8b949e; text-align:center; margin-top:20px;">No saved projects yet.</div>';
+            }
+
+            projects.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'project-item';
+                item.innerHTML = `
+                    <div class="project-info" onclick="loadProject(${p.id})">
+                        <span class="project-name">${p.name}</span>
+                        <span style="font-size:10px; color:#8b949e;">${p.date}</span>
+                    </div>
+                    <i class="fas fa-trash-alt" style="color:#f85149; font-size:12px;" onclick="deleteProject(${p.id})"></i>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // 4. Load Saved Project
+        window.loadProject = (id) => {
+            const p = projects.find(proj => proj.id === id);
+            if(p) {
+                currentCode = p.code;
+                document.getElementById('previewFrame').srcdoc = currentCode;
+                document.getElementById('activeProjectName').innerText = p.name;
+                document.getElementById('statusLabel').innerHTML = '<span class="status-dot" style="background: #238636;"></span>Loaded';
+            }
+        };
+
+        // 5. Delete Project
+        window.deleteProject = (id) => {
+            if(confirm("Are you sure you want to delete this project?")) {
+                projects = projects.filter(p => p.id !== id);
+                localStorage.setItem('weaver_data', JSON.stringify(projects));
+                renderProjects();
+            }
+        };
+
+        // 6. Download as HTML File
+        window.downloadCode = () => {
+            if(!currentCode) return alert("Generate something to download!");
+            const blob = new Blob([currentCode], {type: 'text/html'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'my-ai-game.html';
+            a.click();
+        };
+    </script>
+</body>
+</html>
+
