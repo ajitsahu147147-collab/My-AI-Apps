@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Safety & Language App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.5s ease; }
+        .emergency-pulse { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .modal-overlay { background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+    <!-- Top Navigation -->
+    <nav class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center text-white font-bold">S</div>
+            <h1 class="font-bold text-xl tracking-tight">Safeguard <span class="text-red-600">360</span></h1>
+        </div>
+        <select id="langSelect" class="bg-slate-100 border-none rounded-full px-4 py-2 text-sm font-semibold focus:ring-2 focus:ring-red-500 outline-none">
+            <option value="en">English</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+            <option value="or">ଓଡ଼ିଆ (Odia)</option>
+        </select>
+    </nav>
+
+    <main class="flex-grow p-6 max-w-md mx-auto w-full">
+        <!-- Status Dashboard -->
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 uppercase font-bold mb-1" id="labelTemp">Battery Temp</p>
+                <div class="flex items-baseline gap-1">
+                    <span id="tempValue" class="text-2xl font-bold">32</span>
+                    <span class="text-slate-400">°C</span>
+                </div>
+                <div class="w-full bg-slate-100 h-1.5 mt-3 rounded-full overflow-hidden">
+                    <div id="tempBar" class="bg-green-500 h-full w-[40%]"></div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 uppercase font-bold mb-1" id="labelMotion">Motion</p>
+                <div class="flex items-baseline gap-1">
+                    <span id="motionStatus" class="text-2xl font-bold text-green-600">Stable</span>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-3" id="labelSensor">Accelerometer Active</p>
+            </div>
+        </div>
+
+        <!-- Activity Monitor -->
+        <div class="bg-blue-50 border border-blue-100 rounded-3xl p-5 mb-8 flex items-center gap-4">
+            <div class="bg-blue-500 p-3 rounded-2xl text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-blue-900" id="screenTimeTitle">Screen Activity</p>
+                <p class="text-xs text-blue-700" id="screenTimeDesc">Active: <span id="timer">00:00:00</span></p>
+            </div>
+        </div>
+
+        <!-- Emergency Section -->
+        <div class="flex flex-col items-center justify-center py-10">
+            <button id="emergencyBtn" class="emergency-pulse w-48 h-48 bg-red-600 text-white rounded-full shadow-2xl shadow-red-200 flex flex-col items-center justify-center border-[8px] border-red-100 active:scale-95 transition-transform">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span id="btnEmergency" class="font-black text-xl tracking-widest uppercase">Emergency</span>
+            </button>
+            <p class="mt-8 text-slate-400 text-sm font-medium" id="sosInstruction">Hold for 3 seconds to alert contact</p>
+        </div>
+
+        <!-- Contact Settings -->
+        <div class="mt-8 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <label class="block text-sm font-bold text-slate-700 mb-2" id="labelContact">Emergency Contact</label>
+            <div class="flex gap-2">
+                <input type="tel" id="contactInput" placeholder="+91 00000 00000" class="flex-grow bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+                <button id="saveContact" class="bg-slate-900 text-white px-4 py-3 rounded-xl text-sm font-bold active:bg-black transition-colors">Save</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Overlay Alerts (Hidden by default) -->
+    <div id="alertOverlay" class="fixed inset-0 modal-overlay z-[100] hidden flex items-center justify-center p-6 text-center">
+        <div class="bg-white rounded-[40px] p-8 max-w-sm w-full shadow-2xl transform scale-110">
+            <div id="alertIcon" class="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center">
+                <!-- Icon injected by JS -->
+            </div>
+            <h2 id="alertTitle" class="text-3xl font-black mb-4">ALERT</h2>
+            <p id="alertMessage" class="text-slate-600 mb-8 leading-relaxed">Emergency detected in your vicinity.</p>
+            <button onclick="closeAlert()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-lg">Dismiss</button>
+        </div>
+    </div>
+
+    <script>
+        // Language Dictionary
+        const i18n = {
+            en: {
+                title: "Emergency",
+                temp: "Battery Temp",
+                motion: "Motion",
+                stable: "Stable",
+                fall: "Fall Detected!",
+                sensor: "Accelerometer Active",
+                screenTitle: "Screen Activity",
+                screenDesc: "Active: ",
+                emergency: "Emergency",
+                instruction: "Hold for 3 seconds to alert contact",
+                contact: "Emergency Contact",
+                hotTitle: "Device Overheating!",
+                hotMsg: "Your phone is too hot. Please put it in a cool place immediately.",
+                eyeTitle: "Rest Your Eyes",
+                eyeMsg: "You have been using the screen for 2 hours. Take a 5-minute break.",
+                fallMsg: "A sudden fall was detected. Are you okay?",
+                locMsg: "I need help! My current location: "
+            },
+            hi: {
+                title: "आपातकालीन",
+                temp: "बैटरी तापमान",
+                motion: "गति",
+                stable: "स्थिर",
+                fall: "गिरावट का पता चला!",
+                sensor: "एक्सेलेरोमीटर सक्रिय",
+                screenTitle: "स्क्रीन गतिविधि",
+                screenDesc: "सक्रिय: ",
+                emergency: "आपातकाल",
+                instruction: "संपर्क को सूचित करने के लिए 3 सेकंड दबाएं",
+                contact: "आपातकालीन संपर्क",
+                hotTitle: "डिवाइस ओवरहीटिंग!",
+                hotMsg: "आपका फोन बहुत गर्म है। कृपया इसे तुरंत ठंडी जगह पर रखें।",
+                eyeTitle: "आंखों को आराम दें",
+                eyeMsg: "आप 2 घंटे से स्क्रीन का उपयोग कर रहे हैं। 5 मिनट का ब्रेक लें।",
+                fallMsg: "अचानक गिरावट का पता चला। क्या आप ठीक हैं?",
+                locMsg: "मुझे मदद की ज़रूरत है! मेरा वर्तमान स्थान: "
+            },
+            or: {
+                title: "ଜରୁରୀକାଳୀନ",
+                temp: "ବ୍ୟାଟେରୀ ତାପମାତ୍ରା",
+                motion: "ଗତି",
+                stable: "ସ୍ଥିର",
+                fall: "ପଡିଯିବା ଚିହ୍ନଟ!",
+                sensor: "ଏକ୍ସଲେରୋମିଟର ସକ୍ରିୟ",
+                screenTitle: "ସ୍କ୍ରିନ୍ କାର୍ଯ୍ୟକଳାପ",
+                screenDesc: "ସକ୍ରିୟ: ",
+                emergency: "ଜରୁରୀ",
+                instruction: "ସମ୍ପର୍କକୁ ଜଣାଇବା ପାଇଁ ୩ ସେକେଣ୍ଡ୍ ଦବାନ୍ତୁ",
+                contact: "ଜରୁରୀକାଳୀନ ଯୋଗାଯୋଗ",
+                hotTitle: "ଡିଭାଇସ୍ ଗରମ ହେଉଛି!",
+                hotMsg: "ଆପଣଙ୍କ ଫୋନ୍ ବହୁତ ଗରମ ଅଛି | ଦୟାକରି ଏହାକୁ ତୁରନ୍ତ ଏକ ଥଣ୍ଡା ସ୍ଥାନରେ ରଖନ୍ତୁ |",
+                eyeTitle: "ଆଖିକୁ ବିଶ୍ରାମ ଦିଅନ୍ତୁ",
+                eyeMsg: "ଆପଣ ୨ ଘଣ୍ଟା ଧରି ସ୍କ୍ରିନ୍ ବ୍ୟବହାର କରୁଛନ୍ତି | ୫ ମିନିଟ୍ ବିରତି ନିଅନ୍ତୁ |",
+                fallMsg: "ହଠାତ୍ ପଡିଯିବା ଚିହ୍ନଟ ହେଲା | ଆପଣ ଠିକ୍ ଅଛନ୍ତି କି?",
+                locMsg: "ମୋତେ ସାହାଯ୍ୟ ଦରକାର! ମୋର ବର୍ତ୍ତମାନର ଅବସ୍ଥାନ: "
+            }
+        };
+
+        // State Management
+        let currentLang = 'en';
+        let secondsActive = 0;
+        let emergencyContact = localStorage.getItem('emergencyContact') || "";
+        
+        // DOM Elements
+        const langSelect = document.getElementById('langSelect');
+        const timerDisplay = document.getElementById('timer');
+        const contactInput = document.getElementById('contactInput');
+        const saveBtn = document.getElementById('saveContact');
+        const overlay = document.getElementById('alertOverlay');
+
+        // Initialization
+        window.onload = () => {
+            contactInput.value = emergencyContact;
+            startScreenTimer();
+            simulateSensors();
+            updateUIStrings();
+        };
+
+        // UI Translation Logic
+        langSelect.addEventListener('change', (e) => {
+            currentLang = e.target.value;
+            updateUIStrings();
+        });
+
+        function updateUIStrings() {
+            const t = i18n[currentLang];
+            document.getElementById('labelTemp').textContent = t.temp;
+            document.getElementById('labelMotion').textContent = t.motion;
+            document.getElementById('labelSensor').textContent = t.sensor;
+            document.getElementById('screenTimeTitle').textContent = t.screenTitle;
+            document.getElementById('btnEmergency').textContent = t.emergency;
+            document.getElementById('sosInstruction').textContent = t.instruction;
+            document.getElementById('labelContact').textContent = t.contact;
+        }
+
+        // Screen Time Monitor (Logic: 2 hours = 7200 seconds)
+        function startScreenTimer() {
+            setInterval(() => {
+                secondsActive++;
+                const hrs = Math.floor(secondsActive / 3600);
+                const mins = Math.floor((secondsActive % 3600) / 60);
+                const secs = secondsActive % 60;
+                timerDisplay.textContent = 
+                    `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                
+                // Show Eye Rest Alert at 2 hours (simulated at 10 seconds for demo)
+                if (secondsActive === 7200 || secondsActive === 10) { 
+                    showAlert('eye');
+                }
+            }, 1000);
+        }
+
+        // Sensor Simulation (Since real Battery API is limited in browsers)
+        function simulateSensors() {
+            // Temperature logic
+            setInterval(() => {
+                const temp = Math.floor(Math.random() * (45 - 30 + 1)) + 30;
+                const tempVal = document.getElementById('tempValue');
+                const tempBar = document.getElementById('tempBar');
+                tempVal.textContent = temp;
+                
+                if (temp > 40) {
+                    tempBar.className = "bg-red-500 h-full transition-all duration-500";
+                    tempBar.style.width = "90%";
+                    showAlert('hot');
+                } else {
+                    tempBar.className = "bg-green-500 h-full transition-all duration-500";
+                    tempBar.style.width = (temp * 2) + "%";
+                }
+            }, 5000);
+
+            // Accelerometer / Fall Detection Simulation
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('devicemotion', (event) => {
+                    const acc = event.accelerationIncludingGravity;
+                    const threshold = 15;
+                    if (Math.abs(acc.x) > threshold || Math.abs(acc.y) > threshold || Math.abs(acc.z) > threshold) {
+                        triggerFall();
+                    }
+                });
+            }
+        }
+
+        function triggerFall() {
+            const status = document.getElementById('motionStatus');
+            const t = i18n[currentLang];
+            status.textContent = t.fall;
+            status.classList.replace('text-green-600', 'text-red-600');
+            showAlert('fall');
+            setTimeout(() => {
+                status.textContent = t.stable;
+                status.classList.replace('text-red-600', 'text-green-600');
+            }, 5000);
+        }
+
+        // Alert System
+        function showAlert(type) {
+            const t = i18n[currentLang];
+            const title = document.getElementById('alertTitle');
+            const msg = document.getElementById('alertMessage');
+            const icon = document.getElementById('alertIcon');
+            
+            overlay.classList.remove('hidden');
+
+            if (type === 'hot') {
+                icon.className = "w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center bg-orange-100 text-orange-600";
+                icon.innerHTML = '<svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM11 2a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1zm0 10a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>';
+                title.textContent = t.hotTitle;
+                msg.textContent = t.hotMsg;
+            } else if (type === 'eye') {
+                icon.className = "w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center bg-blue-100 text-blue-600";
+                icon.innerHTML = '<svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.523 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>';
+                title.textContent = t.eyeTitle;
+                msg.textContent = t.eyeMsg;
+            } else if (type === 'fall') {
+                icon.className = "w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center bg-red-100 text-red-600";
+                icon.innerHTML = '<svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.047a1 1 0 01.897.95L12.5 7h4.75a1 1 0 01.929 1.362l-6 13a1 1 0 01-1.805-.832L11.5 14H6.75a1 1 0 01-.929-1.362l6-13z" clip-rule="evenodd"></path></svg>';
+                title.textContent = t.fall;
+                msg.textContent = t.fallMsg;
+            }
+        }
+
+        function closeAlert() {
+            overlay.classList.add('hidden');
+        }
+
+        // SMS / Emergency Feature
+        saveBtn.onclick = () => {
+            emergencyContact = contactInput.value;
+            localStorage.setItem('emergencyContact', emergencyContact);
+            alert("Contact Saved Successfully");
+        };
+
+        const emergencyBtn = document.getElementById('emergencyBtn');
+        let pressTimer;
+
+        emergencyBtn.onmousedown = () => {
+            pressTimer = setTimeout(triggerEmergencySMS, 2000);
+        };
+
+        emergencyBtn.onmouseup = () => {
+            clearTimeout(pressTimer);
+        };
+
+        // Touch support
+        emergencyBtn.ontouchstart = () => {
+            pressTimer = setTimeout(triggerEmergencySMS, 2000);
+        };
+
+        emergencyBtn.ontouchend = () => {
+            clearTimeout(pressTimer);
+        };
+
+        function triggerEmergencySMS() {
+            if (!emergencyContact) {
+                alert("Please save an emergency contact first!");
+                return;
+            }
+
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+                    const t = i18n[currentLang];
+                    const message = encodeURIComponent(`${t.locMsg} ${mapsLink}`);
+                    
+                    // Offline technique: Redirect to SMS URI
+                    window.location.href = `sms:${emergencyContact}?body=${message}`;
+                }, (error) => {
+                    const t = i18n[currentLang];
+                    const message = encodeURIComponent(`${t.locMsg} [Location Access Denied]`);
+                    window.location.href = `sms:${emergencyContact}?body=${message}`;
+                });
+            } else {
+                alert("Geolocation is not supported by your device.");
+            }
+        }
+    </script>
+</body>
+</html></html>
