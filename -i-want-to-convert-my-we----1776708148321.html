@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Offline WebView App Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .code-block { max-height: 400px; overflow-y: auto; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight">AI Wrapper Pro</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="flex space-x-4">
+                        <button onclick="switchTab('interface')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-all">Web Interface</button>
+                        <button onclick="switchTab('android')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-all">Android Setup</button>
+                        <button onclick="switchTab('notifications')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-all">Push Setup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        
+        <!-- UI Interface Tab -->
+        <section id="interface-tab" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- AI Simulator -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
+                        <div class="p-4 border-b border-slate-700 bg-slate-800/50 flex justify-between items-center">
+                            <h2 class="font-semibold flex items-center gap-2">
+                                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                Local AI Engine
+                            </h2>
+                            <span class="text-xs text-slate-400">Status: Offline Ready</span>
+                        </div>
+                        <div id="chat-container" class="h-[500px] overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-xs">AI</div>
+                                <div class="bg-slate-700 p-3 rounded-2xl rounded-tl-none max-w-[80%]">
+                                    <p class="text-sm">Welcome! I am your offline-capable AI interface. This UI is ready to be wrapped in an Android WebView.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-slate-900/50 border-t border-slate-700">
+                            <div class="flex gap-2">
+                                <input type="text" id="chat-input" placeholder="Type your message..." class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                                <button onclick="sendMessage()" class="bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-xl transition-colors">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control Panel -->
+                <div class="space-y-6">
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            JS Bridge Testing
+                        </h3>
+                        <p class="text-sm text-slate-400 mb-6">Test your Android Bridge functions here. These will only trigger inside your APK.</p>
+                        
+                        <div class="space-y-3">
+                            <button onclick="triggerAndroidNotification()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-medium py-3 px-4 rounded-xl flex items-center justify-between group transition-all">
+                                <span>Immediate Notification</span>
+                                <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            </button>
+                            <button onclick="mockVibrate()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-medium py-3 px-4 rounded-xl flex items-center justify-between group transition-all">
+                                <span>Test Vibration</span>
+                                <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-indigo-900/30 p-6 rounded-2xl border border-indigo-500/30 shadow-xl">
+                        <h4 class="text-indigo-400 font-bold mb-2">Android Assets Guide</h4>
+                        <p class="text-xs text-indigo-200/70 leading-relaxed">
+                            Place this file as <code class="bg-indigo-500/20 px-1 rounded text-indigo-300">index.html</code> in your Android project: 
+                            <br><br>
+                            <span class="font-mono bg-indigo-950 p-2 block rounded">app/src/main/assets/</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Android Code Tab -->
+        <section id="android-tab" class="tab-content hidden">
+            <div class="grid grid-cols-1 gap-8">
+                <!-- Activity Main Layout -->
+                <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
+                    <div class="p-4 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
+                        <span class="text-sm font-mono text-indigo-400">activity_main.xml</span>
+                        <button onclick="copyCode('xml1')" class="text-xs text-slate-400 hover:text-white transition-colors">Copy Code</button>
+                    </div>
+                    <pre class="code-block custom-scrollbar"><code id="xml1" class="language-markup">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"&gt;
+
+    &lt;WebView
+        android:id="@+id/webview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" /&gt;
+
+&lt;/RelativeLayout&gt;</code></pre>
+                </div>
+
+                <!-- Main Activity Java -->
+                <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
+                    <div class="p-4 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
+                        <span class="text-sm font-mono text-indigo-400">MainActivity.java</span>
+                        <button onclick="copyCode('java1')" class="text-xs text-slate-400 hover:text-white transition-colors">Copy Code</button>
+                    </div>
+                    <pre class="code-block custom-scrollbar"><code id="java1" class="language-java">package com.your.app;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.os.Bundle;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import java.util.concurrent.TimeUnit;
+
+public class MainActivity extends AppCompatActivity {
+
+    private WebView webView;
+
+    @SuppressLint("SetJavaScriptEnabled")
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        webView = findViewById(R.id.webview);
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setAllowFileAccess(true);
+        webSettings.setAllowContentAccess(true);
+
+        // Security: Allow local file access for offline app
+        webSettings.setAllowFileAccessFromFileURLs(true);
+        webSettings.setAllowUniversalAccessFromFileURLs(true);
+
+        webView.addJavascriptInterface(new WebAppInterface(this), "Android");
+        webView.setWebViewClient(new WebViewClient());
+        webView.loadUrl("file:///android_asset/index.html");
+
+        startBackgroundWorker();
+    }
+
+    private void startBackgroundWorker() {
+        PeriodicWorkRequest notificationWork = new PeriodicWorkRequest.Builder(
+                NotificationWorker.class, 2, TimeUnit.HOURS)
+                .build();
+        WorkManager.getInstance(this).enqueue(notificationWork);
+    }
+
+    public class WebAppInterface {
+        Context mContext;
+        WebAppInterface(Context c) { mContext = c; }
+
+        @JavascriptInterface
+        public void showOfflineNotification() {
+            NotificationWorker.triggerNotification(mContext, "AI Update", "Your offline engine is ready for requests!");
+        }
+    }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Push Setup Tab -->
+        <section id="notifications-tab" class="tab-content hidden">
+            <div class="grid grid-cols-1 gap-8">
+                <!-- Notification Worker -->
+                <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
+                    <div class="p-4 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
+                        <span class="text-sm font-mono text-indigo-400">NotificationWorker.java</span>
+                        <button onclick="copyCode('java2')" class="text-xs text-slate-400 hover:text-white transition-colors">Copy Code</button>
+                    </div>
+                    <pre class="code-block custom-scrollbar"><code id="java2" class="language-java">package com.your.app;
+
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.work.Worker;
+import androidx.work.WorkerParameters;
+
+public class NotificationWorker extends Worker {
+    private static final String CHANNEL_ID = "offline_ai_channel";
+
+    public NotificationWorker(@NonNull Context context, @NonNull WorkerParameters params) {
+        super(context, params);
+    }
+
+    @NonNull
+    @Override
+    public Result doWork() {
+        triggerNotification(getApplicationContext(), "Status Update", "AI is optimizing in background...");
+        return Result.success();
+    }
+
+    public static void triggerNotification(Context context, String title, String msg) {
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "AI Offline Notifications", NotificationManager.IMPORTANCE_DEFAULT);
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        Intent intent = new Intent(context, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(msg)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true);
+
+        notificationManager.notify((int) System.currentTimeMillis(), builder.build());
+    }
+}</code></pre>
+                </div>
+
+                <!-- Manifest -->
+                <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
+                    <div class="p-4 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
+                        <span class="text-sm font-mono text-indigo-400">AndroidManifest.xml</span>
+                        <button onclick="copyCode('xml2')" class="text-xs text-slate-400 hover:text-white transition-colors">Copy Code</button>
+                    </div>
+                    <pre class="code-block custom-scrollbar"><code id="xml2" class="language-markup">&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"&gt;
+    
+    &lt;uses-permission android:name="android.permission.INTERNET" /&gt;
+    &lt;uses-permission android:name="android.permission.POST_NOTIFICATIONS" /&gt;
+    &lt;uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" /&gt;
+    &lt;uses-permission android:name="android.permission.WAKE_LOCK" /&gt;
+
+    &lt;application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar"&gt;
+        
+        &lt;activity android:name=".MainActivity"
+            android:exported="true"&gt;
+            &lt;intent-filter&gt;
+                &lt;action android:name="android.intent.action.MAIN" /&gt;
+                &lt;category android:name="android.intent.category.LAUNCHER" /&gt;
+            &lt;/intent-filter&gt;
+        &lt;/activity&gt;
+
+        &lt;receiver android:name=".BootReceiver" android:exported="true"&gt;
+            &lt;intent-filter&gt;
+                &lt;action android:name="android.intent.action.BOOT_COMPLETED" /&gt;
+            &lt;/intent-filter&gt;
+        &lt;/receiver&gt;
+
+    &lt;/application&gt;
+&lt;/manifest&gt;</code></pre>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Tab Management
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('text-indigo-400', 'bg-slate-800'));
+            
+            document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+            event.currentTarget.classList.add('text-indigo-400', 'bg-slate-800');
+            Prism.highlightAll();
+        }
+
+        // Chat Interaction logic
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const container = document.getElementById('chat-container');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // User message
+            appendMessage('user', message);
+            input.value = '';
+
+            // Simulated AI Response
+            setTimeout(() => {
+                const responses = [
+                    "Analyzing local datasets... Query complete.",
+                    "Since we are offline, I'm using the cached model (v2.4).",
+                    "I've processed your request. Would you like to save this to your local storage?",
+                    "Background worker is active. Your progress is synced locally."
+                ];
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                appendMessage('ai', randomResponse);
+            }, 800);
+        }
+
+        function appendMessage(role, text) {
+            const container = document.getElementById('chat-container');
+            const div = document.createElement('div');
+            div.className = 'flex gap-3 ' + (role === 'user' ? 'flex-row-reverse' : '');
+            
+            const avatar = role === 'ai' ? 
+                '<div class="w-8 h-8 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-xs">AI</div>' :
+                '<div class="w-8 h-8 rounded-full bg-slate-600 flex-shrink-0 flex items-center justify-center text-xs">You</div>';
+
+            const bubbleClass = role === 'ai' ? 
+                'bg-slate-700 rounded-2xl rounded-tl-none' : 
+                'bg-indigo-600 rounded-2xl rounded-tr-none';
+
+            div.innerHTML = `
+                ${avatar}
+                <div class="${bubbleClass} p-3 max-w-[80%] shadow-lg">
+                    <p class="text-sm text-white">${text}</p>
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // JS Bridge Trigger
+        function triggerAndroidNotification() {
+            if (typeof Android !== 'undefined' && Android.showOfflineNotification) {
+                Android.showOfflineNotification();
+            } else {
+                alert("JS Bridge Not Found: This button only works when the file is running inside the Android WebView container.");
+            }
+        }
+
+        function mockVibrate() {
+            if (navigator.vibrate) {
+                navigator.vibrate(200);
+            } else {
+                alert("Vibration triggered (Simulator only)");
+            }
+        }
+
+        // Utility: Copy Code
+        function copyCode(elementId) {
+            const code = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = event.target;
+                const originalText = btn.innerText;
+                btn.innerText = 'Copied!';
+                btn.classList.add('text-green-400');
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.classList.remove('text-green-400');
+                }, 2000);
+            });
+        }
+
+        // Initialize Chat
+        window.onload = () => {
+            Prism.highlightAll();
+            // Enter key support for chat
+            document.getElementById('chat-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+        };
+    </script>
+</body>
+</html></html>
