@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android WebView Notification Project Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;600;700&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        pre, code { font-family: 'Fira Code', monospace; font-size: 0.875rem; }
+        
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .tab-active {
+            border-bottom: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+
+        .code-container {
+            background-color: #0f172a;
+            border-radius: 0.5rem;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover { background: rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen">
+
+    <nav class="border-b border-slate-800 bg-slate-900/50 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-lg">
+                    <i class="fas fa-robot text-white text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight">WebView <span class="text-blue-500">Pro</span></h1>
+            </div>
+            <div class="flex items-center gap-4 text-sm font-medium">
+                <span class="text-slate-400">v2.1.0 Stable</span>
+                <a href="#" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full transition">Documentation</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <header class="mb-10">
+            <h2 class="text-3xl font-bold text-white mb-2">Android Offline WebView System</h2>
+            <p class="text-slate-400 max-w-2xl">Deploy high-performance offline AI applications. This blueprint includes WorkManager for background notifications, a JavaScript Bridge for native triggers, and localized asset loading.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Sidebar Instructions -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
+                    <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-folder-tree text-blue-500"></i>
+                        Project Structure
+                    </h3>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-start gap-3">
+                            <span class="mt-1 w-5 h-5 bg-slate-800 rounded flex items-center justify-center text-[10px] font-bold">1</span>
+                            <span>Create <code>app/src/main/assets/</code> and place your <code>index.html</code>, CSS, and JS there.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="mt-1 w-5 h-5 bg-slate-800 rounded flex items-center justify-center text-[10px] font-bold">2</span>
+                            <span>Add <code>implementation "androidx.work:work-runtime:2.8.1"</code> to <code>build.gradle</code>.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="mt-1 w-5 h-5 bg-slate-800 rounded flex items-center justify-center text-[10px] font-bold">3</span>
+                            <span>Create the Java classes in your package directory.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-blue-900/20 border border-blue-500/30 rounded-xl p-6 shadow-xl">
+                    <h3 class="text-lg font-semibold text-blue-400 mb-2 flex items-center gap-2">
+                        <i class="fas fa-circle-info"></i>
+                        Permissions Note
+                    </h3>
+                    <p class="text-sm text-blue-200/70 leading-relaxed">
+                        For Android 13+ (API 33), the app will request <code>POST_NOTIFICATIONS</code> permission at runtime. The code below includes the necessary logic to handle this automatically.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Code Editor Section -->
+            <div class="lg:col-span-8">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden">
+                    <div class="flex border-b border-slate-800 overflow-x-auto scrollbar-hide bg-slate-900/80">
+                        <button onclick="showTab('main-activity')" id="tab-main-activity" class="px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap tab-active">MainActivity.java</button>
+                        <button onclick="showTab('worker')" id="tab-worker" class="px-6 py-3 text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap">NotificationWorker.java</button>
+                        <button onclick="showTab('manifest')" id="tab-manifest" class="px-6 py-3 text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap">AndroidManifest.xml</button>
+                        <button onclick="showTab('html')" id="tab-html" class="px-6 py-3 text-sm font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap">index.html</button>
+                    </div>
+
+                    <div class="p-0 relative">
+                        <!-- MainActivity.java -->
+                        <div id="content-main-activity" class="code-tab">
+                            <button onclick="copyCode('code-main-activity')" class="copy-btn px-3 py-1.5 rounded text-xs text-slate-400 hover:text-white flex items-center gap-1.5">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                            <pre class="p-6 overflow-auto max-h-[600px] text-blue-300"><code id="code-main-activity">package com.example.webviewapp;
+
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import java.util.concurrent.TimeUnit;
+
+public class MainActivity extends AppCompatActivity {
+
+    private WebView webView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // Check Permissions for Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
+
+        webView = findViewById(R.id.webview);
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        
+        // Load Local HTML
+        webView.setWebViewClient(new WebViewClient());
+        webView.addJavascriptInterface(new WebAppInterface(this), "Android");
+        webView.loadUrl("file:///android_asset/index.html");
+
+        // Schedule Background Notifications (Every 2 Hours)
+        scheduleNotificationTask();
+    }
+
+    private void scheduleNotificationTask() {
+        PeriodicWorkRequest notificationWork = new PeriodicWorkRequest.Builder(
+                NotificationWorker.class, 2, TimeUnit.HOURS)
+                .build();
+        WorkManager.getInstance(this).enqueue(notificationWork);
+    }
+
+    public class WebAppInterface {
+        Context mContext;
+        WebAppInterface(Context c) { mContext = c; }
+
+        @JavascriptInterface
+        public void showOfflineNotification() {
+            // Instant trigger from JS
+            NotificationWorker.showNotification(mContext, "App Update", "Notification triggered from JavaScript!");
+        }
+    }
+}</code></pre>
+                        </div>
+
+                        <!-- NotificationWorker.java -->
+                        <div id="content-worker" class="code-tab hidden">
+                            <button onclick="copyCode('code-worker')" class="copy-btn px-3 py-1.5 rounded text-xs text-slate-400 hover:text-white flex items-center gap-1.5">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                            <pre class="p-6 overflow-auto max-h-[600px] text-emerald-300"><code id="code-worker">package com.example.webviewapp;
+
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.work.Worker;
+import androidx.work.WorkerParameters;
+
+public class NotificationWorker extends Worker {
+
+    private static final String CHANNEL_ID = "OFFLINE_NOTIFS";
+
+    public NotificationWorker(@NonNull Context context, @NonNull WorkerParameters params) {
+        super(context, params);
+    }
+
+    @NonNull
+    @Override
+    public Result doWork() {
+        showNotification(getApplicationContext(), "Background Sync", "Offline content is ready for you!");
+        return Result.success();
+    }
+
+    public static void showNotification(Context context, String title, String content) {
+        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Offline Alerts", NotificationManager.IMPORTANCE_DEFAULT);
+            manager.createNotificationChannel(channel);
+        }
+
+        Intent intent = new Intent(context, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(content)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+        manager.notify(1, builder.build());
+    }
+}</code></pre>
+                        </div>
+
+                        <!-- AndroidManifest.xml -->
+                        <div id="content-manifest" class="code-tab hidden">
+                            <button onclick="copyCode('code-manifest')" class="copy-btn px-3 py-1.5 rounded text-xs text-slate-400 hover:text-white flex items-center gap-1.5">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                            <pre class="p-6 overflow-auto max-h-[600px] text-amber-200"><code id="code-manifest">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"&gt;
+
+    &lt;uses-permission android:name="android.permission.INTERNET" /&gt;
+    &lt;uses-permission android:name="android.permission.POST_NOTIFICATIONS" /&gt;
+    &lt;uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" /&gt;
+    &lt;uses-permission android:name="android.permission.WAKE_LOCK" /&gt;
+
+    &lt;application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar"&gt;
+
+        &lt;activity
+            android:name=".MainActivity"
+            android:exported="true"&gt;
+            &lt;intent-filter&gt;
+                &lt;action android:name="android.intent.action.MAIN" /&gt;
+                &lt;category android:name="android.intent.category.LAUNCHER" /&gt;
+            &lt;/intent-filter&gt;
+        &lt;/activity&gt;
+
+        &lt;!-- Required for WorkManager to persist across reboots --&gt;
+        &lt;receiver
+            android:name="androidx.work.impl.background.systemalarm.RescheduleReceiver"
+            android:enabled="true"
+            android:exported="false"&gt;
+            &lt;intent-filter&gt;
+                &lt;action android:name="android.intent.action.BOOT_COMPLETED" /&gt;
+            &lt;/intent-filter&gt;
+        &lt;/receiver&gt;
+
+    &lt;/application&gt;
+&lt;/manifest&gt;</code></pre>
+                        </div>
+
+                        <!-- index.html -->
+                        <div id="content-html" class="code-tab hidden">
+                            <button onclick="copyCode('code-html')" class="copy-btn px-3 py-1.5 rounded text-xs text-slate-400 hover:text-white flex items-center gap-1.5">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                            <pre class="p-6 overflow-auto max-h-[600px] text-cyan-200"><code id="code-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;style&gt;
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #121212; color: white; }
+        .card { background: #1e1e1e; padding: 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        button { background: #3b82f6; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #2563eb; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="card"&gt;
+        &lt;h1&gt;Offline WebApp&lt;/h1&gt;
+        &lt;p&gt;Click the button below to test the Android Native Notification Bridge.&lt;/p&gt;
+        &lt;br&gt;
+        &lt;button onclick="triggerNotification()"&gt;Send Notification&lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;script&gt;
+        function triggerNotification() {
+            if (window.Android) {
+                window.Android.showOfflineNotification();
+            } else {
+                alert("Native Android Interface not found.");
+            }
+        }
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="mt-8 flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex gap-4">
+                        <button class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 py-3 rounded-lg shadow-lg shadow-blue-900/40 transition-all active:scale-95">
+                            <i class="fas fa-download mr-2"></i> Download Boilerplate
+                        </button>
+                        <button class="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-8 py-3 rounded-lg transition-all">
+                            <i class="fas fa-play mr-2 text-green-400"></i> Run Preview
+                        </button>
+                    </div>
+                    <div class="text-slate-500 text-sm italic">
+                        All code is ready for Android Studio Bumblebee or newer.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ / Help Section -->
+        <div class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="p-6 bg-slate-900/50 rounded-xl border border-slate-800">
+                <i class="fas fa-wifi-slash text-2xl text-red-400 mb-4"></i>
+                <h4 class="text-lg font-bold mb-2">Truly Offline</h4>
+                <p class="text-slate-400 text-sm leading-relaxed">No external dependencies. All JS and CSS should be stored in the assets folder to ensure the app works in airplane mode.</p>
+            </div>
+            <div class="p-6 bg-slate-900/50 rounded-xl border border-slate-800">
+                <i class="fas fa-clock text-2xl text-purple-400 mb-4"></i>
+                <h4 class="text-lg font-bold mb-2">WorkManager</h4>
+                <p class="text-slate-400 text-sm leading-relaxed">Unlike simple services, WorkManager survives app closures and device restarts, ensuring your alerts are always delivered.</p>
+            </div>
+            <div class="p-6 bg-slate-900/50 rounded-xl border border-slate-800">
+                <i class="fas fa-bridge text-2xl text-orange-400 mb-4"></i>
+                <h4 class="text-lg font-bold mb-2">Native Bridge</h4>
+                <p class="text-slate-400 text-sm leading-relaxed">The JavascriptInterface creates a secure tunnel between your web code and Android's native NotificationManager.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-slate-800 mt-20 py-10 bg-slate-950">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm">© 2023 WebView Pro Dev Tools. Provided under MIT License for educational purposes.</p>
+        </div>
+    </footer>
+
+    <script>
+        function showTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.code-tab').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active classes from buttons
+            document.querySelectorAll('nav button, .bg-slate-900/80 button').forEach(btn => {
+                btn.classList.remove('tab-active', 'text-white');
+                btn.classList.add('text-slate-400');
+            });
+
+            // Show active tab
+            document.getElementById('content-' + tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('tab-' + tabId);
+            activeBtn.classList.add('tab-active', 'text-white');
+            activeBtn.classList.remove('text-slate-400');
+        }
+
+        async function copyCode(elementId) {
+            const code = document.getElementById(elementId).innerText;
+            const btn = event.currentTarget;
+            
+            try {
+                await navigator.clipboard.writeText(code);
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check text-green-400"></i> Copied!';
+                btn.classList.add('text-white');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.classList.remove('text-white');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy!', err);
+            }
+        }
+    </script>
+</body>
+</html></html>
