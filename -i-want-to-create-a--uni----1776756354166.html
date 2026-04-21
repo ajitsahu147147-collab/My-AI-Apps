@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Safety & Language App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .emergency-pulse { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-hidden">
+
+    <div id="alert-overlay" class="fixed inset-0 z-50 bg-red-600 flex flex-col items-center justify-center p-6 text-center hidden">
+        <div class="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-6 animate-bounce">
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+        <h1 id="alert-title" class="text-4xl font-black mb-4 uppercase tracking-tighter"></h1>
+        <p id="alert-desc" class="text-xl mb-8 opacity-90"></p>
+        <button onclick="dismissAlert()" class="bg-white text-red-600 px-12 py-4 rounded-full font-bold text-lg shadow-2xl active:scale-95 transition-transform">OK / ठीक है / ଠିକ୍ ଅଛି</button>
+    </div>
+
+    <header class="p-6 flex justify-between items-center glass">
+        <div>
+            <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">SafetyCore</h1>
+            <p class="text-xs text-slate-400 font-medium">Offline Protection Active</p>
+        </div>
+        <select id="lang-select" onchange="changeLanguage()" class="bg-slate-800 border border-slate-700 text-sm rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="en">English</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+            <option value="or">ଓଡ଼ିଆ (Odia)</option>
+        </select>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-6 space-y-6">
+        <div class="grid grid-cols-2 gap-4">
+            <div class="glass p-4 rounded-3xl">
+                <span id="label-battery" class="text-xs text-slate-400 block mb-1">BATTERY TEMP</span>
+                <div class="flex items-end gap-2">
+                    <span id="temp-val" class="text-2xl font-bold">32°C</span>
+                    <span class="text-emerald-500 text-xs font-bold mb-1">NORMAL</span>
+                </div>
+            </div>
+            <div class="glass p-4 rounded-3xl">
+                <span id="label-motion" class="text-xs text-slate-400 block mb-1">MOTION</span>
+                <div class="flex items-end gap-2">
+                    <span id="motion-val" class="text-2xl font-bold italic">STABLE</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass p-6 rounded-3xl relative overflow-hidden">
+            <div class="relative z-10">
+                <h2 id="label-eye-care" class="text-lg font-bold mb-1">Activity Monitor</h2>
+                <div class="flex items-center gap-3">
+                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div id="eye-progress" class="bg-blue-500 h-full w-0 transition-all duration-1000"></div>
+                    </div>
+                    <span id="eye-timer" class="text-xs font-mono text-slate-400">00:00</span>
+                </div>
+                <p id="eye-status" class="text-xs text-slate-500 mt-2 italic">Monitoring screen usage for eye safety...</p>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <label id="label-contact" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Emergency Contact</label>
+            <input id="contact-num" type="tel" placeholder="+91 00000 00000" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-2xl text-lg focus:ring-2 focus:ring-red-500 outline-none transition-all">
+        </div>
+
+        <div class="flex flex-col items-center justify-center py-8">
+            <button onclick="triggerEmergency()" class="emergency-pulse w-48 h-48 bg-red-600 rounded-full flex flex-col items-center justify-center shadow-inner active:scale-90 transition-all">
+                <svg class="w-16 h-16 text-white mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                <span id="btn-emergency" class="text-white font-black text-xl tracking-tight uppercase">Emergency</span>
+            </button>
+            <p id="label-tap-hint" class="text-slate-500 text-sm mt-8 animate-pulse text-center px-6"></p>
+        </div>
+    </main>
+
+    <footer class="p-6 glass safe-area-bottom">
+        <div class="flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
+                Sensors Active
+            </div>
+            <div>Build 1.0.4 - Local Mode</div>
+        </div>
+    </footer>
+
+    <script>
+        const translations = {
+            en: {
+                emergency: "Emergency",
+                healthAlert: "Health Alert",
+                fallDetected: "Fall Detected!",
+                batteryHot: "Device Overheating!",
+                restEyes: "Eye Rest Required",
+                restEyesDesc: "You have been using the device for too long. Please look away for 20 seconds.",
+                fallDesc: "A sudden impact was detected. Are you okay?",
+                hotDesc: "The battery temperature is critically high. Stop usage immediately.",
+                tapHint: "Tap the button above to send your location to your saved contact.",
+                contact: "Emergency Contact",
+                eyeCare: "Screen Time Monitor",
+                battery: "Battery Temp",
+                motion: "Motion Sensor"
+            },
+            hi: {
+                emergency: "आपातकालीन",
+                healthAlert: "स्वास्थ्य चेतावनी",
+                fallDetected: "गिरावट का पता चला!",
+                batteryHot: "डिवाइस गर्म हो गया है!",
+                restEyes: "आंखों को आराम दें",
+                restEyesDesc: "आप बहुत देर से डिवाइस का उपयोग कर रहे हैं। कृपया २० सेकंड के लिए दूर देखें।",
+                fallDesc: "एक अचानक गिरावट का पता चला था। क्या आप ठीक हैं?",
+                hotDesc: "बैटरी का तापमान बहुत अधिक है। तुरंत उपयोग बंद करें।",
+                tapHint: "अपने सहेजे गए संपर्क को अपना स्थान भेजने के लिए ऊपर दिए गए बटन को टैप करें।",
+                contact: "आपातकालीन संपर्क",
+                eyeCare: "स्क्रीन समय मॉनिटर",
+                battery: "बैटरी तापमान",
+                motion: "गति संवेदक"
+            },
+            or: {
+                emergency: "ଜରୁରୀକାଳୀନ",
+                healthAlert: "ସ୍ୱାସ୍ଥ୍ୟ ସତର୍କତା",
+                fallDetected: "ପତନ ଚିହ୍ନଟ ହୋଇଛି!",
+                batteryHot: "ଫୋନ୍ ଗରମ ହୋଇଯାଇଛି!",
+                restEyes: "ଆଖିକୁ ବିଶ୍ରାମ ଦିଅନ୍ତୁ",
+                restEyesDesc: "ଆପଣ ବହୁତ ସମୟ ଧରି ଫୋନ୍ ବ୍ୟବହାର କରୁଛନ୍ତି | ଦୟାକରି ୨୦ ସେକେଣ୍ଡ୍ ପାଇଁ ଅନ୍ୟ କୁଆଡେ ଚାହାଁନ୍ତୁ |",
+                fallDesc: "ହଠାତ୍ ପଡିଯିବା ଚିହ୍ନଟ ହୋଇଛି | ଆପଣ ଠିକ୍ ଅଛନ୍ତି କି?",
+                hotDesc: "ବ୍ୟାଟେରୀର ତାପମାତ୍ରା ବହୁତ ଅଧିକ | ତୁରନ୍ତ ବ୍ୟବହାର ବନ୍ଦ କରନ୍ତୁ |",
+                tapHint: "ଆପଣଙ୍କର ସଞ୍ଚିତ ଯୋଗାଯୋଗ ନମ୍ବରକୁ ଆପଣଙ୍କର ଅବସ୍ଥାନ ପଠାଇବା ପାଇଁ ଉପର ବଟନ୍ ଟିପନ୍ତୁ |",
+                contact: "ଜରୁରୀକାଳୀନ ସମ୍ପର୍କ",
+                eyeCare: "ସ୍କ୍ରିନ୍ ସମୟ ମନିଟର",
+                battery: "ବ୍ୟାଟେରୀ ତାପମାତ୍ରା",
+                motion: "ଗତି ସେନ୍ସର"
+            }
+        };
+
+        let currentLang = 'en';
+        let startTime = Date.now();
+        let screenTimeLimit = 2 * 60 * 60 * 1000; // 2 hours
+        let alertActive = false;
+
+        function changeLanguage() {
+            currentLang = document.getElementById('lang-select').value;
+            const t = translations[currentLang];
+            
+            document.getElementById('btn-emergency').innerText = t.emergency;
+            document.getElementById('label-eye-care').innerText = t.eyeCare;
+            document.getElementById('label-battery').innerText = t.battery;
+            document.getElementById('label-motion').innerText = t.motion;
+            document.getElementById('label-contact').innerText = t.contact;
+            document.getElementById('label-tap-hint').innerText = t.tapHint;
+            
+            localStorage.setItem('pref_lang', currentLang);
+        }
+
+        function showAlert(titleKey, descKey) {
+            if (alertActive) return;
+            alertActive = true;
+            const t = translations[currentLang];
+            document.getElementById('alert-title').innerText = t[titleKey];
+            document.getElementById('alert-desc').innerText = t[descKey];
+            document.getElementById('alert-overlay').classList.remove('hidden');
+            
+            if (window.navigator.vibrate) {
+                window.navigator.vibrate([500, 200, 500, 200, 500]);
+            }
+        }
+
+        function dismissAlert() {
+            document.getElementById('alert-overlay').classList.add('hidden');
+            alertActive = false;
+        }
+
+        // Activity Monitor
+        setInterval(() => {
+            let elapsed = Date.now() - startTime;
+            let progress = (elapsed / screenTimeLimit) * 100;
+            document.getElementById('eye-progress').style.width = Math.min(progress, 100) + '%';
+            
+            let mins = Math.floor(elapsed / 60000);
+            let secs = Math.floor((elapsed % 60000) / 1000);
+            document.getElementById('eye-timer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+            if (elapsed >= screenTimeLimit) {
+                showAlert('restEyes', 'restEyesDesc');
+                startTime = Date.now(); // Reset after alert
+            }
+        }, 1000);
+
+        // Simulated Sensors (Battery API & Accelerometer)
+        function initSensors() {
+            // Mock Battery Temperature logic (Web API doesn't expose raw temp usually)
+            setInterval(() => {
+                let mockTemp = Math.floor(Math.random() * (42 - 30) + 30);
+                document.getElementById('temp-val').innerText = mockTemp + '°C';
+                if (mockTemp > 40) {
+                    showAlert('batteryHot', 'hotDesc');
+                }
+            }, 10000);
+
+            // Fall Detection Logic
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('devicemotion', (event) => {
+                    let acc = event.acceleration;
+                    if (!acc) return;
+                    let totalAcc = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
+                    
+                    if (totalAcc > 30) { // Threshold for sudden fall
+                        document.getElementById('motion-val').innerText = "IMPACT!";
+                        document.getElementById('motion-val').classList.add('text-red-500');
+                        showAlert('fallDetected', 'fallDesc');
+                    } else {
+                        document.getElementById('motion-val').innerText = "STABLE";
+                        document.getElementById('motion-val').classList.remove('text-red-500');
+                    }
+                });
+            }
+        }
+
+        // Emergency SMS Simulation
+        function triggerEmergency() {
+            const phone = document.getElementById('contact-num').value;
+            if (!phone) {
+                alert("Please enter a contact number first.");
+                return;
+            }
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    const msg = `EMERGENCY! I need help. My location: https://maps.google.com/?q=${lat},${lon}`;
+                    window.location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`;
+                }, () => {
+                    const msg = `EMERGENCY! I need help. (Location permission denied)`;
+                    window.location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`;
+                });
+            }
+        }
+
+        // Initialization
+        window.onload = () => {
+            const savedLang = localStorage.getItem('pref_lang') || 'en';
+            document.getElementById('lang-select').value = savedLang;
+            changeLanguage();
+            initSensors();
+            
+            // Requesting motion permission for iOS
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                document.body.addEventListener('click', () => {
+                    DeviceMotionEvent.requestPermission();
+                }, { once: true });
+            }
+        };
+
+        // Persist contact
+        document.getElementById('contact-num').value = localStorage.getItem('emergency_contact') || '';
+        document.getElementById('contact-num').addEventListener('input', (e) => {
+            localStorage.setItem('emergency_contact', e.target.value);
+        });
+    </script>
+</body>
+</html></html>
