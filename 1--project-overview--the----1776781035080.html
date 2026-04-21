@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenithFocus | High-Discipline Productivity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        .grayscale-mode {
+            filter: grayscale(100%) !important;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+
+        .nav-active {
+            color: #10b981;
+            border-bottom: 2px solid #10b981;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Block Overlay (Hidden by default) -->
+    <div id="blockOverlay" class="fixed inset-0 z-[100] bg-black hidden flex-col items-center justify-center p-6 text-center">
+        <div class="mb-8">
+            <div class="w-24 h-24 bg-rose-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-rose-500">
+                <i class="fas fa-lock text-rose-500 text-4xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-white mb-2">Focus Interrupted</h1>
+            <p id="blockReason" class="text-slate-400 max-w-md">You're attempting to access restricted content. Return to your goals.</p>
+        </div>
+
+        <div id="mathChallenge" class="glass-card p-8 rounded-2xl w-full max-w-sm">
+            <p class="text-sm text-emerald-400 mb-2 font-mono uppercase tracking-widest">Hard Mode Active</p>
+            <h2 class="text-2xl font-bold mb-6" id="mathProblem">Solve: 14 * 7 + 12</h2>
+            <input type="number" id="mathAnswer" placeholder="Enter answer..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 mb-4 focus:ring-2 focus:ring-emerald-500 outline-none">
+            <button onclick="checkMathAnswer()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all">
+                Submit & Unlock
+            </button>
+            <button onclick="exitAppSim()" class="w-full mt-4 text-slate-500 hover:text-white text-sm">
+                Actually, I'll go back to work
+            </button>
+        </div>
+    </div>
+
+    <!-- Main App Layout -->
+    <div id="appRoot" class="max-w-md mx-auto min-h-screen flex flex-col relative pb-20">
+        
+        <!-- Header -->
+        <header class="p-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold flex items-center gap-2">
+                    <span class="text-emerald-500"><i class="fas fa-shield-halved"></i></span>
+                    Zenith
+                </h1>
+                <p class="text-xs text-slate-500 mt-1 uppercase tracking-tighter">On-Device Privacy Engine Active</p>
+            </div>
+            <div class="flex gap-3">
+                <div class="bg-slate-800 px-3 py-1 rounded-full flex items-center gap-2 border border-slate-700">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full status-pulse"></span>
+                    <span class="text-xs font-medium">Safe</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Skill Points Section -->
+        <section class="px-6 mb-8">
+            <div class="glass-card rounded-3xl p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <i class="fas fa-brain text-6xl"></i>
+                </div>
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p class="text-slate-400 text-sm mb-1">Total Skill Points</p>
+                        <h2 id="skillPoints" class="text-4xl font-black text-white">1,240</h2>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-emerald-400 text-sm font-bold">+120 today</p>
+                        <p class="text-slate-500 text-[10px] uppercase">Focus Tier: Scholar</p>
+                    </div>
+                </div>
+                <div class="mt-6 flex gap-4">
+                    <div class="flex-1 bg-slate-900/50 p-3 rounded-xl border border-white/5">
+                        <p class="text-[10px] text-slate-500 uppercase">Time Saved</p>
+                        <p id="timeSaved" class="text-lg font-bold">4h 22m</p>
+                    </div>
+                    <div class="flex-1 bg-slate-900/50 p-3 rounded-xl border border-white/5">
+                        <p class="text-[10px] text-slate-500 uppercase">Sessions</p>
+                        <p class="text-lg font-bold">18</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Area -->
+        <main id="mainView" class="px-6 flex-1 space-y-6">
+            
+            <!-- Live Monitor Simulation -->
+            <div class="space-y-3">
+                <h3 class="text-sm font-bold text-slate-400 flex justify-between items-center">
+                    REAL-TIME MONITORING
+                    <span class="text-[10px] bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded">NO CLOUD</span>
+                </h3>
+                <div id="monitoringLog" class="space-y-2 max-h-48 overflow-y-auto">
+                    <!-- Logs injected here -->
+                </div>
+            </div>
+
+            <!-- Discipline Modes -->
+            <div class="grid grid-cols-2 gap-4">
+                <div onclick="toggleSetting('hardMode')" id="hardModeCard" class="glass-card p-4 rounded-2xl cursor-pointer transition-all border-l-4 border-l-slate-700">
+                    <i class="fas fa-fire text-slate-500 mb-2 block" id="hardModeIcon"></i>
+                    <h4 class="font-bold text-sm">Hard Mode</h4>
+                    <p class="text-[10px] text-slate-500">Unlocks require math puzzles</p>
+                </div>
+                <div onclick="toggleSetting('grayscale')" id="grayscaleCard" class="glass-card p-4 rounded-2xl cursor-pointer transition-all border-l-4 border-l-slate-700">
+                    <i class="fas fa-droplet-slash text-slate-500 mb-2 block" id="grayscaleIcon"></i>
+                    <h4 class="font-bold text-sm">Grayscale</h4>
+                    <p class="text-[10px] text-slate-500">Strip addictive colors</p>
+                </div>
+            </div>
+
+            <!-- Keyword Management -->
+            <div class="space-y-3">
+                <h3 class="text-sm font-bold text-slate-400">KEYWORD ENGINE</h3>
+                <div class="flex gap-2 mb-4">
+                    <button onclick="switchKeywordTab('blacklist')" id="tabBlacklist" class="flex-1 py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 border border-slate-700">DISTRACTION</button>
+                    <button onclick="switchKeywordTab('whitelist')" id="tabWhitelist" class="flex-1 py-2 text-xs font-bold rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">EDUCATIONAL</button>
+                </div>
+                <div class="glass-card rounded-2xl p-4">
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="keywordInput" placeholder="Add word..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none">
+                        <button onclick="addKeyword()" class="bg-slate-700 hover:bg-slate-600 px-4 rounded-lg"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div id="keywordList" class="flex flex-wrap gap-2">
+                        <!-- Keywords injected here -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass-card border-t border-white/10 px-8 py-4 flex justify-between items-center z-50">
+            <button class="nav-active flex flex-col items-center gap-1 transition-all">
+                <i class="fas fa-house text-lg"></i>
+                <span class="text-[10px]">Home</span>
+            </button>
+            <button class="text-slate-500 hover:text-white flex flex-col items-center gap-1 transition-all">
+                <i class="fas fa-chart-line text-lg"></i>
+                <span class="text-[10px]">Stats</span>
+            </button>
+            <button class="text-slate-500 hover:text-white flex flex-col items-center gap-1 transition-all">
+                <i class="fas fa-bullseye text-lg"></i>
+                <span class="text-[10px]">Focus</span>
+            </button>
+            <button class="text-slate-500 hover:text-white flex flex-col items-center gap-1 transition-all">
+                <i class="fas fa-gear text-lg"></i>
+                <span class="text-[10px]">Settings</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Onboarding Modal -->
+    <div id="onboardingModal" class="fixed inset-0 z-[150] bg-slate-900 flex items-center justify-center p-6 text-center">
+        <div class="max-w-xs w-full">
+            <div id="onboardingStep1">
+                <div class="w-20 h-20 bg-emerald-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-user-shield text-3xl text-emerald-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-4">Privacy First</h2>
+                <p class="text-slate-400 text-sm mb-8 leading-relaxed">
+                    Zenith processes all content <b>offline</b>. No data ever leaves your device. No internet permission required.
+                </p>
+                <button onclick="nextStep(2)" class="w-full bg-emerald-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-900/20">Continue</button>
+            </div>
+            <div id="onboardingStep2" class="hidden">
+                <div class="w-20 h-20 bg-blue-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-universal-access text-3xl text-blue-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-4">Accessibility Service</h2>
+                <p class="text-slate-400 text-sm mb-8 leading-relaxed">
+                    To monitor YouTube and Social Apps, Zenith needs Accessibility permissions to "read" video titles and block distractions.
+                </p>
+                <button onclick="finishOnboarding()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-900/20">Grant & Start</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        let state = {
+            skillPoints: 1240,
+            timeSaved: "4h 22m",
+            hardMode: false,
+            grayscale: false,
+            currentTab: 'blacklist',
+            blacklist: ['Prank', 'Shorts', 'Reels', 'Comedy', 'Dance', 'Challenge', 'Vlog', 'Fail'],
+            whitelist: ['Python', 'Tutorial', 'Coding', 'Science', 'Documentary', 'News', 'Space', 'History'],
+            isBlocked: false,
+            currentProblem: { q: "", a: 0 }
+        };
+
+        // Initialize App
+        window.onload = () => {
+            const hasOnboarded = localStorage.getItem('zenith_onboarded');
+            if(hasOnboarded) {
+                document.getElementById('onboardingModal').classList.add('hidden');
+            }
+            loadData();
+            renderKeywords();
+            startSimulation();
+        };
+
+        function nextStep(step) {
+            document.getElementById('onboardingStep1').classList.add('hidden');
+            document.getElementById('onboardingStep2').classList.remove('hidden');
+        }
+
+        function finishOnboarding() {
+            localStorage.setItem('zenith_onboarded', 'true');
+            document.getElementById('onboardingModal').classList.add('hidden');
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('zenith_state');
+            if(saved) {
+                const parsed = JSON.parse(saved);
+                state = {...state, ...parsed};
+                updateUI();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('zenith_state', JSON.stringify(state));
+        }
+
+        function updateUI() {
+            document.getElementById('skillPoints').innerText = state.skillPoints.toLocaleString();
+            document.getElementById('timeSaved').innerText = state.timeSaved;
+            
+            // Update Hard Mode Card
+            const hmCard = document.getElementById('hardModeCard');
+            const hmIcon = document.getElementById('hardModeIcon');
+            if(state.hardMode) {
+                hmCard.classList.replace('border-l-slate-700', 'border-l-rose-500');
+                hmIcon.classList.replace('text-slate-500', 'text-rose-500');
+            } else {
+                hmCard.classList.replace('border-l-rose-500', 'border-l-slate-700');
+                hmIcon.classList.replace('text-rose-500', 'text-slate-500');
+            }
+
+            // Update Grayscale Card
+            const gsCard = document.getElementById('grayscaleCard');
+            const gsIcon = document.getElementById('grayscaleIcon');
+            if(state.grayscale) {
+                gsCard.classList.replace('border-l-slate-700', 'border-l-emerald-500');
+                gsIcon.classList.replace('text-slate-500', 'text-emerald-500');
+                document.body.classList.add('grayscale-mode');
+            } else {
+                gsCard.classList.replace('border-l-emerald-500', 'border-l-slate-700');
+                gsIcon.classList.replace('text-emerald-500', 'text-slate-500');
+                document.body.classList.remove('grayscale-mode');
+            }
+        }
+
+        function toggleSetting(key) {
+            state[key] = !state[key];
+            saveData();
+            updateUI();
+        }
+
+        function switchKeywordTab(tab) {
+            state.currentTab = tab;
+            const b = document.getElementById('tabBlacklist');
+            const w = document.getElementById('tabWhitelist');
+            
+            if(tab === 'blacklist') {
+                b.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-rose-500/10 text-rose-500 border border-rose-500/20';
+                w.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 border border-slate-700';
+            } else {
+                w.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
+                b.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 border border-slate-700';
+            }
+            renderKeywords();
+        }
+
+        function renderKeywords() {
+            const list = document.getElementById('keywordList');
+            const items = state[state.currentTab];
+            list.innerHTML = items.map(word => `
+                <div class="bg-slate-800 px-3 py-1 rounded-full text-xs flex items-center gap-2 border border-slate-700 group">
+                    ${word}
+                    <i onclick="removeKeyword('${word}')" class="fas fa-times text-slate-500 hover:text-rose-500 cursor-pointer"></i>
+                </div>
+            `).join('');
+        }
+
+        function addKeyword() {
+            const input = document.getElementById('keywordInput');
+            const val = input.value.trim();
+            if(val && !state[state.currentTab].includes(val)) {
+                state[state.currentTab].push(val);
+                input.value = '';
+                renderKeywords();
+                saveData();
+            }
+        }
+
+        function removeKeyword(word) {
+            state[state.currentTab] = state[state.currentTab].filter(w => w !== word);
+            renderKeywords();
+            saveData();
+        }
+
+        // Accessibility Simulation
+        const apps = ["YouTube", "Instagram", "Facebook", "TikTok"];
+        const scenarios = [
+            { app: "YouTube", title: "Python for Beginners Tutorial", type: "edu" },
+            { app: "YouTube", title: "I Spent 24 Hours in a Box - Prank", type: "dist" },
+            { app: "Instagram", title: "Reels / Trending Dance", type: "dist" },
+            { app: "YouTube", title: "SpaceX Starship Launch Analysis", type: "edu" },
+            { app: "Facebook", title: "Funny Cats Compilation 2024", type: "dist" },
+            { app: "Instagram", title: "Coding Tips for Seniors", type: "edu" }
+        ];
+
+        function startSimulation() {
+            const log = document.getElementById('monitoringLog');
+            setInterval(() => {
+                if(state.isBlocked) return;
+
+                const scene = scenarios[Math.floor(Math.random() * scenarios.length)];
+                const logEntry = document.createElement('div');
+                logEntry.className = "flex justify-between items-center bg-slate-800/40 p-2 rounded-lg border border-white/5 animate-fade-in";
+                
+                const isBlocked = checkContent(scene.title);
+                
+                logEntry.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-[10px] font-bold text-slate-500 w-16 uppercase">${scene.app}</span>
+                        <span class="text-xs truncate max-w-[150px]">${scene.title}</span>
+                    </div>
+                    <span class="text-[9px] font-bold px-2 py-0.5 rounded ${isBlocked ? 'bg-rose-500/20 text-rose-500' : 'bg-emerald-500/20 text-emerald-500'}">
+                        ${isBlocked ? 'BLOCKED' : 'ALLOWED'}
+                    </span>
+                `;
+
+                log.prepend(logEntry);
+                if(log.children.length > 5) log.lastChild.remove();
+
+                if(isBlocked) {
+                    triggerBlock(scene.title);
+                } else if (scene.type === 'edu') {
+                    state.skillPoints += 5;
+                    updateUI();
+                }
+            }, 4000);
+        }
+
+        function checkContent(title) {
+            const lowerTitle = title.toLowerCase();
+            const hasBlacklist = state.blacklist.some(word => lowerTitle.includes(word.toLowerCase()));
+            const hasWhitelist = state.whitelist.some(word => lowerTitle.includes(word.toLowerCase()));
+            
+            // Logic: Distraction takes priority unless it matches a strong educational keyword
+            return hasBlacklist && !hasWhitelist;
+        }
+
+        function triggerBlock(title) {
+            state.isBlocked = true;
+            document.getElementById('blockReason').innerText = `Keyword detected in: "${title}"`;
+            
+            if(state.hardMode) {
+                generateMath();
+                document.getElementById('mathChallenge').classList.remove('hidden');
+            } else {
+                document.getElementById('mathChallenge').classList.add('hidden');
+                // Auto unblock after 3 seconds in normal mode for demo
+                setTimeout(unblock, 3000);
+            }
+
+            document.getElementById('blockOverlay').classList.remove('hidden');
+        }
+
+        function generateMath() {
+            const a = Math.floor(Math.random() * 20) + 1;
+            const b = Math.floor(Math.random() * 15) + 1;
+            const c = Math.floor(Math.random() * 30) + 1;
+            state.currentProblem = {
+                q: `${a} * ${b} + ${c}`,
+                a: (a * b) + c
+            };
+            document.getElementById('mathProblem').innerText = `Solve: ${state.currentProblem.q}`;
+            document.getElementById('mathAnswer').value = '';
+        }
+
+        function checkMathAnswer() {
+            const userAns = parseInt(document.getElementById('mathAnswer').value);
+            if(userAns === state.currentProblem.a) {
+                unblock();
+            } else {
+                alert("Incorrect. Stay focused.");
+                generateMath();
+            }
+        }
+
+        function unblock() {
+            state.isBlocked = false;
+            document.getElementById('blockOverlay').classList.add('hidden');
+        }
+
+        function exitAppSim() {
+            unblock();
+            alert("App Closed. Back to Productivity!");
+        }
+
+    </script>
+</body>
+</html></html>
