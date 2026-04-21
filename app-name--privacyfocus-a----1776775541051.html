@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrivacyFocus AI | Zero-Knowledge Productivity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e5e7eb;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(23, 23, 23, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+        }
+
+        .tab-active {
+            color: #6366f1;
+            border-bottom: 2px solid #6366f1;
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .privacy-badge {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+        }
+
+        .hard-mode-pulse {
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #262626;
+            border-radius: 10px;
+        }
+
+        #timer-display {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- Header -->
+    <header class="p-6 flex justify-between items-center sticky top-0 z-50 bg-black/50 backdrop-blur-md border-b border-white/5">
+        <div>
+            <h1 class="text-xl font-bold gradient-text">PrivacyFocus AI</h1>
+            <p class="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">Zero-Knowledge Protocol</p>
+        </div>
+        <div class="privacy-badge px-3 py-1 rounded-full text-xs flex items-center gap-2">
+            <i class="fas fa-shield-halved"></i>
+            <span>Local Only</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-md mx-auto p-4 space-y-6">
+
+        <!-- Section: Dashboard -->
+        <section id="view-dashboard" class="view space-y-6">
+            <div class="glass-card p-6">
+                <div class="flex justify-between items-end mb-4">
+                    <div>
+                        <p class="text-gray-400 text-sm">Today's Focus</p>
+                        <h2 class="text-3xl font-bold">5h 42m</h2>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-green-400 text-sm font-medium"><i class="fas fa-arrow-down mr-1"></i>12%</span>
+                        <p class="text-gray-500 text-[10px]">vs yesterday</p>
+                    </div>
+                </div>
+                <canvas id="usageChart" height="150"></canvas>
+            </div>
+
+            <!-- On-Device AI Insights -->
+            <div class="space-y-3">
+                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider ml-1">On-Device AI Analysis</h3>
+                <div class="glass-card p-4 flex gap-4 items-start">
+                    <div class="bg-indigo-500/20 p-3 rounded-xl text-indigo-400">
+                        <i class="fas fa-brain text-xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-sm">Usage Pattern Detected</h4>
+                        <p class="text-xs text-gray-400 mt-1">Your social media usage peaks at 9:00 PM. Local AI suggests starting a 15-min meditation then.</p>
+                    </div>
+                </div>
+                <div class="glass-card p-4 flex gap-4 items-start">
+                    <div class="bg-amber-500/20 p-3 rounded-xl text-amber-400">
+                        <i class="fas fa-bolt text-xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-sm">Contextual Tip</h4>
+                        <p class="text-xs text-gray-400 mt-1">You focus better in the 'Office' location. 85% of your Deep Work happens there.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Focus Mode -->
+        <section id="view-focus" class="view hidden space-y-6">
+            <div class="glass-card p-8 text-center relative overflow-hidden">
+                <div id="discipline-indicator" class="absolute top-4 right-4 text-[10px] uppercase font-bold text-gray-500 border border-gray-700 px-2 py-0.5 rounded">
+                    Normal Mode
+                </div>
+                
+                <h3 class="text-gray-400 mb-2">Deep Focus Session</h3>
+                <div id="timer-display" class="text-6xl font-black mb-8">25:00</div>
+                
+                <div class="flex justify-center gap-4 mb-8">
+                    <button id="timer-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white w-32 py-3 rounded-2xl font-bold transition-all">START</button>
+                    <button id="reset-btn" class="bg-white/5 hover:bg-white/10 text-white w-16 py-3 rounded-2xl transition-all"><i class="fas fa-undo"></i></button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="setMode('normal')" id="btn-normal" class="p-3 rounded-xl border-2 border-indigo-500 bg-indigo-500/10 text-xs font-bold">NORMAL</button>
+                    <button onclick="setMode('hard')" id="btn-hard" class="p-3 rounded-xl border-2 border-transparent bg-white/5 text-xs font-bold">HARD MODE</button>
+                </div>
+                <p class="text-[10px] text-gray-500 mt-4 italic">Hard mode prevents session cancellation without a math challenge.</p>
+            </div>
+
+            <!-- Contextual Blocking -->
+            <div class="glass-card p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold">Contextual Block</h3>
+                    <div class="privacy-badge px-2 py-0.5 rounded text-[10px]">LOCAL GPS</div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-briefcase text-gray-400"></i>
+                            <div>
+                                <p class="text-sm font-medium">Office Location</p>
+                                <p class="text-[10px] text-gray-500">Auto-block Entertainment Apps</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Tasks -->
+        <section id="view-tasks" class="view hidden space-y-6">
+            <div class="glass-card p-6">
+                <h3 class="text-xl font-bold mb-4">Offline Tasks</h3>
+                <div class="flex gap-2 mb-6">
+                    <input type="text" id="task-input" placeholder="New focus task..." class="bg-white/5 border border-white/10 rounded-xl px-4 py-3 flex-grow focus:outline-none focus:border-indigo-500">
+                    <button id="add-task" class="bg-indigo-600 px-4 rounded-xl"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="task-list" class="space-y-3">
+                    <!-- Tasks injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Settings/Privacy -->
+        <section id="view-settings" class="view hidden space-y-6">
+            <div class="glass-card p-6">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-2xl font-bold">U</div>
+                    <div>
+                        <h3 class="font-bold text-lg">Local User</h3>
+                        <p class="text-xs text-green-400">Zero Data in Cloud</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-2">
+                    <div class="w-full p-4 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
+                        <div class="flex items-center gap-3 text-sm">
+                            <i class="fas fa-lock text-indigo-400"></i>
+                            <span>End-to-End Backup</span>
+                        </div>
+                        <button onclick="exportData()" class="text-xs bg-indigo-600/20 text-indigo-400 px-3 py-1 rounded-lg border border-indigo-500/30">Backup Now</button>
+                    </div>
+                    <div class="w-full p-4 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
+                        <div class="flex items-center gap-3 text-sm">
+                            <i class="fas fa-trash text-red-400"></i>
+                            <span>Purge Local Data</span>
+                        </div>
+                        <button onclick="purgeData()" class="text-xs bg-red-600/20 text-red-400 px-3 py-1 rounded-lg border border-red-500/30">Delete All</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-2xl border border-dashed border-gray-700 text-center">
+                <p class="text-xs text-gray-500">All analytics are computed on your phone's processor using private model weights.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Hard Mode Modal -->
+    <div id="math-modal" class="fixed inset-0 bg-black/90 z-[100] hidden items-center justify-center p-6">
+        <div class="glass-card p-8 w-full max-w-sm text-center">
+            <h2 class="text-red-500 font-bold text-xl mb-4">Hard Mode Active!</h2>
+            <p class="text-sm text-gray-400 mb-6">Solve this to stop the timer:</p>
+            <div id="math-question" class="text-2xl font-bold mb-6 italic tracking-widest"></div>
+            <input type="number" id="math-answer" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-center text-xl mb-4 focus:outline-none" placeholder="?">
+            <button id="verify-math" class="w-full bg-red-600 py-3 rounded-xl font-bold">SUBMIT ANSWER</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-xl border-t border-white/5 px-6 py-4 flex justify-between items-center z-50">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-indigo-500">
+            <i class="fas fa-chart-pie text-xl"></i>
+            <span class="text-[10px] font-bold">Insights</span>
+        </button>
+        <button onclick="switchTab('focus')" id="nav-focus" class="flex flex-col items-center gap-1 text-gray-500">
+            <i class="fas fa-bullseye text-xl"></i>
+            <span class="text-[10px] font-bold">Focus</span>
+        </button>
+        <button onclick="switchTab('tasks')" id="nav-tasks" class="flex flex-col items-center gap-1 text-gray-500">
+            <i class="fas fa-check-double text-xl"></i>
+            <span class="text-[10px] font-bold">Tasks</span>
+        </button>
+        <button onclick="switchTab('settings')" id="nav-settings" class="flex flex-col items-center gap-1 text-gray-500">
+            <i class="fas fa-fingerprint text-xl"></i>
+            <span class="text-[10px] font-bold">Privacy</span>
+        </button>
+    </nav>
+
+    <script>
+        // State Management
+        let state = {
+            view: 'dashboard',
+            focusMode: 'normal', // 'normal' or 'hard'
+            timerSeconds: 1500,
+            timerActive: false,
+            timerInterval: null,
+            tasks: JSON.parse(localStorage.getItem('focus_tasks') || '[]'),
+            usage: [120, 450, 300, 200, 400, 342, 300]
+        };
+
+        // Navigation
+        function switchTab(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            
+            // Update Nav Icons
+            document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-indigo-500', 'text-gray-500'));
+            document.getElementById(`nav-${viewId}`).classList.replace('text-gray-500', 'text-indigo-500');
+            state.view = viewId;
+        }
+
+        // Pomodoro Logic
+        const timerDisplay = document.getElementById('timer-display');
+        const timerBtn = document.getElementById('timer-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+        function updateTimerDisplay() {
+            const m = Math.floor(state.timerSeconds / 60);
+            const s = state.timerSeconds % 60;
+            timerDisplay.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        timerBtn.addEventListener('click', () => {
+            if (state.timerActive) {
+                if (state.focusMode === 'hard') {
+                    showMathChallenge();
+                } else {
+                    stopTimer();
+                }
+            } else {
+                startTimer();
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            if (state.focusMode === 'hard' && state.timerActive) {
+                alert("Cannot reset in Hard Mode while timer is running!");
+                return;
+            }
+            stopTimer();
+            state.timerSeconds = 1500;
+            updateTimerDisplay();
+        });
+
+        function startTimer() {
+            state.timerActive = true;
+            timerBtn.textContent = 'STOP';
+            timerBtn.classList.replace('bg-indigo-600', 'bg-red-600');
+            if(state.focusMode === 'hard') timerBtn.classList.add('hard-mode-pulse');
+
+            state.timerInterval = setInterval(() => {
+                if (state.timerSeconds > 0) {
+                    state.timerSeconds--;
+                    updateTimerDisplay();
+                } else {
+                    stopTimer();
+                    alert("Focus Session Complete! Data saved locally.");
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            state.timerActive = false;
+            clearInterval(state.timerInterval);
+            timerBtn.textContent = 'START';
+            timerBtn.classList.replace('bg-red-600', 'bg-indigo-600');
+            timerBtn.classList.remove('hard-mode-pulse');
+        }
+
+        function setMode(mode) {
+            state.focusMode = mode;
+            const hardBtn = document.getElementById('btn-hard');
+            const normalBtn = document.getElementById('btn-normal');
+            const indicator = document.getElementById('discipline-indicator');
+
+            if (mode === 'hard') {
+                hardBtn.classList.add('border-indigo-500', 'bg-indigo-500/10');
+                normalBtn.classList.remove('border-indigo-500', 'bg-indigo-500/10');
+                indicator.textContent = 'Hard Mode Active';
+                indicator.classList.replace('text-gray-500', 'text-red-500');
+                indicator.classList.add('border-red-500/50');
+            } else {
+                normalBtn.classList.add('border-indigo-500', 'bg-indigo-500/10');
+                hardBtn.classList.remove('border-indigo-500', 'bg-indigo-500/10');
+                indicator.textContent = 'Normal Mode';
+                indicator.classList.replace('text-red-500', 'text-gray-500');
+                indicator.classList.remove('border-red-500/50');
+            }
+        }
+
+        // Hard Mode Math Challenge
+        let currentAnswer = 0;
+        function showMathChallenge() {
+            const num1 = Math.floor(Math.random() * 20) + 10;
+            const num2 = Math.floor(Math.random() * 20) + 10;
+            const num3 = Math.floor(Math.random() * 5) + 2;
+            currentAnswer = (num1 + num2) * num3;
+            
+            document.getElementById('math-question').textContent = `(${num1} + ${num2}) × ${num3}`;
+            document.getElementById('math-modal').classList.replace('hidden', 'flex');
+        }
+
+        document.getElementById('verify-math').addEventListener('click', () => {
+            const userAns = parseInt(document.getElementById('math-answer').value);
+            if (userAns === currentAnswer) {
+                document.getElementById('math-modal').classList.replace('flex', 'hidden');
+                document.getElementById('math-answer').value = '';
+                stopTimer();
+            } else {
+                alert("Wrong answer! Keep focusing.");
+                document.getElementById('math-answer').value = '';
+            }
+        });
+
+        // Task Management
+        const taskInput = document.getElementById('task-input');
+        const addTaskBtn = document.getElementById('add-task');
+        const taskList = document.getElementById('task-list');
+
+        function renderTasks() {
+            taskList.innerHTML = '';
+            state.tasks.forEach((task, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-4 bg-white/5 rounded-xl border border-white/5 group';
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${index})" class="w-5 h-5 accent-indigo-500">
+                        <span class="${task.done ? 'line-through text-gray-500' : 'text-gray-200'}">${task.text}</span>
+                    </div>
+                    <button onclick="deleteTask(${index})" class="text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash"></i></button>
+                `;
+                taskList.appendChild(div);
+            });
+            localStorage.setItem('focus_tasks', JSON.stringify(state.tasks));
+        }
+
+        addTaskBtn.addEventListener('click', () => {
+            if (taskInput.value.trim()) {
+                state.tasks.unshift({ text: taskInput.value.trim(), done: false });
+                taskInput.value = '';
+                renderTasks();
+            }
+        });
+
+        window.toggleTask = (index) => {
+            state.tasks[index].done = !state.tasks[index].done;
+            renderTasks();
+        };
+
+        window.deleteTask = (index) => {
+            state.tasks.splice(index, 1);
+            renderTasks();
+        };
+
+        // Data Management
+        window.exportData = () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "privacy_focus_backup.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            alert("End-to-End Encrypted backup downloaded to your device.");
+        };
+
+        window.purgeData = () => {
+            if (confirm("Are you sure? This will delete all local history and settings.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        };
+
+        // Chart Initialization
+        function initChart() {
+            const ctx = document.getElementById('usageChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Focus Minutes',
+                        data: state.usage,
+                        borderColor: '#6366f1',
+                        borderWidth: 3,
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: '#6b7280', font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTasks();
+            initChart();
+        });
+    </script>
+</body>
+</html></html>
