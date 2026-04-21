@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusHub | Productivity Filter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-glow {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+
+        .webview-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 50;
+            display: none;
+            flex-direction: column;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .focus-toggle:checked ~ .dot {
+            transform: translateX(100%);
+            background-color: #10b981;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-6 sm:p-12">
+
+    <!-- Header -->
+    <header class="w-full max-w-md mb-12 text-center">
+        <div class="inline-flex items-center justify-center p-3 mb-4 rounded-2xl bg-blue-600 bg-opacity-20 text-blue-400">
+            <i class="fas fa-shield-halved text-3xl"></i>
+        </div>
+        <h1 class="text-4xl font-bold tracking-tight text-white mb-2">FocusHub</h1>
+        <p class="text-slate-400 font-medium">Rewire your scrolling habits.</p>
+    </header>
+
+    <!-- Main Controls -->
+    <div class="w-full max-w-md space-y-4 mb-8">
+        <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+            <div class="flex flex-col">
+                <span class="text-sm font-semibold text-slate-200">Anti-Distraction Mode</span>
+                <span class="text-xs text-slate-500">Redirects to educational content</span>
+            </div>
+            <label for="focus-mode" class="flex items-center cursor-pointer">
+                <div class="relative">
+                    <input type="checkbox" id="focus-mode" class="sr-only focus-toggle" checked>
+                    <div class="block bg-slate-700 w-14 h-8 rounded-full"></div>
+                    <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
+                </div>
+            </label>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+            <div class="flex flex-col">
+                <span class="text-sm font-semibold text-slate-200">Smart Filter (WebView)</span>
+                <span class="text-xs text-slate-500">Injects custom CSS to hide Reels/Shorts</span>
+            </div>
+            <label for="webview-mode" class="flex items-center cursor-pointer">
+                <div class="relative">
+                    <input type="checkbox" id="webview-mode" class="sr-only focus-toggle">
+                    <div class="block bg-slate-700 w-14 h-8 rounded-full"></div>
+                    <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
+                </div>
+            </label>
+        </div>
+    </div>
+
+    <!-- Platforms List -->
+    <main id="platform-list" class="w-full max-w-md space-y-4">
+        
+        <!-- YouTube -->
+        <div class="glass-card p-5 rounded-3xl flex items-center gap-4">
+            <div class="w-14 h-14 flex items-center justify-center rounded-2xl bg-red-600 bg-opacity-10 text-red-500 text-2xl">
+                <i class="fab fa-youtube"></i>
+            </div>
+            <div class="flex-grow">
+                <h3 class="font-bold text-lg text-slate-100 uppercase tracking-wide">YouTube</h3>
+                <p class="text-xs text-slate-500">Coding & Science</p>
+            </div>
+            <button onclick="handleOpen('youtube')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-xl transition-all btn-glow uppercase text-sm tracking-tighter">
+                Open
+            </button>
+        </div>
+
+        <!-- Instagram -->
+        <div class="glass-card p-5 rounded-3xl flex items-center gap-4">
+            <div class="w-14 h-14 flex items-center justify-center rounded-2xl bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-600 bg-opacity-10 text-pink-500 text-2xl">
+                <i class="fab fa-instagram"></i>
+            </div>
+            <div class="flex-grow">
+                <h3 class="font-bold text-lg text-slate-100 uppercase tracking-wide">Instagram</h3>
+                <p class="text-xs text-slate-500">#CodingLife Feed</p>
+            </div>
+            <button onclick="handleOpen('instagram')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-xl transition-all btn-glow uppercase text-sm tracking-tighter">
+                Open
+            </button>
+        </div>
+
+        <!-- Facebook -->
+        <div class="glass-card p-5 rounded-3xl flex items-center gap-4">
+            <div class="w-14 h-14 flex items-center justify-center rounded-2xl bg-blue-700 bg-opacity-10 text-blue-500 text-2xl">
+                <i class="fab fa-facebook"></i>
+            </div>
+            <div class="flex-grow">
+                <h3 class="font-bold text-lg text-slate-100 uppercase tracking-wide">Facebook</h3>
+                <p class="text-xs text-slate-500">Tech Communities</p>
+            </div>
+            <button onclick="handleOpen('facebook')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-xl transition-all btn-glow uppercase text-sm tracking-tighter">
+                Open
+            </button>
+        </div>
+
+    </main>
+
+    <!-- WebView Simulation Overlay -->
+    <div id="webview-container" class="webview-overlay">
+        <div class="p-4 bg-slate-900 border-b border-slate-700 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <button onclick="closeWebView()" class="p-2 text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                <div class="flex flex-col">
+                    <span id="webview-title" class="text-sm font-bold">FocusHub Browser</span>
+                    <span id="webview-url" class="text-[10px] text-slate-500 truncate w-48">https://youtube.com/...</span>
+                </div>
+            </div>
+            <div class="flex gap-4 text-emerald-500 text-xs items-center">
+                <i class="fas fa-lock text-[10px]"></i> Clean Mode Active
+            </div>
+        </div>
+        <div class="flex-grow bg-white flex flex-col items-center justify-center relative overflow-hidden">
+            <div id="mock-loader" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center z-10">
+                <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p class="text-slate-400 text-sm">Stripping distractions...</p>
+            </div>
+            
+            <!-- Mock UI to demonstrate filtering -->
+            <div class="w-full h-full bg-slate-50 flex flex-col p-4 overflow-y-auto">
+                <div class="w-full h-40 bg-slate-200 rounded-lg mb-4 animate-pulse"></div>
+                <div class="h-6 w-3/4 bg-slate-300 rounded mb-2 animate-pulse"></div>
+                <div class="h-4 w-1/2 bg-slate-300 rounded mb-6 animate-pulse"></div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="h-32 bg-slate-200 rounded animate-pulse"></div>
+                    <div class="h-32 bg-slate-200 rounded animate-pulse"></div>
+                    <div class="h-32 bg-slate-200 rounded animate-pulse"></div>
+                    <div class="h-32 bg-slate-200 rounded animate-pulse"></div>
+                </div>
+
+                <div id="filter-notification" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full text-xs shadow-2xl border border-slate-700 whitespace-nowrap">
+                    <i class="fas fa-filter text-emerald-400 mr-2"></i> Custom Script: <span class="text-slate-400">display: none; for .shorts-container</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-12 text-slate-600 text-[10px] text-center uppercase tracking-[0.2em] max-w-xs">
+        &copy; 2023 FocusHub <br>
+        Curating focus through intent
+    </footer>
+
+    <script>
+        const config = {
+            youtube: {
+                deep: "youtube://www.youtube.com/results?search_query=educational+technology+science",
+                web: "https://www.youtube.com/results?search_query=educational+technology+science",
+                name: "YouTube",
+                blocked: [".ytd-rich-shelf-renderer", "#shorts-container", "#endpoint.yt-simple-endpoint.ytd-guide-entry-renderer[title='Shorts']"]
+            },
+            instagram: {
+                deep: "instagram://tag?name=codinglife",
+                web: "https://www.instagram.com/explore/tags/codinglife/",
+                name: "Instagram",
+                blocked: ["._aabd", "._aakw", "a[href*='/reels/']", "a[href*='/explore/']"]
+            },
+            facebook: {
+                deep: "fb://groups/scienceandtechnology",
+                web: "https://www.facebook.com/groups/search/groups/?q=science%20and%20technology",
+                name: "Facebook",
+                blocked: ["div[aria-label='Reels']", "div[aria-label='Stories']"]
+            }
+        };
+
+        function handleOpen(platform) {
+            const isFocusMode = document.getElementById('focus-mode').checked;
+            const isWebviewMode = document.getElementById('webview-mode').checked;
+            const settings = config[platform];
+
+            if (isWebviewMode) {
+                openWebView(platform);
+                return;
+            }
+
+            if (isFocusMode) {
+                // Attempt deep link then fallback
+                const start = Date.now();
+                window.location.href = settings.deep;
+                
+                setTimeout(() => {
+                    if (Date.now() - start < 2000) {
+                        window.open(settings.web, '_blank');
+                    }
+                }, 500);
+            } else {
+                // Warning if focus mode is off
+                if(confirm("Focus Mode is OFF. You might be exposed to addictive feeds. Proceed?")) {
+                    window.open(`https://www.${platform}.com`, '_blank');
+                }
+            }
+        }
+
+        function openWebView(platform) {
+            const container = document.getElementById('webview-container');
+            const title = document.getElementById('webview-title');
+            const urlText = document.getElementById('webview-url');
+            const loader = document.getElementById('mock-loader');
+            const settings = config[platform];
+
+            title.innerText = `FocusHub | ${settings.name} Isolated`;
+            urlText.innerText = settings.web;
+            container.style.display = 'flex';
+            loader.style.display = 'flex';
+
+            // Simulate script injection and loading
+            setTimeout(() => {
+                loader.style.display = 'none';
+                console.log(`FocusHub: Injected CSS to hide: ${settings.blocked.join(', ')}`);
+            }, 1800);
+        }
+
+        function closeWebView() {
+            document.getElementById('webview-container').style.display = 'none';
+        }
+
+        // Add visual feedback to buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => btn.style.transform = 'scale(0.95)');
+            btn.addEventListener('mouseup', () => btn.style.transform = 'scale(1)');
+        });
+    </script>
+</body>
+</html></html>
