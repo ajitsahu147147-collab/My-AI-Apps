@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppGen | Professional Web-to-PWA Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .dark .glass { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .step-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .phone-mockup { width: 280px; height: 560px; border: 8px solid #1e293b; border-radius: 36px; position: relative; overflow: hidden; background: #000; }
+        .app-icon-preview { width: 80px; height: 80px; border-radius: 18px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .pulsate { animation: pulsate 2s infinite; }
+        @keyframes pulsate { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-300">
+    
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 top-0 px-6 py-4 flex justify-between items-center glass">
+        <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">A</div>
+            <span class="text-xl font-bold tracking-tight">AppGen</span>
+        </div>
+        <div class="flex items-center space-x-6">
+            <span class="hidden md:block text-xs font-medium px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full">● Local Engine Active</span>
+            <button id="themeToggle" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
+                <svg id="sunIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path></svg>
+                <svg id="moonIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-12 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        
+        <!-- Configuration Column -->
+        <div class="lg:col-span-7 space-y-8">
+            <header>
+                <h1 class="text-4xl font-extrabold tracking-tight mb-2">Deploy your web app. <span class="text-indigo-600">Instantly.</span></h1>
+                <p class="text-slate-500 dark:text-slate-400 text-lg">Turn any website into a high-performance PWA. 100% private, client-side processing.</p>
+            </header>
+
+            <!-- Steps Container -->
+            <div id="configForm" class="space-y-6">
+                
+                <!-- Step 1: Core Details -->
+                <div class="glass p-6 rounded-3xl shadow-sm space-y-4">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="w-6 h-6 flex items-center justify-center bg-indigo-600 text-white rounded-full text-xs">1</span>
+                        <h2 class="font-semibold text-lg">Core Configuration</h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">App Name</label>
+                            <input type="text" id="appName" placeholder="e.g. My Dashboard" class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Target URL</label>
+                            <input type="url" id="appUrl" placeholder="https://example.com" class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Custom Branding -->
+                <div class="glass p-6 rounded-3xl shadow-sm space-y-4">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="w-6 h-6 flex items-center justify-center bg-indigo-600 text-white rounded-full text-xs">2</span>
+                        <h2 class="font-semibold text-lg">Visual Branding</h2>
+                    </div>
+                    <div class="flex flex-wrap gap-6 items-center">
+                        <div class="relative group">
+                            <input type="file" id="iconUpload" accept="image/*" class="hidden">
+                            <label for="iconUpload" class="cursor-pointer flex flex-col items-center justify-center w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 transition-all">
+                                <div id="iconPlaceholder" class="flex flex-col items-center">
+                                    <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                    <span class="text-[10px] mt-1 text-slate-500 font-bold">ICON</span>
+                                </div>
+                                <img id="iconPreview" src="" class="hidden w-full h-full object-cover rounded-2xl">
+                            </label>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Splash Background</label>
+                            <div class="flex items-center space-x-4">
+                                <input type="color" id="themeColor" value="#4f46e5" class="w-12 h-12 rounded-lg cursor-pointer bg-transparent border-none">
+                                <span id="colorHex" class="font-mono text-sm text-slate-500 uppercase">#4f46e5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Performance & Features -->
+                <div class="glass p-6 rounded-3xl shadow-sm space-y-4">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="w-6 h-6 flex items-center justify-center bg-indigo-600 text-white rounded-full text-xs">3</span>
+                        <h2 class="font-semibold text-lg">App Capabilities</h2>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-center justify-between p-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 cursor-pointer">
+                            <span class="text-sm font-medium">Offline Support (Caching)</span>
+                            <input type="checkbox" id="offlineMode" checked class="w-5 h-5 accent-indigo-600">
+                        </label>
+                        <label class="flex items-center justify-between p-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 cursor-pointer">
+                            <span class="text-sm font-medium">Native Share Intent</span>
+                            <input type="checkbox" id="shareMode" class="w-5 h-5 accent-indigo-600">
+                        </label>
+                        <label class="flex items-center justify-between p-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 cursor-pointer">
+                            <span class="text-sm font-medium">Push Notification Ready</span>
+                            <input type="checkbox" id="pushNotif" class="w-5 h-5 accent-indigo-600">
+                        </label>
+                    </div>
+                </div>
+
+                <button id="generateBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-500/30 transition-all transform active:scale-[0.98] flex items-center justify-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span>Build My App Package</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Preview Column -->
+        <div class="lg:col-span-5 flex flex-col items-center justify-start pt-12">
+            <div class="sticky top-28 flex flex-col items-center">
+                <p class="text-xs font-bold text-slate-400 mb-6 uppercase tracking-[0.2em]">Real-time Preview</p>
+                <div class="phone-mockup shadow-2xl">
+                    <!-- Status Bar -->
+                    <div class="absolute top-0 w-full px-6 py-3 flex justify-between items-center z-10 text-white text-[10px] font-bold">
+                        <span>9:41</span>
+                        <div class="flex items-center space-x-1">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path></svg>
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M17.944 11c-.478-3.133-3.221-5.5-6.444-5.5S5.534 7.867 5.056 11h12.888zM13 2a1 1 0 10-6 0 1 1 0 006 0zm-4 6a1 1 0 100 2 1 1 0 000-2zm4 0a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path></svg>
+                        </div>
+                    </div>
+
+                    <!-- Screen Content -->
+                    <div id="phoneScreen" class="w-full h-full bg-slate-900 transition-colors duration-500 flex flex-col items-center justify-center p-8">
+                        <div id="mockAppIcon" class="app-icon-preview bg-indigo-600 flex items-center justify-center mb-6 overflow-hidden">
+                            <span id="mockLetter" class="text-white text-3xl font-bold">A</span>
+                            <img id="mockImg" src="" class="hidden w-full h-full object-cover">
+                        </div>
+                        <h3 id="mockName" class="text-white text-xl font-bold mb-1">My Dashboard</h3>
+                        <p id="mockStatus" class="text-indigo-300 text-xs animate-pulse">Initializing...</p>
+                    </div>
+
+                    <!-- Home Indicator -->
+                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/20 rounded-full"></div>
+                </div>
+                
+                <div class="mt-8 glass p-4 rounded-2xl w-full max-w-[280px]">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                        <span class="text-[10px] font-bold uppercase text-slate-400">Security Audit</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-2">Zero servers involved. Your application assets are generated purely in-browser and never leave your device.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for Result -->
+    <div id="resultModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center px-4 bg-slate-950/80 backdrop-blur-sm">
+        <div class="glass w-full max-w-2xl rounded-[2.5rem] p-8 space-y-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="text-2xl font-bold">Generation Complete</h2>
+                    <p class="text-slate-500">Your PWA bundle is ready for deployment.</p>
+                </div>
+                <button onclick="toggleModal()" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-slate-900 text-indigo-400 p-4 rounded-2xl font-mono text-xs overflow-x-auto no-scrollbar">
+                    <p>// 1. Add this to your HTML &lt;head&gt;</p>
+                    <p id="headCode" class="text-slate-300 mt-2"></p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button id="downloadManifest" class="flex items-center justify-center space-x-2 bg-indigo-600 text-white p-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>manifest.json</span>
+                    </button>
+                    <button id="downloadSW" class="flex items-center justify-center space-x-2 bg-slate-800 text-white p-4 rounded-2xl font-bold hover:bg-slate-900 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>sw.js</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
+                <h4 class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase mb-1">Quick Instructions</h4>
+                <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-400">Upload these files to your website's root directory. The PWA will automatically become installable on Chrome, Safari, and Edge. No further configuration needed.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Management
+        const themeToggle = document.getElementById('themeToggle');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        let isDark = true;
+
+        function toggleTheme() {
+            isDark = !isDark;
+            document.documentElement.classList.toggle('dark', isDark);
+            sunIcon.classList.toggle('hidden', !isDark);
+            moonIcon.classList.toggle('hidden', isDark);
+        }
+        themeToggle.addEventListener('click', toggleTheme);
+        toggleTheme(); // Default dark
+
+        // Form Inputs & Preview Logic
+        const appNameInput = document.getElementById('appName');
+        const appUrlInput = document.getElementById('appUrl');
+        const themeColorInput = document.getElementById('themeColor');
+        const iconUpload = document.getElementById('iconUpload');
+        
+        const mockName = document.getElementById('mockName');
+        const mockLetter = document.getElementById('mockLetter');
+        const mockImg = document.getElementById('mockImg');
+        const phoneScreen = document.getElementById('phoneScreen');
+        const mockAppIcon = document.getElementById('mockAppIcon');
+        const colorHex = document.getElementById('colorHex');
+
+        appNameInput.addEventListener('input', (e) => {
+            const val = e.target.value || "My Dashboard";
+            mockName.textContent = val;
+            mockLetter.textContent = val.charAt(0).toUpperCase();
+        });
+
+        themeColorInput.addEventListener('input', (e) => {
+            const color = e.target.value;
+            phoneScreen.style.backgroundColor = color;
+            mockAppIcon.style.backgroundColor = color;
+            colorHex.textContent = color;
+            mockStatus.style.color = getContrastYIQ(color);
+            mockName.style.color = getContrastYIQ(color);
+        });
+
+        iconUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('iconPreview').src = event.target.result;
+                    document.getElementById('iconPreview').classList.remove('hidden');
+                    document.getElementById('iconPlaceholder').classList.add('hidden');
+                    mockImg.src = event.target.result;
+                    mockImg.classList.remove('hidden');
+                    mockLetter.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function getContrastYIQ(hexcolor){
+            hexcolor = hexcolor.replace("#", "");
+            var r = parseInt(hexcolor.substr(0,2),16);
+            var g = parseInt(hexcolor.substr(2,2),16);
+            var b = parseInt(hexcolor.substr(4,2),16);
+            var yiq = ((r*299)+(g*587)+(b*114))/1000;
+            return (yiq >= 128) ? '#0f172a' : '#ffffff';
+        }
+
+        // Bundle Generation Logic
+        const generateBtn = document.getElementById('generateBtn');
+        const modal = document.getElementById('resultModal');
+        const headCode = document.getElementById('headCode');
+
+        function toggleModal() {
+            modal.classList.toggle('hidden');
+        }
+
+        generateBtn.addEventListener('click', () => {
+            const appName = appNameInput.value || "AppGen PWA";
+            const appUrl = appUrlInput.value || window.location.origin;
+            const themeColor = themeColorInput.value;
+
+            // Generate Manifest JSON
+            const manifest = {
+                "name": appName,
+                "short_name": appName,
+                "start_url": appUrl,
+                "display": "standalone",
+                "background_color": themeColor,
+                "theme_color": themeColor,
+                "icons": [
+                    {
+                        "src": "icon.png",
+                        "sizes": "192x192",
+                        "type": "image/png"
+                    },
+                    {
+                        "src": "icon.png",
+                        "sizes": "512x512",
+                        "type": "image/png"
+                    }
+                ]
+            };
+
+            // Generate Service Worker
+            const sw = `
+const CACHE_NAME = '${appName.toLowerCase().replace(/\s+/g, '-')}-v1';
+const ASSETS = [
+    '/',
+    '/index.html',
+    '/manifest.json'
+];
+
+self.addEventListener('install', (e) => {
+    e.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    );
+});
+
+self.addEventListener('fetch', (e) => {
+    e.respondWith(
+        caches.match(e.request).then((res) => res || fetch(e.request))
+    );
+});`;
+
+            // Display in Modal
+            headCode.innerText = `<link rel="manifest" href="manifest.json">\n<meta name="theme-color" content="${themeColor}">\n<script>\n if('serviceWorker' in navigator) {\n  navigator.serviceWorker.register('sw.js');\n }\n<\/script>`;
+            
+            // Set up download buttons
+            setupDownload(document.getElementById('downloadManifest'), JSON.stringify(manifest, null, 2), 'manifest.json');
+            setupDownload(document.getElementById('downloadSW'), sw, 'sw.js');
+
+            toggleModal();
+        });
+
+        function setupDownload(btn, content, filename) {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            btn.onclick = () => {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+            };
+        }
+
+        // Initialize preview animation
+        const mockStatus = document.getElementById('mockStatus');
+        const statuses = ["Syncing cache...", "Updating assets...", "Ready for offline", "Connected"];
+        let statusIdx = 0;
+        setInterval(() => {
+            statusIdx = (statusIdx + 1) % statuses.length;
+            mockStatus.textContent = statuses[statusIdx];
+        }, 3000);
+    </script>
+</body>
+</html></html>
