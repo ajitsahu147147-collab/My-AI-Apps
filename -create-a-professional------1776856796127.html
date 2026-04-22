@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NativeWeb | Professional Web-to-App Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .iphone-mockup { width: 280px; height: 580px; border: 8px solid #334155; border-radius: 40px; position: relative; overflow: hidden; background: #000; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .status-bar { height: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; align-items: center; font-size: 10px; }
+        .app-preview-content { height: calc(100% - 30px); width: 100%; background: #fff; border-radius: 0 0 32px 32px; overflow: hidden; position: relative; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .gradient-text { background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .loader { border-top-color: #60a5fa; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <nav class="border-b border-slate-800 bg-slate-900/50 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <i data-lucide="layers" class="w-5 h-5 text-white"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight">Native<span class="text-blue-500">Web</span></span>
+            </div>
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+                <a href="#" class="hover:text-white transition-colors">Features</a>
+                <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-white transition-colors">Documentation</a>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-xs bg-green-500/10 text-green-400 px-3 py-1 rounded-full border border-green-500/20 font-medium">100% Private</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-6 py-12">
+        <div class="grid lg:grid-cols-12 gap-12">
+            
+            <!-- Left: Configuration Form -->
+            <div class="lg:col-span-7 space-y-8">
+                <div>
+                    <h1 class="text-4xl font-bold mb-4">Transform any Website into a <span class="gradient-text">Native App</span></h1>
+                    <p class="text-slate-400 text-lg">Generate high-performance Progressive Web Apps with offline support, custom branding, and zero tracking.</p>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex gap-1 bg-slate-800/50 p-1 rounded-xl w-fit">
+                    <button onclick="switchTab('general')" id="tab-btn-general" class="px-6 py-2 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white shadow-lg">General</button>
+                    <button onclick="switchTab('appearance')" id="tab-btn-appearance" class="px-6 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white">Appearance</button>
+                    <button onclick="switchTab('capabilities')" id="tab-btn-capabilities" class="px-6 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white">Capabilities</button>
+                </div>
+
+                <div class="glass rounded-2xl p-8 space-y-6">
+                    <!-- Tab: General -->
+                    <div id="tab-general" class="tab-content active space-y-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-slate-300">App Name</label>
+                                <input type="text" id="app-name" placeholder="My Awesome App" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all" oninput="updatePreview()">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-slate-300">Short Name</label>
+                                <input type="text" id="app-short-name" placeholder="App" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-slate-300">Website URL (HTTPS Required)</label>
+                            <input type="url" id="app-url" placeholder="https://yourwebsite.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all" oninput="updatePreview()">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-slate-300">Description</label>
+                            <textarea id="app-desc" rows="3" placeholder="Explain what your app does..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Appearance -->
+                    <div id="tab-appearance" class="tab-content space-y-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-slate-300">Theme Color</label>
+                                <div class="flex gap-3">
+                                    <input type="color" id="theme-color" value="#2563eb" class="h-12 w-20 bg-slate-900 border border-slate-700 rounded-lg cursor-pointer" oninput="updatePreview()">
+                                    <input type="text" id="theme-color-hex" value="#2563eb" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm" readonly>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-slate-300">Background Color</label>
+                                <div class="flex gap-3">
+                                    <input type="color" id="bg-color" value="#ffffff" class="h-12 w-20 bg-slate-900 border border-slate-700 rounded-lg cursor-pointer" oninput="updatePreview()">
+                                    <input type="text" id="bg-color-hex" value="#ffffff" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <label class="text-sm font-medium text-slate-300">App Icon (512x512 recommended)</label>
+                            <div class="border-2 border-dashed border-slate-700 rounded-2xl p-8 text-center hover:border-blue-500 transition-colors cursor-pointer group" onclick="document.getElementById('icon-upload').click()">
+                                <input type="file" id="icon-upload" class="hidden" accept="image/*" onchange="handleIconUpload(event)">
+                                <div id="icon-placeholder" class="flex flex-col items-center">
+                                    <i data-lucide="image-plus" class="w-10 h-10 text-slate-500 mb-2 group-hover:text-blue-500"></i>
+                                    <p class="text-sm text-slate-400">Click to upload brand icon</p>
+                                </div>
+                                <div id="icon-preview-container" class="hidden flex flex-col items-center">
+                                    <img id="icon-preview-img" class="w-20 h-20 rounded-2xl shadow-xl mb-2 object-cover" src="">
+                                    <p class="text-xs text-blue-400">Icon uploaded successfully</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-slate-300">Display Mode</label>
+                            <select id="display-mode" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                                <option value="standalone">Standalone (Native Feel)</option>
+                                <option value="fullscreen">Fullscreen</option>
+                                <option value="minimal-ui">Minimal UI</option>
+                                <option value="browser">Browser</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Capabilities -->
+                    <div id="tab-capabilities" class="tab-content space-y-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-slate-900/50 rounded-xl border border-slate-700">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center">
+                                        <i data-lucide="wifi-off" class="w-5 h-5 text-purple-400"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium">Offline Support</h4>
+                                        <p class="text-xs text-slate-500">Enable service worker caching</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="offline-mode" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 bg-slate-900/50 rounded-xl border border-slate-700">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 bg-orange-500/10 rounded-lg flex items-center justify-center">
+                                        <i data-lucide="bell" class="w-5 h-5 text-orange-400"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium">Push Notifications</h4>
+                                        <p class="text-xs text-slate-500">Enable system-level alerts</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="push-notif" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 bg-slate-900/50 rounded-xl border border-slate-700">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                                        <i data-lucide="mouse-pointer" class="w-5 h-5 text-blue-400"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium">Splash Screen</h4>
+                                        <p class="text-xs text-slate-500">Auto-generate boot sequence</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="splash-screen" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <button onclick="generateApp()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-2xl shadow-xl shadow-blue-900/20 flex items-center justify-center gap-3 transition-all transform active:scale-95">
+                    <i data-lucide="download" class="w-5 h-5"></i>
+                    Build and Download App Package
+                </button>
+                <p class="text-center text-slate-500 text-sm">No servers. No tracking. Pure client-side generation.</p>
+            </div>
+
+            <!-- Right: Live Preview -->
+            <div class="lg:col-span-5 flex flex-col items-center">
+                <div class="sticky top-24">
+                    <p class="text-slate-400 text-sm font-medium mb-6 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        Live Native Preview
+                    </p>
+                    
+                    <div class="iphone-mockup">
+                        <div class="status-bar text-black" id="preview-status-bar">
+                            <span id="preview-time">9:41</span>
+                            <div class="flex gap-1.5 items-center">
+                                <i data-lucide="signal" class="w-3 h-3"></i>
+                                <i data-lucide="wifi" class="w-3 h-3"></i>
+                                <i data-lucide="battery" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <div class="app-preview-content" id="preview-screen">
+                            <!-- Splash Preview -->
+                            <div id="preview-splash" class="absolute inset-0 z-20 flex flex-col items-center justify-center transition-all duration-700">
+                                <img id="preview-icon-small" src="https://via.placeholder.com/150" class="w-24 h-24 rounded-3xl shadow-2xl mb-4">
+                                <h3 id="preview-name" class="text-xl font-bold text-gray-800">My App</h3>
+                                <div class="absolute bottom-12">
+                                    <div class="loader w-6 h-6 border-2 border-slate-200 rounded-full"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Web Preview Mock -->
+                            <div id="preview-web" class="absolute inset-0 z-10 flex flex-col opacity-0">
+                                <div id="preview-header" class="h-14 flex items-center px-4 justify-between border-b bg-white">
+                                    <i data-lucide="menu" class="w-5 h-5 text-gray-400"></i>
+                                    <span class="text-xs font-semibold text-gray-400 truncate max-w-[150px]" id="preview-url-text">yourwebsite.com</span>
+                                    <i data-lucide="share" class="w-5 h-5 text-gray-400"></i>
+                                </div>
+                                <div class="flex-1 bg-gray-50 p-4 space-y-4">
+                                    <div class="h-32 w-full bg-slate-200 rounded-xl animate-pulse"></div>
+                                    <div class="space-y-2">
+                                        <div class="h-4 w-3/4 bg-slate-200 rounded-md"></div>
+                                        <div class="h-4 w-1/2 bg-slate-200 rounded-md"></div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="h-20 bg-slate-200 rounded-xl"></div>
+                                        <div class="h-20 bg-slate-200 rounded-xl"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-center gap-4">
+                        <button onclick="simulateBoot()" class="text-xs bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full border border-slate-700 transition-colors">
+                            Restart Preview
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Overlay Loader -->
+    <div id="global-loader" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] hidden items-center justify-center flex-col">
+        <div class="loader w-12 h-12 border-4 border-slate-700 border-t-blue-500 rounded-full mb-4"></div>
+        <p class="text-lg font-medium text-white" id="loader-text">Compiling assets...</p>
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // State
+        let uploadedIconData = null;
+
+        // Tab Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('[id^="tab-btn-"]').forEach(el => {
+                el.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+                el.classList.add('text-slate-400');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            const btn = document.getElementById(`tab-btn-${tabId}`);
+            btn.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
+            btn.classList.remove('text-slate-400');
+        }
+
+        // Real-time Preview Updates
+        function updatePreview() {
+            const name = document.getElementById('app-name').value || 'My Awesome App';
+            const url = document.getElementById('app-url').value || 'yourwebsite.com';
+            const themeColor = document.getElementById('theme-color').value;
+            const bgColor = document.getElementById('bg-color').value;
+
+            document.getElementById('preview-name').innerText = name;
+            document.getElementById('preview-url-text').innerText = url.replace(/^https?:\/\//, '');
+            document.getElementById('theme-color-hex').value = themeColor.toUpperCase();
+            document.getElementById('bg-color-hex').value = bgColor.toUpperCase();
+            
+            document.getElementById('preview-splash').style.backgroundColor = bgColor;
+            
+            // Determine if text should be light or dark based on background
+            const isDark = isColorDark(bgColor);
+            document.getElementById('preview-name').style.color = isDark ? '#ffffff' : '#1e293b';
+        }
+
+        function isColorDark(color) {
+            const hex = color.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            return brightness < 155;
+        }
+
+        function handleIconUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedIconData = e.target.result;
+                    document.getElementById('icon-placeholder').classList.add('hidden');
+                    document.getElementById('icon-preview-container').classList.remove('hidden');
+                    document.getElementById('icon-preview-img').src = uploadedIconData;
+                    document.getElementById('preview-icon-small').src = uploadedIconData;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function simulateBoot() {
+            const splash = document.getElementById('preview-splash');
+            const web = document.getElementById('preview-web');
+            
+            splash.style.opacity = '1';
+            splash.style.display = 'flex';
+            web.style.opacity = '0';
+            
+            setTimeout(() => {
+                splash.style.opacity = '0';
+                web.style.opacity = '1';
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                }, 700);
+            }, 2500);
+        }
+
+        async function generateApp() {
+            const loader = document.getElementById('global-loader');
+            const loaderText = document.getElementById('loader-text');
+            loader.style.display = 'flex';
+            
+            try {
+                const appName = document.getElementById('app-name').value || 'My App';
+                const shortName = document.getElementById('app-short-name').value || 'App';
+                const appUrl = document.getElementById('app-url').value || 'https://example.com';
+                const themeColor = document.getElementById('theme-color').value;
+                const bgColor = document.getElementById('bg-color').value;
+                const displayMode = document.getElementById('display-mode').value;
+                const isOffline = document.getElementById('offline-mode').checked;
+
+                const zip = new JSZip();
+
+                // 1. Generate manifest.json
+                const manifest = {
+                    "name": appName,
+                    "short_name": shortName,
+                    "start_url": appUrl,
+                    "display": displayMode,
+                    "background_color": bgColor,
+                    "theme_color": themeColor,
+                    "icons": [
+                        {
+                            "src": "icon-512.png",
+                            "sizes": "512x512",
+                            "type": "image/png",
+                            "purpose": "any maskable"
+                        }
+                    ]
+                };
+                zip.file("manifest.json", JSON.stringify(manifest, null, 2));
+
+                // 2. Generate Service Worker
+                let swContent = `
+const CACHE_NAME = '${shortName.toLowerCase()}-cache-v1';
+const urlsToCache = ['/'];
+
+self.addEventListener('install', event => {
+    event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
+});
+
+self.addEventListener('fetch', event => {
+    event.respondWith(
+        caches.match(event.request).then(response => response || fetch(event.request))
+    );
+});`;
+                if (isOffline) {
+                    zip.file("sw.js", swContent);
+                }
+
+                // 3. Generate HTML Snippet for Implementation
+                const snippet = `
+<!-- Add these to your <head> section -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="${themeColor}">
+<link rel="apple-touch-icon" href="/icon-512.png">
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js');
+    });
+  }
+<\/script>`;
+                zip.file("INSTALL_GUIDE.html", `
+                    <html><body style="font-family:sans-serif; padding:40px; line-height:1.6;">
+                    <h1>Installation Guide for ${appName}</h1>
+                    <p>1. Upload <b>manifest.json</b>, <b>sw.js</b>, and <b>icon-512.png</b> to your website's root directory.</p>
+                    <p>2. Add the following code to your index.html head section:</p>
+                    <pre style="background:#f4f4f4; pading:20px; border-radius:8px;">${snippet.replace(/</g, '&lt;')}</pre>
+                    </body></html>
+                `);
+
+                // 4. Handle Icon (Using a placeholder if none uploaded)
+                const iconBlob = uploadedIconData ? 
+                    await (await fetch(uploadedIconData)).blob() : 
+                    await (await fetch('https://via.placeholder.com/512/2563eb/ffffff?text=' + shortName)).blob();
+                
+                zip.file("icon-512.png", iconBlob);
+
+                // Export ZIP
+                loaderText.innerText = "Finalizing package...";
+                const content = await zip.generateAsync({type:"blob"});
+                const downloadLink = document.createElement("a");
+                downloadLink.href = URL.createObjectURL(content);
+                downloadLink.download = `${shortName.toLowerCase()}-pwa-package.zip`;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    alert("App package generated successfully! Check your downloads.");
+                }, 1000);
+
+            } catch (err) {
+                console.error(err);
+                alert("An error occurred during generation.");
+                loader.style.display = 'none';
+            }
+        }
+
+        // Set initial time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('preview-time').innerText = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+        }
+        
+        setInterval(updateTime, 1000);
+        updateTime();
+        updatePreview();
+        simulateBoot();
+    </script>
+</body>
+</html></html>
