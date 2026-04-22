@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web2App Pro | Professional PWA Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#f5f7ff',
+                            100: '#ebf0fe',
+                            200: '#ced9fd',
+                            300: '#b1c2fb',
+                            400: '#7695f8',
+                            500: '#3b68f5',
+                            600: '#355ddd',
+                            700: '#2c4eb9',
+                            800: '#233e94',
+                            900: '#1d3379',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .phone-mockup { width: 300px; height: 600px; border: 8px solid #334155; border-radius: 40px; position: relative; background: #000; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .phone-screen { height: 100%; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3b68f5; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="font-sans antialiased">
+
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-50 glass border-b border-slate-800 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center font-bold text-white italic">W</div>
+                <span class="text-xl font-bold tracking-tight">Web2App<span class="text-brand-500">Pro</span></span>
+            </div>
+            <nav class="hidden md:flex space-x-8 text-sm font-medium text-slate-400">
+                <a href="#" class="hover:text-white transition">Features</a>
+                <a href="#" class="hover:text-white transition">Privacy</a>
+                <a href="#" class="hover:text-white transition">Documentation</a>
+            </nav>
+            <div class="flex items-center space-x-4">
+                <span class="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded-full border border-slate-700">v2.4 Stable</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-24 pb-12 px-4 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- UI Control Panel -->
+        <div class="lg:col-span-8 space-y-6">
+            <div class="glass rounded-3xl p-8">
+                <div class="flex items-center space-x-4 mb-8 overflow-x-auto pb-2 custom-scrollbar">
+                    <button onclick="switchTab('general')" id="btn-general" class="tab-btn px-4 py-2 rounded-full text-sm font-medium bg-brand-500 text-white transition-all whitespace-nowrap">1. App Details</button>
+                    <button onclick="switchTab('branding')" id="btn-branding" class="tab-btn px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:bg-slate-800 transition-all whitespace-nowrap">2. Branding</button>
+                    <button onclick="switchTab('offline')" id="btn-offline" class="tab-btn px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:bg-slate-800 transition-all whitespace-nowrap">3. Capabilities</button>
+                    <button onclick="switchTab('build')" id="btn-build" class="tab-btn px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:bg-slate-800 transition-all whitespace-nowrap">4. Export</button>
+                </div>
+
+                <div id="tab-general" class="tab-content active">
+                    <h2 class="text-2xl font-bold mb-2">General Information</h2>
+                    <p class="text-slate-400 mb-6">Enter the base details for your application. No data leaves your browser.</p>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">App Name</label>
+                                <input type="text" id="app-name" placeholder="My Awesome App" oninput="updatePreview()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1">Short Name</label>
+                                <input type="text" id="app-short-name" placeholder="App" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-1">URL (Web Address)</label>
+                            <input type="url" id="app-url" placeholder="https://yourwebsite.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-1">Description</label>
+                            <textarea id="app-desc" rows="3" placeholder="Describe what your app does..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500 transition"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-branding" class="tab-content">
+                    <h2 class="text-2xl font-bold mb-2">Branding & Icons</h2>
+                    <p class="text-slate-400 mb-6">Customize how your app looks on the home screen and during startup.</p>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-3">App Icon (PNG/SVG)</label>
+                                <div class="flex items-center space-x-4">
+                                    <div id="icon-preview-box" class="w-20 h-20 bg-slate-800 rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-700 overflow-hidden">
+                                        <svg id="icon-placeholder" class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <img id="user-icon" src="#" class="hidden w-full h-full object-cover">
+                                    </div>
+                                    <input type="file" id="icon-upload" accept="image/*" class="hidden" onchange="handleIconUpload(this)">
+                                    <button onclick="document.getElementById('icon-upload').click()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-sm transition">Upload Icon</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-3">Theme Color</label>
+                                <div class="flex items-center space-x-4">
+                                    <input type="color" id="theme-color" value="#3b68f5" oninput="updatePreview()" class="w-12 h-12 bg-transparent border-none cursor-pointer">
+                                    <span class="text-slate-300 font-mono text-sm" id="theme-color-hex">#3b68f5</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-3">Splash Screen Style</label>
+                            <div class="grid grid-cols-3 gap-4">
+                                <button onclick="setSplash('minimal')" class="p-3 rounded-xl border-2 border-brand-500 bg-brand-500/10 text-xs font-bold text-center">Minimalist</button>
+                                <button onclick="setSplash('centered')" class="p-3 rounded-xl border border-slate-700 bg-slate-800 hover:border-slate-500 text-xs font-bold text-center transition">Centered Logo</button>
+                                <button onclick="setSplash('full')" class="p-3 rounded-xl border border-slate-700 bg-slate-800 hover:border-slate-500 text-xs font-bold text-center transition">Full Brand</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-offline" class="tab-content">
+                    <h2 class="text-2xl font-bold mb-2">Advanced Capabilities</h2>
+                    <p class="text-slate-400 mb-6">Enable powerful native-like features for your web application.</p>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-2xl border border-slate-700">
+                            <div>
+                                <h3 class="font-semibold">Offline Support</h3>
+                                <p class="text-xs text-slate-400">Uses Service Workers to cache your app for offline use.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="offline-toggle" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-2xl border border-slate-700">
+                            <div>
+                                <h3 class="font-semibold">Push Notifications</h3>
+                                <p class="text-xs text-slate-400">Configure Web Push API to send re-engagement alerts.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="push-toggle" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-2xl border border-slate-700">
+                            <div>
+                                <h3 class="font-semibold">Full Screen (Standalone)</h3>
+                                <p class="text-xs text-slate-400">Removes browser UI for a true native app experience.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="fullscreen-toggle" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-build" class="tab-content">
+                    <h2 class="text-2xl font-bold mb-2">Build & Export</h2>
+                    <p class="text-slate-400 mb-6">Generate your professional application package.</p>
+                    <div id="pre-build-view">
+                        <div class="bg-brand-500/10 border border-brand-500/30 rounded-2xl p-6 mb-6">
+                            <h4 class="font-bold text-brand-400 mb-2">Ready for deployment!</h4>
+                            <p class="text-sm text-slate-300">Your configuration is complete. We will generate the manifest.json, service-worker.js, and installation instructions.</p>
+                        </div>
+                        <button onclick="generateBuild()" class="w-full bg-brand-500 hover:bg-brand-600 py-4 rounded-xl font-bold text-lg transition shadow-lg shadow-brand-500/20">Generate App Package</button>
+                    </div>
+                    <div id="post-build-view" class="hidden space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-bold">Manifest.json</h4>
+                            <button onclick="copyToClipboard('manifest-code')" class="text-xs text-brand-400 hover:underline">Copy Code</button>
+                        </div>
+                        <pre class="bg-slate-900 p-4 rounded-xl text-xs font-mono text-slate-300 overflow-x-auto border border-slate-700" id="manifest-code"></pre>
+                        
+                        <div class="flex items-center justify-between pt-4">
+                            <h4 class="font-bold">Service-Worker.js</h4>
+                            <button onclick="copyToClipboard('sw-code')" class="text-xs text-brand-400 hover:underline">Copy Code</button>
+                        </div>
+                        <pre class="bg-slate-900 p-4 rounded-xl text-xs font-mono text-slate-300 overflow-x-auto border border-slate-700" id="sw-code"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-center space-x-8 py-6 grayscale opacity-50">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Progressive_Web_Apps_Logo.svg" alt="PWA" class="h-8">
+                <span class="font-bold text-xl">100% PRIVATE</span>
+                <span class="font-bold text-xl">NO ADS</span>
+            </div>
+        </div>
+
+        <!-- Phone Preview -->
+        <div class="lg:col-span-4 flex justify-center">
+            <div class="sticky top-28">
+                <p class="text-center text-sm font-semibold text-slate-500 mb-4 uppercase tracking-widest">Live Preview</p>
+                <div class="phone-mockup">
+                    <div id="phone-screen" class="phone-screen transition-all duration-500" style="background-color: #3b68f5;">
+                        <!-- Splash View -->
+                        <div id="preview-splash" class="flex flex-col items-center">
+                            <div id="preview-icon-container" class="w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center mb-4 backdrop-blur-md shadow-2xl">
+                                <div id="preview-icon-placeholder" class="text-white text-4xl font-bold">W</div>
+                                <img id="preview-icon-img" src="" class="hidden w-full h-full rounded-3xl object-cover">
+                            </div>
+                            <h3 id="preview-app-name" class="text-white font-bold text-xl">My Awesome App</h3>
+                            <div class="mt-12">
+                                <div class="loader"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-center space-x-2">
+                    <button onclick="setPreviewMode('splash')" class="w-2 h-2 rounded-full bg-brand-500"></button>
+                    <button onclick="setPreviewMode('home')" class="w-2 h-2 rounded-full bg-slate-700"></button>
+                    <button onclick="setPreviewMode('app')" class="w-2 h-2 rounded-full bg-slate-700"></button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-12 border-t border-slate-800 py-12 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="text-slate-500 text-sm">
+                &copy; 2023 Web2App Pro. Open-source engine. No watermarks.
+            </div>
+            <div class="flex space-x-6">
+                <a href="#" class="text-slate-400 hover:text-white transition text-sm">GitHub</a>
+                <a href="#" class="text-slate-400 hover:text-white transition text-sm">Terms</a>
+                <a href="#" class="text-slate-400 hover:text-white transition text-sm">Privacy Policy</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let currentTab = 'general';
+        let splashStyle = 'minimal';
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-brand-500', 'text-white');
+                el.classList.add('text-slate-400', 'hover:bg-slate-800');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`btn-${tabId}`).classList.remove('text-slate-400', 'hover:bg-slate-800');
+            document.getElementById(`btn-${tabId}`).classList.add('bg-brand-500', 'text-white');
+            currentTab = tabId;
+        }
+
+        function handleIconUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const iconUrl = e.target.result;
+                    document.getElementById('icon-placeholder').classList.add('hidden');
+                    const icon = document.getElementById('user-icon');
+                    icon.src = iconUrl;
+                    icon.classList.remove('hidden');
+                    
+                    const prevIcon = document.getElementById('preview-icon-img');
+                    prevIcon.src = iconUrl;
+                    prevIcon.classList.remove('hidden');
+                    document.getElementById('preview-icon-placeholder').classList.add('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function updatePreview() {
+            const name = document.getElementById('app-name').value || 'My Awesome App';
+            const color = document.getElementById('theme-color').value;
+            
+            document.getElementById('preview-app-name').innerText = name;
+            document.getElementById('phone-screen').style.backgroundColor = color;
+            document.getElementById('theme-color-hex').innerText = color.toUpperCase();
+            
+            // Auto update short name if empty
+            const shortName = document.getElementById('app-short-name');
+            if (!shortName.value || shortName.value === name.substring(0, name.length - 1)) {
+                shortName.value = name.substring(0, 12);
+            }
+        }
+
+        function setSplash(style) {
+            splashStyle = style;
+            const screen = document.getElementById('preview-splash');
+            const iconContainer = document.getElementById('preview-icon-container');
+            
+            if (style === 'minimal') {
+                iconContainer.className = "w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center mb-4 backdrop-blur-md shadow-2xl";
+                document.getElementById('preview-app-name').className = "text-white font-bold text-xl";
+            } else if (style === 'centered') {
+                iconContainer.className = "w-32 h-32 bg-white rounded-[2rem] flex items-center justify-center mb-6 shadow-2xl";
+                document.getElementById('preview-app-name').className = "text-white font-black text-2xl uppercase tracking-widest";
+            } else {
+                iconContainer.className = "w-full h-48 bg-transparent flex items-center justify-center mb-0";
+                document.getElementById('preview-app-name').className = "text-white font-bold text-3xl mt-4";
+            }
+        }
+
+        function generateBuild() {
+            const buildView = document.getElementById('pre-build-view');
+            const postView = document.getElementById('post-build-view');
+            
+            const config = {
+                name: document.getElementById('app-name').value || 'My App',
+                short_name: document.getElementById('app-short-name').value || 'App',
+                url: document.getElementById('app-url').value || 'https://example.com',
+                desc: document.getElementById('app-desc').value || '',
+                theme: document.getElementById('theme-color').value,
+                offline: document.getElementById('offline-toggle').checked,
+                push: document.getElementById('push-toggle').checked
+            };
+
+            const manifest = {
+                "name": config.name,
+                "short_name": config.short_name,
+                "description": config.desc,
+                "start_url": config.url,
+                "display": "standalone",
+                "background_color": config.theme,
+                "theme_color": config.theme,
+                "icons": [
+                    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+                    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+                ]
+            };
+
+            const swCode = `const CACHE_NAME = '${config.short_name.toLowerCase()}-v1';
+const ASSETS = [
+  '/',
+  '/index.html',
+  '${config.url}'
+];
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
+});
+
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then(res => res || fetch(e.request))
+  );
+});`;
+
+            document.getElementById('manifest-code').innerText = JSON.stringify(manifest, null, 2);
+            document.getElementById('sw-code').innerText = swCode;
+
+            buildView.innerHTML = `<div class="flex flex-col items-center py-8">
+                <div class="loader mb-4"></div>
+                <p class="text-brand-400 font-medium animate-pulse">Assembling application manifest...</p>
+            </div>`;
+
+            setTimeout(() => {
+                buildView.classList.add('hidden');
+                postView.classList.remove('hidden');
+            }, 1500);
+        }
+
+        function copyToClipboard(id) {
+            const text = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(text);
+            alert('Copied to clipboard!');
+        }
+
+        function setPreviewMode(mode) {
+            const screen = document.getElementById('phone-screen');
+            if (mode === 'splash') {
+                screen.innerHTML = `
+                    <div id="preview-splash" class="flex flex-col items-center">
+                        <div id="preview-icon-container" class="w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center mb-4 backdrop-blur-md shadow-2xl">
+                            <div id="preview-icon-placeholder" class="text-white text-4xl font-bold">W</div>
+                            <img id="preview-icon-img" src="${document.getElementById('user-icon').src}" class="${document.getElementById('user-icon').classList.contains('hidden') ? 'hidden' : ''} w-full h-full rounded-3xl object-cover">
+                        </div>
+                        <h3 id="preview-app-name" class="text-white font-bold text-xl">${document.getElementById('app-name').value || 'My Awesome App'}</h3>
+                        <div class="mt-12"><div class="loader border-white/30 border-top-white"></div></div>
+                    </div>
+                `;
+                screen.style.backgroundColor = document.getElementById('theme-color').value;
+            } else if (mode === 'home') {
+                screen.style.backgroundColor = '#1e293b';
+                screen.innerHTML = `
+                    <div class="grid grid-cols-4 gap-6 p-6 w-full h-full content-start pt-12">
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 bg-white/10 rounded-xl mb-1"></div>
+                            <div class="w-8 h-1 bg-slate-600 rounded"></div>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <img src="${document.getElementById('user-icon').classList.contains('hidden') ? 'https://via.placeholder.com/48' : document.getElementById('user-icon').src}" class="w-12 h-12 rounded-xl mb-1 object-cover">
+                            <div class="text-[8px] text-white truncate w-full text-center">${document.getElementById('app-short-name').value || 'App'}</div>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-6 w-11/12 h-14 bg-white/10 backdrop-blur-md rounded-2xl"></div>
+                `;
+            } else if (mode === 'app') {
+                screen.style.backgroundColor = '#ffffff';
+                screen.innerHTML = `
+                    <div class="w-full h-full flex flex-col">
+                        <div class="h-14 w-full bg-slate-100 border-b flex items-center px-4
