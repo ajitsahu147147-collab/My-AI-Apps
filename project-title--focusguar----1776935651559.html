@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusGuard AI | Deep Focus Controller</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0b;
+            color: #e4e4e7;
+            overflow-x: hidden;
+        }
+        .glass-panel {
+            background: rgba(24, 24, 27, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(63, 63, 70, 0.4);
+        }
+        .status-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+        .overlay-preview {
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- NAVIGATION -->
+    <nav class="sticky top-0 z-50 px-6 py-4 glass-panel border-b border-zinc-800">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight">FocusGuard <span class="text-blue-500">AI</span></h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <div id="serviceStatus" class="flex items-center gap-2 text-sm font-medium bg-zinc-900 px-3 py-1.5 rounded-full border border-zinc-800">
+                    <span class="w-2 h-2 rounded-full bg-green-500 status-pulse"></span>
+                    Service Active
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN UI -->
+    <main class="max-w-5xl mx-auto p-6 space-y-8">
+        
+        <!-- DASHBOARD GRID -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- PERMISSIONS CARD -->
+            <div class="md:col-span-2 glass-panel p-6 rounded-3xl space-y-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-xl font-bold">System Permissions</h2>
+                        <p class="text-zinc-400 text-sm">Required for background monitoring</p>
+                    </div>
+                    <button onclick="checkPermissions()" class="text-blue-500 hover:text-blue-400 transition text-sm font-medium">Refresh All</button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-500/10 rounded-lg"><svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></div>
+                            <span class="text-sm font-medium">Accessibility Service</span>
+                        </div>
+                        <span id="perm-acc" class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-md">Enabled</span>
+                    </div>
+
+                    <div class="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-purple-500/10 rounded-lg"><svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg></div>
+                            <span class="text-sm font-medium">Usage Stats</span>
+                        </div>
+                        <span id="perm-usage" class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-md">Enabled</span>
+                    </div>
+
+                    <div class="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-amber-500/10 rounded-lg"><svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                            <span class="text-sm font-medium">Background Service</span>
+                        </div>
+                        <span class="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded-md">Persistent</span>
+                    </div>
+
+                    <div class="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-zinc-500/10 rounded-lg"><svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg></div>
+                            <span class="text-sm font-medium">No Internet Perm.</span>
+                        </div>
+                        <span class="text-xs px-2 py-1 bg-zinc-500/20 text-zinc-400 rounded-md">Verified Offline</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRIVACY GUARANTEE -->
+            <div class="glass-panel p-6 rounded-3xl flex flex-col justify-center items-center text-center space-y-4">
+                <div class="w-16 h-16 bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center">
+                    <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg">Privacy Locked</h3>
+                    <p class="text-zinc-400 text-sm">FocusGuard operates entirely offline. Your scanning data never leaves this device.</p>
+                </div>
+                <button class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-sm font-semibold transition">View Manifest</button>
+            </div>
+
+        </div>
+
+        <!-- KEYWORD CONFIGURATION -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- BLOCKED LIST -->
+            <div class="glass-panel p-6 rounded-3xl space-y-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636" /></svg></div>
+                    <h2 class="font-bold">Restricted Keywords</h2>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="badInput" placeholder="Add word (e.g. Prank)" class="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2 text-sm">
+                    <button onclick="addWord('bad')" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-xl text-sm font-bold transition">Add</button>
+                </div>
+                <div id="badList" class="flex flex-wrap gap-2 pt-2">
+                    <!-- Bad words appear here -->
+                </div>
+            </div>
+
+            <!-- ALLOWED LIST -->
+            <div class="glass-panel p-6 rounded-3xl space-y-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-green-500/10 rounded-lg flex items-center justify-center"><svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg></div>
+                    <h2 class="font-bold">Focus Keywords (Bypass)</h2>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="goodInput" placeholder="Add word (e.g. Coding)" class="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2 text-sm">
+                    <button onclick="addWord('good')" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-xl text-sm font-bold transition">Add</button>
+                </div>
+                <div id="goodList" class="flex flex-wrap gap-2 pt-2">
+                    <!-- Good words appear here -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SIMULATION MODE -->
+        <div class="glass-panel p-8 rounded-3xl space-y-6">
+            <div class="text-center space-y-2">
+                <h2 class="text-2xl font-bold italic tracking-tighter">SIMULATION LABORATORY</h2>
+                <p class="text-zinc-400">Test how FocusGuard AI reacts to content in real-time</p>
+            </div>
+
+            <div class="max-w-xl mx-auto space-y-6">
+                <div class="space-y-2">
+                    <label class="text-xs uppercase font-bold text-zinc-500 tracking-widest ml-1">Mock Video Title / Description</label>
+                    <div class="relative">
+                        <input type="text" id="testTitle" placeholder="Enter a video title to scan..." class="w-full bg-zinc-900/50 border-2 border-zinc-800 rounded-2xl px-6 py-4 text-lg font-medium transition focus:border-blue-500">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                             <div class="h-8 w-px bg-zinc-800"></div>
+                             <button onclick="runSimulation()" class="ml-2 p-2 bg-blue-600 hover:bg-blue-500 rounded-xl transition shadow-lg shadow-blue-500/20">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="simLog" class="h-32 bg-zinc-950 rounded-2xl border border-zinc-800 p-4 font-mono text-xs overflow-y-auto hide-scrollbar space-y-1 text-zinc-500">
+                    <div class="text-blue-400 opacity-50 font-bold tracking-widest uppercase mb-2">SYSTEM LOGS</div>
+                    <div>[INFO] FocusGuard Accessibility Service Initialized...</div>
+                    <div>[INFO] Scanning Node Tree: YouTube Shorts UI Detected</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- THE OVERLAY (BLOCKER) -->
+    <div id="blockerOverlay" class="fixed inset-0 overlay-preview hidden flex flex-col items-center justify-center p-8 text-center space-y-8 animate-in fade-in zoom-in duration-300">
+        <div class="w-24 h-24 bg-red-600/20 border-2 border-red-500 rounded-full flex items-center justify-center">
+            <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+        </div>
+        
+        <div class="space-y-2">
+            <h2 class="text-4xl font-black text-white">DISTRACTION DETECTED</h2>
+            <p id="blockerMessage" class="text-zinc-400 text-lg max-w-md">YouTube Shorts detected with restricted keywords. This content is currently blocked by your Focus Protocol.</p>
+        </div>
+
+        <div class="flex flex-col gap-3 w-full max-w-xs">
+            <button onclick="hideOverlay()" class="w-full py-4 bg-zinc-100 hover:bg-white text-zinc-950 font-bold rounded-2xl transition shadow-xl">Back to Focus</button>
+            <p class="text-zinc-500 text-xs italic">FocusGuard Overlay System v2.0 (Accessibility Node Filter)</p>
+        </div>
+    </div>
+
+    <script>
+        let badWords = ['Funny', 'Prank', 'Reels', 'Meme', 'Gaming', 'Reaction'];
+        let goodWords = ['Coding', 'Tutorial', 'News', 'AI', 'JavaScript', 'Physics'];
+
+        function renderLists() {
+            const badList = document.getElementById('badList');
+            const goodList = document.getElementById('goodList');
+            
+            badList.innerHTML = badWords.map(word => `
+                <span class="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-full flex items-center gap-2">
+                    ${word}
+                    <button onclick="removeWord('bad', '${word}')" class="hover:text-white">&times;</button>
+                </span>
+            `).join('');
+
+            goodList.innerHTML = goodWords.map(word => `
+                <span class="px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold rounded-full flex items-center gap-2">
+                    ${word}
+                    <button onclick="removeWord('good', '${word}')" class="hover:text-white">&times;</button>
+                </span>
+            `).join('');
+        }
+
+        function addWord(type) {
+            const input = document.getElementById(type + 'Input');
+            const word = input.value.trim();
+            if (word) {
+                if (type === 'bad') badWords.push(word);
+                else goodWords.push(word);
+                input.value = '';
+                renderLists();
+                logAction(`Added keyword: ${word} to ${type} list`);
+            }
+        }
+
+        function removeWord(type, word) {
+            if (type === 'bad') badWords = badWords.filter(w => w !== word);
+            else goodWords = goodWords.filter(w => w !== word);
+            renderLists();
+            logAction(`Removed keyword: ${word}`);
+        }
+
+        function logAction(msg) {
+            const log = document.getElementById('simLog');
+            const div = document.createElement('div');
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            log.prepend(div);
+        }
+
+        function checkPermissions() {
+            logAction("Re-checking system permissions...");
+            setTimeout(() => {
+                logAction("Accessibility Service: RUNNING");
+                logAction("Usage Statistics: GRANTED");
+            }, 500);
+        }
+
+        function runSimulation() {
+            const title = document.getElementById('testTitle').value.toLowerCase();
+            if (!title) return;
+
+            logAction(`Scanning title: "${title}"`);
+            
+            // Check for whitelist bypass first
+            const hasGood = goodWords.some(w => title.includes(w.toLowerCase()));
+            const hasBad = badWords.some(w => title.includes(w.toLowerCase()));
+
+            if (hasGood) {
+                logAction("BYPASS: Positive keyword detected. Allowing content.");
+                alert("Safe content detected! FocusGuard allowed this video.");
+                return;
+            }
+
+            if (hasBad || title.includes('shorts') || title.includes('reels')) {
+                logAction("ALERT: Restricted content detected. Triggering Accessibility Overlay.");
+                showOverlay(title);
+            } else {
+                logAction("SCAN COMPLETE: No immediate distractions found.");
+                alert("Neutral content. No action taken.");
+            }
+        }
+
+        function showOverlay(title) {
+            const msg = document.getElementById('blockerMessage');
+            msg.textContent = `"${title}" matches your restricted keyword list. Content has been intercepted and blocked for your productivity.`;
+            document.getElementById('blockerOverlay').classList.remove('hidden');
+        }
+
+        function hideOverlay() {
+            document.getElementById('blockerOverlay').classList.add('hidden');
+            logAction("User requested return to dashboard. Content dismissed.");
+        }
+
+        // Initialize
+        renderLists();
+    </script>
+</body>
+</html></html>
