@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenith Productivity - Privacy First Discipline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+            transition: filter 0.3s ease;
+        }
+
+        .grayscale-mode {
+            filter: grayscale(100%) contrast(1.2);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .tab-active {
+            color: #38bdf8;
+            border-bottom: 2px solid #38bdf8;
+        }
+
+        #blocker-overlay {
+            display: none;
+            z-index: 9999;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-24">
+
+    <!-- BLOCKER OVERLAY -->
+    <div id="blocker-overlay" class="fixed inset-0 bg-black flex flex-col items-center justify-center p-6 text-center">
+        <div class="bg-red-500/10 border border-red-500/50 p-8 rounded-3xl max-w-md w-full">
+            <i class="fas fa-shield-halved text-6xl text-red-500 mb-6"></i>
+            <h2 class="text-3xl font-bold mb-2">Content Blocked</h2>
+            <p class="text-slate-400 mb-8" id="block-reason">This content matches your distraction list. Stay focused.</p>
+            
+            <div id="math-challenge" class="space-y-4">
+                <p class="text-sm uppercase tracking-widest text-slate-500 font-semibold">Discipline Challenge</p>
+                <div class="text-2xl font-mono bg-slate-900 p-4 rounded-xl border border-slate-700" id="math-question">
+                    14 * 6 + 12 = ?
+                </div>
+                <input type="number" id="math-answer" placeholder="Your answer" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-center text-xl focus:ring-2 focus:ring-sky-500 outline-none">
+                <button onclick="checkMathAnswer()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-4 rounded-xl transition-all">
+                    Unlock Access
+                </button>
+            </div>
+            <button onclick="closeBlocker()" class="mt-6 text-slate-500 hover:text-white transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i> Go Back to Focus
+            </button>
+        </div>
+    </div>
+
+    <!-- ONBOARDING MODAL -->
+    <div id="onboarding-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-lg w-full">
+            <h2 class="text-2xl font-bold mb-4">Welcome to Zenith</h2>
+            <div class="space-y-6">
+                <div class="flex items-start gap-4">
+                    <div class="bg-sky-500/20 p-3 rounded-xl"><i class="fas fa-universal-access text-sky-500"></i></div>
+                    <div>
+                        <h4 class="font-semibold">Accessibility Permission</h4>
+                        <p class="text-sm text-slate-400">Required to read screen content and block unproductive apps.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <div class="bg-emerald-500/20 p-3 rounded-xl"><i class="fas fa-lock text-emerald-500"></i></div>
+                    <div>
+                        <h4 class="font-semibold">100% On-Device</h4>
+                        <p class="text-sm text-slate-400">Zero data leaves your phone. We don't even have internet permissions.</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="finishOnboarding()" class="w-full mt-8 bg-sky-600 py-4 rounded-xl font-bold">I Understand, Let's Start</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="app-container">
+        
+        <!-- HEADER -->
+        <header class="p-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <span class="bg-sky-600 p-1.5 rounded-lg"><i class="fas fa-bolt text-xs"></i></span>
+                    ZENITH
+                </h1>
+                <p class="text-xs text-slate-500 font-medium tracking-widest uppercase">Privacy-First Discipline</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right">
+                    <div class="text-xs text-slate-400">Skill Points</div>
+                    <div class="font-bold text-sky-400" id="skill-points-display">1,240</div>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center">
+                    <i class="fas fa-user text-slate-400"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="px-6 space-y-6 animate-fade-in">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-card p-4 rounded-3xl">
+                    <p class="text-slate-400 text-xs mb-1">Time Saved</p>
+                    <p class="text-2xl font-bold">12h 45m</p>
+                    <div class="mt-2 text-[10px] text-emerald-400">+12% from last week</div>
+                </div>
+                <div class="glass-card p-4 rounded-3xl">
+                    <p class="text-slate-400 text-xs mb-1">Focus Level</p>
+                    <p class="text-2xl font-bold">Elite</p>
+                    <div class="mt-2 flex gap-1">
+                        <div class="h-1 flex-1 bg-sky-500 rounded-full"></div>
+                        <div class="h-1 flex-1 bg-sky-500 rounded-full"></div>
+                        <div class="h-1 flex-1 bg-sky-500 rounded-full"></div>
+                        <div class="h-1 flex-1 bg-slate-700 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 rounded-3xl relative overflow-hidden">
+                <div class="relative z-10">
+                    <h3 class="font-bold text-lg mb-1">Live Monitor</h3>
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="flex h-2 w-2 rounded-full bg-emerald-500 status-pulse"></span>
+                        <span class="text-xs text-slate-400 uppercase">Accessibility Active</span>
+                    </div>
+                    
+                    <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700/50 mb-4">
+                        <label class="text-[10px] uppercase text-slate-500 mb-2 block">Screen Content Simulator</label>
+                        <input type="text" id="sim-input" placeholder="Type video title (e.g. 'Coding Tutorial')" 
+                            class="w-full bg-transparent border-b border-slate-700 pb-2 focus:border-sky-500 outline-none transition-colors">
+                        <div class="mt-4 flex justify-between items-center">
+                            <span id="sim-status" class="text-xs font-medium text-emerald-400">System Ready</span>
+                            <button onclick="simulateScan()" class="text-xs bg-sky-600 px-4 py-1.5 rounded-lg font-bold">Scan Screen</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-slate-400 text-sm font-semibold mb-4 px-1">Discipline Controls</h3>
+                <div class="space-y-3">
+                    <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center text-orange-500">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-sm">Hard Mode</h4>
+                                <p class="text-xs text-slate-500">Math puzzles to unlock apps</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="hard-mode-toggle" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
+                        </label>
+                    </div>
+
+                    <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-500/20 flex items-center justify-center text-slate-400">
+                                <i class="fas fa-eye-slash"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-sm">Grayscale Auto-Switch</h4>
+                                <p class="text-xs text-slate-500">Remove dopamine on trigger</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="grayscale-toggle" class="sr-only peer" onchange="toggleGrayscale(this.checked)">
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOCUS ZONES TAB (HIDDEN BY DEFAULT) -->
+        <div id="tab-zones" class="px-6 space-y-6 animate-fade-in hidden">
+            <h2 class="text-xl font-bold">Focus Zones</h2>
+            
+            <div class="space-y-4">
+                <div class="glass-card p-6 rounded-3xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold flex items-center gap-2">
+                            <i class="fas fa-check-circle text-emerald-500"></i>
+                            Educational Keywords
+                        </h3>
+                        <button onclick="addKeyword('educational')" class="text-sky-400 text-sm font-bold">+ Add</button>
+                    </div>
+                    <div id="educational-tags" class="flex flex-wrap gap-2">
+                        <!-- Tags injected by JS -->
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 rounded-3xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold flex items-center gap-2">
+                            <i class="fas fa-times-circle text-red-500"></i>
+                            Distraction Keywords
+                        </h3>
+                        <button onclick="addKeyword('distraction')" class="text-sky-400 text-sm font-bold">+ Add</button>
+                    </div>
+                    <div id="distraction-tags" class="flex flex-wrap gap-2">
+                        <!-- Tags injected by JS -->
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 rounded-3xl">
+                    <h3 class="font-bold mb-4">Monitored Apps</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <i class="fab fa-youtube text-red-600 text-xl"></i>
+                                <span class="text-sm font-medium">YouTube (Shorts Detector)</span>
+                            </div>
+                            <div class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-full uppercase font-bold tracking-tighter">Active</div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <i class="fab fa-instagram text-pink-600 text-xl"></i>
+                                <span class="text-sm font-medium">Instagram (Reels Detector)</span>
+                            </div>
+                            <div class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-full uppercase font-bold tracking-tighter">Active</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS TAB (HIDDEN BY DEFAULT) -->
+        <div id="tab-stats" class="px-6 space-y-6 animate-fade-in hidden">
+            <h2 class="text-xl font-bold">Performance Logs</h2>
+            <div class="glass-card rounded-3xl overflow-hidden">
+                <div class="p-6 border-b border-slate-700/50">
+                    <h3 class="text-sm font-semibold uppercase text-slate-500">Recent Interceptions</h3>
+                </div>
+                <div class="divide-y divide-slate-700/50" id="intercept-logs">
+                    <!-- Logs injected by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-slate-900/80 backdrop-blur-xl border-t border-slate-800 px-6 py-4 flex justify-between items-center z-40">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 transition-all text-sky-400">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-[10px] font-bold uppercase">Home</span>
+            </button>
+            <button onclick="switchTab('zones')" id="nav-zones" class="flex flex-col items-center gap-1 transition-all text-slate-500">
+                <i class="fas fa-bullseye text-xl"></i>
+                <span class="text-[10px] font-bold uppercase">Zones</span>
+            </button>
+            <button onclick="switchTab('stats')" id="nav-stats" class="flex flex-col items-center gap-1 transition-all text-slate-500">
+                <i class="fas fa-chart-line text-xl"></i>
+                <span class="text-[10px] font-bold uppercase">Stats</span>
+            </button>
+            <button class="flex flex-col items-center gap-1 transition-all text-slate-500">
+                <i class="fas fa-cog text-xl"></i>
+                <span class="text-[10px] font-bold uppercase">Settings</span>
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        // APP STATE (Privacy-First Local Storage)
+        let state = {
+            skillPoints: 1240,
+            timeSaved: "12h 45m",
+            hardMode: true,
+            grayscale: false,
+            educationalKeywords: ['Python', 'Tutorial', 'Documentary', 'AI', 'Flutter', 'Economics', 'News'],
+            distractionKeywords: ['Prank', 'Challenge', 'Vlog', 'Comedy', 'Dance', 'Giveaway', 'Fail'],
+            logs: [
+                { time: '10:45 AM', app: 'YouTube', content: 'Funny Cat Pranks 2024', status: 'Blocked' },
+                { time: '09:12 AM', app: 'Instagram', content: 'Dance Reels Challenge', status: 'Blocked' },
+                { time: '08:05 AM', app: 'YouTube', content: 'Advanced React Tutorial', status: 'Allowed' }
+            ],
+            currentMathResult: null
+        };
+
+        // INITIALIZATION
+        window.onload = () => {
+            if (!localStorage.getItem('zenith_onboarded')) {
+                document.getElementById('onboarding-modal').classList.remove('hidden');
+            }
+            renderKeywords();
+            renderLogs();
+            updateUI();
+        };
+
+        function finishOnboarding() {
+            localStorage.setItem('zenith_onboarded', 'true');
+            document.getElementById('onboarding-modal').classList.add('hidden');
+        }
+
+        // NAVIGATION
+        function switchTab(tabId) {
+            ['dashboard', 'zones', 'stats'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`nav-${t}`).classList.remove('text-sky-400');
+                document.getElementById(`nav-${t}`).classList.add('text-slate-500');
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabId}`).classList.add('text-sky-400');
+            document.getElementById(`nav-${tabId}`).classList.remove('text-slate-500');
+        }
+
+        // KEYWORD MANAGEMENT
+        function renderKeywords() {
+            const eduContainer = document.getElementById('educational-tags');
+            const disContainer = document.getElementById('distraction-tags');
+            
+            eduContainer.innerHTML = state.educationalKeywords.map(k => 
+                `<span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs rounded-full border border-emerald-500/20 flex items-center gap-2">
+                    ${k} <i class="fas fa-times cursor-pointer" onclick="removeKeyword('educational', '${k}')"></i>
+                </span>`
+            ).join('');
+
+            disContainer.innerHTML = state.distractionKeywords.map(k => 
+                `<span class="px-3 py-1 bg-red-500/10 text-red-400 text-xs rounded-full border border-red-500/20 flex items-center gap-2">
+                    ${k} <i class="fas fa-times cursor-pointer" onclick="removeKeyword('distraction', '${k}')"></i>
+                </span>`
+            ).join('');
+        }
+
+        function addKeyword(type) {
+            const k = prompt(`Add new ${type} keyword:`);
+            if (k) {
+                if (type === 'educational') state.educationalKeywords.push(k);
+                else state.distractionKeywords.push(k);
+                renderKeywords();
+            }
+        }
+
+        function removeKeyword(type, word) {
+            if (type === 'educational') {
+                state.educationalKeywords = state.educationalKeywords.filter(k => k !== word);
+            } else {
+                state.distractionKeywords = state.distractionKeywords.filter(k => k !== word);
+            }
+            renderKeywords();
+        }
+
+        // SIMULATOR & FILTER LOGIC
+        function simulateScan() {
+            const input = document.getElementById('sim-input').value;
+            const status = document.getElementById('sim-status');
+            
+            if (!input) return;
+
+            status.innerHTML = `<span class="text-sky-400">Analyzing UI Nodes...</span>`;
+            
+            setTimeout(() => {
+                const lowerInput = input.toLowerCase();
+                const isEducational = state.educationalKeywords.some(k => lowerInput.includes(k.toLowerCase()));
+                const isDistraction = state.distractionKeywords.some(k => lowerInput.includes(k.toLowerCase()));
+
+                if (isDistraction && !isEducational) {
+                    triggerBlock(input);
+                } else if (isEducational) {
+                    status.innerHTML = `<span class="text-emerald-400">Educational - Content Allowed</span>`;
+                    state.skillPoints += 10;
+                    updateUI();
+                } else {
+                    status.innerHTML = `<span class="text-slate-400">Neutral Content</span>`;
+                }
+            }, 800);
+        }
+
+        function updateUI() {
+            document.getElementById('skill-points-display').innerText = state.skillPoints.toLocaleString();
+        }
+
+        // BLOCKING SYSTEM
+        function triggerBlock(contentTitle) {
+            const overlay = document.getElementById('blocker-overlay');
+            const reason = document.getElementById('block-reason');
+            const mathQ = document.getElementById('math-question');
+            
+            reason.innerText = `Detected: "${contentTitle}"`;
+            overlay.style.display = 'flex';
+
+            // Generate Math Problem
+            const a = Math.floor(Math.random() * 12) + 5;
+            const b = Math.floor(Math.random() * 12) + 2;
+            const c = Math.floor(Math.random() * 50);
+            state.currentMathResult = (a * b) + c;
+            mathQ.innerText = `${a} × ${b} + ${c} = ?`;
+            
+            // Log interception
+            state.logs.unshift({
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                app: 'Simulator',
+                content: contentTitle,
+                status: 'Blocked'
+            });
+            renderLogs();
+        }
+
+        function checkMathAnswer() {
+            const ans = document.getElementById('math-answer').value;
+            if (parseInt(ans) === state.currentMathResult) {
+                closeBlocker();
+                alert("Challenge passed. Content unlocked for 10 minutes.");
+            } else {
+                alert("Incorrect. Stay focused on your goals.");
+                document.getElementById('math-answer').value = '';
+            }
+        }
+
+        function closeBlocker() {
+            document.getElementById('blocker-overlay').style.display = 'none';
+            document.getElementById('math-answer').value = '';
+        }
+
+        function toggleGrayscale(active) {
+            if (active) document.body.classList.add('grayscale-mode');
+            else document.body.classList.remove('grayscale-mode');
+        }
+
+        function renderLogs() {
+            const container = document.getElementById('intercept-logs');
+            container.innerHTML = state.logs.map(log => `
+                <div class="p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="text-[10px] text-slate-500 font-mono">${log.time}</div>
+                        <div>
+                            <div class="text-xs font-bold">${log.app}</div>
+                            <div class="text-[10px] text-slate-400 truncate w-32">${log.content}</div>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${log.status === 'Blocked' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}">
+                        ${log.status}
+                    </span>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html></html>
