@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusGuard AI | Control Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .5; transform: scale(1.1); }
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 10px;
+        }
+
+        /* Simulator Overlay Simulation */
+        #blocker-overlay {
+            display: none;
+            z-index: 9999;
+            background: rgba(15, 23, 42, 0.98);
+        }
+
+        .permission-card.active {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.05);
+        }
+
+        .nav-item.active {
+            background: #334155;
+            color: #38bdf8;
+            border-right: 3px solid #38bdf8;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Foreground Service Notification (Mockup) -->
+    <div id="fg-notification" class="fixed top-0 left-0 w-full bg-slate-800 border-b border-slate-700 px-4 py-2 flex items-center justify-between text-xs z-50 transform -translate-y-full transition-transform duration-300">
+        <div class="flex items-center gap-3">
+            <div class="bg-sky-500 p-1 rounded">
+                <i class="fas fa-shield-halved text-white"></i>
+            </div>
+            <div>
+                <p class="font-bold">FocusGuard AI is running</p>
+                <p class="text-slate-400">Monitoring for distractions in background...</p>
+            </div>
+        </div>
+        <div class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Foreground Service</div>
+    </div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 glass-panel border-r border-slate-800 hidden md:flex flex-col">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-brain text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-none">FocusGuard</h1>
+                        <span class="text-[10px] text-sky-400 font-bold tracking-tighter uppercase">AI Powered</span>
+                    </div>
+                </div>
+
+                <nav class="space-y-1">
+                    <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white transition-all active">
+                        <i class="fas fa-th-large w-5"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                    <a href="#" onclick="switchTab('permissions')" id="nav-permissions" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white transition-all">
+                        <i class="fas fa-lock w-5"></i>
+                        <span class="font-medium">Permissions</span>
+                    </a>
+                    <a href="#" onclick="switchTab('keywords')" id="nav-keywords" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white transition-all">
+                        <i class="fas fa-filter w-5"></i>
+                        <span class="font-medium">Content Filter</span>
+                    </a>
+                    <a href="#" onclick="switchTab('simulator')" id="nav-simulator" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white transition-all">
+                        <i class="fas fa-mobile-screen w-5"></i>
+                        <span class="font-medium">Live Simulator</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="mt-auto p-6">
+                <div class="p-4 bg-slate-900/50 rounded-xl border border-slate-700/50">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-user-shield text-emerald-400 text-sm"></i>
+                        <span class="text-xs font-semibold">Privacy Guaranteed</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 leading-relaxed">Local processing only. No internet permission requested or required.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto custom-scrollbar bg-slate-950">
+            <!-- Header -->
+            <header class="h-16 flex items-center justify-between px-8 border-b border-slate-900 bg-slate-950/50 sticky top-0 z-40 backdrop-blur-md">
+                <div class="flex items-center gap-4">
+                    <button class="md:hidden text-slate-400">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2 id="tab-title" class="text-lg font-semibold">Dashboard</h2>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2">
+                        <div id="service-status-dot" class="w-2 h-2 rounded-full bg-slate-500"></div>
+                        <span id="service-status-text" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Service Inactive</span>
+                    </div>
+                    <button onclick="toggleGlobalService()" id="global-toggle" class="bg-slate-800 px-4 py-1.5 rounded-full text-sm font-bold hover:bg-slate-700 transition-colors border border-slate-700">
+                        Enable Guard
+                    </button>
+                </div>
+            </header>
+
+            <div class="p-8 max-w-5xl mx-auto">
+                
+                <!-- Tab: Dashboard -->
+                <div id="tab-content-dashboard" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="glass-panel p-6 rounded-2xl">
+                            <p class="text-slate-400 text-sm mb-1">Time Blocked Today</p>
+                            <h3 class="text-3xl font-bold">02:45 <span class="text-sm font-normal text-slate-500">hrs</span></h3>
+                        </div>
+                        <div class="glass-panel p-6 rounded-2xl">
+                            <p class="text-slate-400 text-sm mb-1">Attempted Distractions</p>
+                            <h3 class="text-3xl font-bold">42</h3>
+                        </div>
+                        <div class="glass-panel p-6 rounded-2xl">
+                            <p class="text-slate-400 text-sm mb-1">Focus Score</p>
+                            <h3 class="text-3xl font-bold text-sky-400">88%</h3>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl overflow-hidden">
+                        <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+                            <h4 class="font-bold">Active Shielding Logic</h4>
+                            <span class="bg-sky-500/10 text-sky-400 text-[10px] px-2 py-1 rounded font-bold uppercase tracking-widest">Accessibility Overlay</span>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="flex items-start gap-4">
+                                <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400 flex-shrink-0">
+                                    <i class="fab fa-youtube"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between">
+                                        <p class="font-semibold text-sm">YouTube Shorts Filter</p>
+                                        <div class="w-10 h-5 bg-sky-500 rounded-full relative cursor-pointer">
+                                            <div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-1">Automatically detects and blocks vertical scrolling content.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0">
+                                    <i class="fab fa-instagram"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between">
+                                        <p class="font-semibold text-sm">Instagram Reels Blocker</p>
+                                        <div class="w-10 h-5 bg-sky-500 rounded-full relative cursor-pointer">
+                                            <div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-1">Intercepts WindowManager layouts for accessibility overlay.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Permissions -->
+                <div id="tab-content-permissions" class="hidden space-y-6">
+                    <div class="glass-panel p-8 rounded-2xl text-center">
+                        <div class="w-16 h-16 bg-sky-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-sky-500">
+                            <i class="fas fa-shield-halved text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">System Permissions Required</h3>
+                        <p class="text-slate-400 text-sm max-w-md mx-auto">FocusGuard AI requires these permissions to run as a Background Service and provide Real-time Overlay logic.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div id="perm-accessibility" class="permission-card glass-panel p-6 rounded-2xl border-2 border-transparent transition-all">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-3 bg-amber-500/10 rounded-xl text-amber-500">
+                                    <i class="fas fa-universal-access text-xl"></i>
+                                </div>
+                                <span id="status-accessibility" class="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded uppercase">Disabled</span>
+                            </div>
+                            <h4 class="font-bold mb-1 text-sm">Accessibility Service</h4>
+                            <p class="text-xs text-slate-500 mb-4">Required to scan video titles and detect when YouTube Shorts is on screen.</p>
+                            <button onclick="grantPermission('accessibility')" class="w-full py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold transition-all border border-slate-700">Grant in Settings</button>
+                        </div>
+
+                        <div id="perm-stats" class="permission-card glass-panel p-6 rounded-2xl border-2 border-transparent transition-all">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-3 bg-indigo-500/10 rounded-xl text-indigo-500">
+                                    <i class="fas fa-chart-line text-xl"></i>
+                                </div>
+                                <span id="status-stats" class="text-[10px] font-bold text-indigo-500 bg-indigo-500/10 px-2 py-1 rounded uppercase">Disabled</span>
+                            </div>
+                            <h4 class="font-bold mb-1 text-sm">Usage Stats Access</h4>
+                            <p class="text-xs text-slate-500 mb-4">Required to monitor foreground application changes and persistent execution.</p>
+                            <button onclick="grantPermission('stats')" class="w-full py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold transition-all border border-slate-700">Grant in Settings</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Keywords -->
+                <div id="tab-content-keywords" class="hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-bold mb-4 flex items-center gap-2">
+                                <i class="fas fa-check-circle text-emerald-500"></i> Safe Passwords (Whitelist)
+                            </h4>
+                            <div class="glass-panel p-4 rounded-2xl space-y-3">
+                                <div class="flex gap-2">
+                                    <input type="text" id="safe-input" placeholder="Add keyword (e.g. Science)" class="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-sky-500">
+                                    <button onclick="addWord('safe')" class="bg-sky-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-sky-600 transition-colors"><i class="fas fa-plus"></i></button>
+                                </div>
+                                <div id="safe-list" class="flex flex-wrap gap-2">
+                                    <span class="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-xs font-medium border border-emerald-500/20">Coding <i class="fas fa-times ml-1 cursor-pointer"></i></span>
+                                    <span class="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-xs font-medium border border-emerald-500/20">Tutorial <i class="fas fa-times ml-1 cursor-pointer"></i></span>
+                                    <span class="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-xs font-medium border border-emerald-500/20">News <i class="fas fa-times ml-1 cursor-pointer"></i></span>
+                                    <span class="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-xs font-medium border border-emerald-500/20">Documentary <i class="fas fa-times ml-1 cursor-pointer"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="font-bold mb-4 flex items-center gap-2">
+                                <i class="fas fa-ban text-rose-500"></i> Block Keywords (Blacklist)
+                            </h4>
+                            <div class="glass-panel p-4 rounded-2xl space-y-3">
+                                <div class="flex gap-2">
+                                    <input type="text" id="block-input" placeholder="Add keyword (e.g. Gossip)" class="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-rose-500">
+                                    <button onclick="addWord('block')" class="bg-rose-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-rose-600 transition-colors"><i class="fas fa-plus"></i></button>
+                                </div>
+                                <div id="block-list" class="flex flex-wrap gap-2">
+                                    <span class="bg-rose-500/10 text-rose-500 px-3 py-1 rounded-full text-xs font-medium border border-rose-500/20">Prank <i class="fas fa-times ml-1 cursor-pointer"></i></span>
+                                    <span class="bg-rose-500/10 text-rose-500 px-3 py-1 rounded-full text-xs font-medium border border-rose-500/20">Funny <i class="fas fa-times ml-1 cursor-pointer"></i></span>
+                                    <span class="bg-rose-500/10 text-rose-500 px-3 py-1 rounded-full text-xs font-medium border border-rose-500/20">Challenge <i class="fas fa-times ml-1 cursor-pointer"></i></span>
+                                    <span class="bg-rose-500/10 text-rose-500 px-3 py-1 rounded-full text-xs font-medium border border-rose-500/20">Memes <i class="fas fa-times ml-1 cursor-pointer"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Simulator -->
+                <div id="tab-content-simulator" class="hidden space-y-6">
+                    <div class="flex flex-col md:flex-row gap-8 items-center justify-center">
+                        <!-- Mockup Phone -->
+                        <div class="w-[280px] h-[580px] bg-black rounded-[3rem] border-[8px] border-slate-800 shadow-2xl relative overflow-hidden">
+                            <!-- Screen Content -->
+                            <div id="phone-screen" class="w-full h-full bg-slate-900 flex flex-col pt-10 px-4">
+                                <div id="app-mock-content" class="space-y-4">
+                                    <div class="flex items-center justify-between text-white mb-2">
+                                        <i class="fas fa-wifi text-xs"></i>
+                                        <span class="text-xs font-bold">12:00</span>
+                                        <i class="fas fa-battery-full text-xs"></i>
+                                    </div>
+                                    <div class="w-full h-40 bg-slate-800 rounded-xl relative overflow-hidden flex items-center justify-center">
+                                        <i class="fab fa-youtube text-4xl text-red-600"></i>
+                                    </div>
+                                    <h5 id="mock-video-title" class="font-bold text-sm text-white">How to build a Neural Network from scratch</h5>
+                                    <div class="space-y-2">
+                                        <div class="h-2 w-3/4 bg-slate-700 rounded"></div>
+                                        <div class="h-2 w-full bg-slate-800 rounded"></div>
+                                        <div class="h-2 w-1/2 bg-slate-800 rounded"></div>
+                                    </div>
+                                    <div class="mt-8 p-4 bg-sky-500/10 border border-sky-500/20 rounded-xl text-center">
+                                        <p id="mock-status" class="text-sky-400 text-[10px] font-bold uppercase">Learning Mode Active</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- The Actual Blocker Overlay Mockup -->
+                                <div id="sim-overlay" class="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-6 text-center z-50 transition-all duration-500 transform translate-y-full">
+                                    <div class="w-16 h-16 bg-rose-500 rounded-2xl flex items-center justify-center mb-6">
+                                        <i class="fas fa-hand text-white text-3xl"></i>
+                                    </div>
+                                    <h4 class="text-xl font-bold mb-2">Focus Guard Active</h4>
+                                    <p class="text-slate-400 text-sm mb-8 italic">"Don't trade your dreams for temporary entertainment."</p>
+                                    <div class="w-full p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl mb-4">
+                                        <p class="text-[10px] text-rose-400 font-bold uppercase tracking-widest">Distraction Detected</p>
+                                        <p id="detected-word" class="text-white text-sm font-semibold">"Funny Prank"</p>
+                                    </div>
+                                    <button onclick="resetSim()" class="text-[10px] text-slate-500 uppercase tracking-widest hover:text-white transition-all underline underline-offset-4">Close App to Continue</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Simulator Controls -->
+                        <div class="flex-1 max-w-sm">
+                            <h4 class="font-bold text-xl mb-6">Test Logic</h4>
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Input Search/Title</label>
+                                    <input type="text" id="sim-input" placeholder="Type video title here..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-500 mb-2">
+                                    <p class="text-[10px] text-slate-500 italic">Try "Coding Tutorial" (Safe) or "Funny Prank" (Blocked)</p>
+                                </div>
+                                <div class="flex flex-col gap-3">
+                                    <button onclick="runSimulation()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-sky-500/20">
+                                        Scan Title
+                                    </button>
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex-1 h-[1px] bg-slate-800"></div>
+                                        <span class="text-[10px] text-slate-600 font-bold">OR</span>
+                                        <div class="flex-1 h-[1px] bg-slate-800"></div>
+                                    </div>
+                                    <button onclick="triggerShorts()" class="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 font-bold py-3 rounded-xl transition-all">
+                                        Simulate YouTube Shorts Open
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Alert Modal for Permission -->
+    <div id="permission-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="glass-panel max-w-md w-full p-8 rounded-[2rem] border-slate-700">
+            <h3 class="text-xl font-bold mb-4">System Redirect</h3>
+            <p class="text-slate-400 mb-6 leading-relaxed">We are taking you to your phone's <strong>Settings > Accessibility</strong> menu. Please find "FocusGuard AI" and toggle it to <strong>ON</strong>.</p>
+            <button onclick="confirmPermission()" class="w-full bg-sky-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-sky-500/30">I Understand</button>
+        </div>
+    </div>
+
+    <script>
+        let isServiceActive = false;
+        let accessibilityGranted = false;
+        let statsGranted = false;
+        let currentTab = 'dashboard';
+        let safeWords = ['coding', 'tutorial', 'news', 'documentary'];
+        let blockWords = ['prank', 'funny', 'challenge', 'memes'];
+
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('[id^="tab-content-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            // Show selected
+            document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabId}`).classList.add('active');
+            document.getElementById('tab-title').innerText = tabId.charAt(0).toUpperCase() + tabId.slice(1);
+            currentTab = tabId;
+        }
+
+        function toggleGlobalService() {
+            if (!accessibilityGranted || !statsGranted) {
+                switchTab('permissions');
+                alert("Please grant all permissions before enabling the Guard Service.");
+                return;
+            }
+
+            isServiceActive = !isServiceActive;
+            const btn = document.getElementById('global-toggle');
+            const dot = document.getElementById('service-status-dot');
+            const txt = document.getElementById('service-status-text');
+            const notification = document.getElementById('fg-notification');
+
+            if (isServiceActive) {
+                btn.innerText = "Disable Guard";
+                btn.classList.add('bg-rose-500/10', 'text-rose-500', 'border-rose-500/30');
+                btn.classList.remove('bg-slate-800', 'text-sm');
+                dot.classList.add('bg-emerald-500', 'status-pulse');
+                dot.classList.remove('bg-slate-500');
+                txt.innerText = "Service Active";
+                txt.classList.add('text-emerald-500');
+                notification.classList.remove('-translate-y-full');
+            } else {
+                btn.innerText = "Enable Guard";
+                btn.classList.remove('bg-rose-500/10', 'text-rose-500', 'border-rose-500/30');
+                btn.classList.add('bg-slate-800');
+                dot.classList.remove('bg-emerald-500', 'status-pulse');
+                dot.classList.add('bg-slate-500');
+                txt.innerText = "Service Inactive";
+                txt.classList.remove('text-emerald-500');
+                notification.classList.add('-translate-y-full');
+            }
+        }
+
+        let pendingPerm = '';
+        function grantPermission(type) {
+            pendingPerm = type;
+            document.getElementById('permission-modal').classList.remove('hidden');
+            document.getElementById('permission-modal').classList.add('flex');
+        }
+
+        function confirmPermission() {
+            if (pendingPerm === 'accessibility') {
+                accessibilityGranted = true;
+                document.getElementById('status-accessibility').innerText = 'Granted';
+                document.getElementById('status-accessibility').classList.replace('text-amber-500', 'text-emerald-500');
+                document.getElementById('status-accessibility').classList.replace('bg-amber-500/10', 'bg-emerald-500/10');
+                document.getElementById('perm-accessibility').classList.add('active');
+            } else if (pendingPerm === 'stats') {
+                statsGranted = true;
+                document.getElementById('status-stats').innerText = 'Granted';
+                document.getElementById('status-stats').classList.replace('text-indigo-500', 'text-emerald-500');
+                document.getElementById('status-stats').classList.replace('bg-indigo-500/10', 'bg-emerald-500/10');
+                document.getElementById('perm-stats').classList.add('active');
+            }
+            
+            document.getElementById('permission-modal').classList.add('hidden');
+            document.getElementById('permission-modal').classList.remove('flex');
+        }
+
+        function addWord(type) {
+            const input = document.getElementById(`${type}-
