@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenith Guard - Privacy-First Discipline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#10b981',
+                        danger: '#ef4444',
+                        background: '#0f172a',
+                        card: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .status-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .grayscale-mode { filter: grayscale(100%) !important; }
+        .math-input:focus { outline: none; border-bottom: 2px solid #6366f1; }
+    </style>
+</head>
+<body class="bg-background text-slate-200 min-h-screen pb-20">
+
+    <!-- Blocking Overlay (Hidden by Default) -->
+    <div id="blockerOverlay" class="fixed inset-0 z-[100] bg-black hidden flex-col items-center justify-center p-6 text-center">
+        <div class="max-w-md w-full space-y-8">
+            <div class="bg-danger/20 p-4 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 border border-danger/50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-white">Focus Interrupted</h1>
+            <p class="text-slate-400">Zenith Guard detected unproductive content (Shorts/Reels/Pranks). Your discipline is your strength.</p>
+            
+            <div id="mathChallenge" class="bg-card p-6 rounded-2xl border border-slate-700 space-y-4">
+                <p class="text-sm uppercase tracking-widest text-primary font-semibold">Hard Mode: Solve to Unlock</p>
+                <div class="text-2xl font-mono" id="equationDisplay">14 * 7 + 23 = ?</div>
+                <input type="number" id="mathAnswer" class="bg-transparent border-b border-slate-600 w-full text-center text-2xl py-2 math-input" placeholder="Result">
+                <button onclick="checkMathAnswer()" class="w-full bg-primary hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition">Submit Solution</button>
+            </div>
+            
+            <button onclick="closeAppSimulator()" class="text-slate-500 hover:text-white transition text-sm">Close distracting app & Return to Focus</button>
+        </div>
+    </div>
+
+    <!-- Onboarding Modal -->
+    <div id="onboardingModal" class="fixed inset-0 z-50 bg-background flex items-center justify-center p-4">
+        <div class="max-w-lg glass p-8 rounded-3xl shadow-2xl">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04a11.357 11.357 0 00-1.173 4.597c0 3.074 1.217 5.856 3.193 7.91a11.954 11.954 0 001.01 1.01l2.586 2.586a1 1 0 001.414 0l2.586-2.586a11.954 11.954 0 001.01-1.01c1.976-2.054 3.193-4.836 3.193-7.91a11.357 11.357 0 00-1.173-4.597z"/></svg>
+                </div>
+                <h2 class="text-2xl font-bold">Zenith Guard Setup</h2>
+            </div>
+            <div id="stepContent" class="space-y-4 mb-8">
+                <!-- Steps injected by JS -->
+            </div>
+            <button id="nextBtn" onclick="nextStep()" class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/30 hover:-translate-y-1 transition-all">Grant Accessibility Permission</button>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="p-6 flex justify-between items-center sticky top-0 bg-background/80 backdrop-blur-md z-40">
+        <div>
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <span class="w-2 h-2 bg-secondary rounded-full status-pulse"></span>
+                Zenith Guard
+            </h1>
+            <p class="text-xs text-slate-500 font-medium">ON-DEVICE PROCESSING ACTIVE</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="bg-card px-3 py-1.5 rounded-full border border-slate-700 flex items-center gap-2">
+                <span class="text-amber-400">⭐</span>
+                <span id="skillPoints" class="font-bold text-sm">1,240</span>
+            </div>
+            <button onclick="toggleTheme()" class="p-2 bg-card rounded-xl border border-slate-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="fixed bottom-0 left-0 right-0 glass border-t border-white/10 px-6 py-4 flex justify-around z-50">
+        <button onclick="showPage('dashboard')" class="nav-link flex flex-col items-center gap-1 text-primary">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Dash</span>
+        </button>
+        <button onclick="showPage('filters')" class="nav-link flex flex-col items-center gap-1 text-slate-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Filter</span>
+        </button>
+        <button onclick="showPage('simulator')" class="nav-link flex flex-col items-center gap-1 text-slate-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Live</span>
+        </button>
+        <button onclick="showPage('settings')" class="nav-link flex flex-col items-center gap-1 text-slate-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z"/></svg>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Mods</span>
+        </button>
+    </nav>
+
+    <main class="p-6">
+        <!-- Dashboard Page -->
+        <section id="page-dashboard" class="space-y-6 animate-fade-in">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-card p-5 rounded-3xl border border-slate-800 shadow-xl">
+                    <p class="text-slate-500 text-xs font-bold uppercase mb-1">Time Saved</p>
+                    <h3 class="text-2xl font-bold text-primary">4h 22m</h3>
+                    <p class="text-[10px] text-secondary mt-2">↑ 12% from yesterday</p>
+                </div>
+                <div class="bg-card p-5 rounded-3xl border border-slate-800 shadow-xl">
+                    <p class="text-slate-500 text-xs font-bold uppercase mb-1">Focus Score</p>
+                    <h3 class="text-2xl font-bold text-white">92/100</h3>
+                    <div class="w-full bg-slate-700 h-1 mt-3 rounded-full overflow-hidden">
+                        <div class="bg-secondary h-full" style="width: 92%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-card p-6 rounded-3xl border border-slate-800">
+                <h3 class="font-bold mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Daily Progress
+                </h3>
+                <div class="flex items-end justify-between h-32 gap-2 px-2">
+                    <div class="w-full bg-primary/20 rounded-t-lg relative" style="height: 40%"><span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px]">Mon</span></div>
+                    <div class="w-full bg-primary/40 rounded-t-lg relative" style="height: 65%"><span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px]">Tue</span></div>
+                    <div class="w-full bg-primary/60 rounded-t-lg relative" style="height: 45%"><span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px]">Wed</span></div>
+                    <div class="w-full bg-primary/30 rounded-t-lg relative" style="height: 85%"><span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px]">Thu</span></div>
+                    <div class="w-full bg-primary rounded-t-lg relative" style="height: 95%"><span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold">Fri</span></div>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <h4 class="text-sm font-bold text-slate-400 px-1">RECENT ACTIVITY (LOCAL LOGS)</h4>
+                <div id="activityLogs" class="space-y-2">
+                    <!-- Logs injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters Page -->
+        <section id="page-filters" class="hidden space-y-6">
+            <div>
+                <h2 class="text-xl font-bold mb-2">Keyword Engine</h2>
+                <p class="text-slate-500 text-sm italic">Scanning UI hierarchy in real-time. No data leaves this device.</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-card p-5 rounded-3xl border border-slate-800">
+                    <label class="block text-secondary text-xs font-bold uppercase mb-3 tracking-widest">Allowed (Educational)</label>
+                    <div id="allowedTags" class="flex flex-wrap gap-2 mb-4">
+                        <!-- Tags -->
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="addAllowed" placeholder="Add keyword (e.g. Tutorial)" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm flex-1">
+                        <button onclick="addKeyword('allowed')" class="bg-secondary p-2 rounded-xl">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-card p-5 rounded-3xl border border-slate-800">
+                    <label class="block text-danger text-xs font-bold uppercase mb-3 tracking-widest">Blocked (Distractions)</label>
+                    <div id="blockedTags" class="flex flex-wrap gap-2 mb-4">
+                        <!-- Tags -->
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="addBlocked" placeholder="Add keyword (e.g. Prank)" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm flex-1">
+                        <button onclick="addKeyword('blocked')" class="bg-danger p-2 rounded-xl">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Simulator Page -->
+        <section id="page-simulator" class="hidden space-y-6">
+            <div class="bg-slate-900 rounded-3xl p-6 border-2 border-dashed border-slate-700">
+                <h3 class="text-center font-bold text-slate-400 mb-6 uppercase tracking-tighter">Accessibility Service Probe</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-slate-500 font-bold mb-1 block">SELECT ACTIVE APP</label>
+                        <select id="simApp" class="w-full bg-card border border-slate-700 p-3 rounded-xl text-sm">
+                            <option value="com.google.android.youtube">YouTube (com.google.android.youtube)</option>
+                            <option value="com.instagram.android">Instagram (com.instagram.android)</option>
+                            <option value="com.facebook.katana">Facebook (com.facebook.katana)</option>
+                            <option value="com.android.settings">Settings (System)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-slate-500 font-bold mb-1 block">UI NODE TEXT (SIMULATED SCAN)</label>
+                        <textarea id="simText" rows="4" class="w-full bg-card border border-slate-700 p-3 rounded-xl text-sm font-mono" placeholder="Type video titles or UI text here..."></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-between bg-card p-4 rounded-2xl border border-slate-700">
+                        <div>
+                            <p class="text-sm font-bold">Scanning Active</p>
+                            <p class="text-[10px] text-slate-500 uppercase">AI-Lite Keyword Matcher</p>
+                        </div>
+                        <div class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="scannerToggle" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </div>
+                    </div>
+
+                    <button onclick="runSimulation()" class="w-full bg-white text-black font-bold py-4 rounded-2xl shadow-xl active:scale-95 transition">Test Scanner Logic</button>
+                </div>
+            </div>
+
+            <div id="simLog" class="font-mono text-[10px] bg-black p-4 rounded-xl border border-slate-800 text-secondary h-32 overflow-y-auto">
+                > System initialized...<br>
+                > Accessibility Service running...<br>
+                > Room Database connected (Local)...
+            </div>
+        </section>
+
+        <!-- Settings/Modes Page -->
+        <section id="page-settings" class="hidden space-y-6">
+            <h2 class="text-xl font-bold">Discipline Modes</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-card p-5 rounded-3xl border border-slate-800 flex items-center justify-between">
+                    <div class="flex gap-4 items-center">
+                        <div class="w-12 h-12 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold">Hard Mode</h4>
+                            <p class="text-[10px] text-slate-500 uppercase">Math puzzles to unlock</p>
+                        </div>
+                    </div>
+                    <input type="checkbox" id="hardModeToggle" checked class="w-5 h-5 accent-primary">
+                </div>
+
+                <div class="bg-card p-5 rounded-3xl border border-slate-800 flex items-center justify-between">
+                    <div class="flex gap-4 items-center">
+                        <div class="w-12 h-12 bg-slate-500/20 rounded-2xl flex items-center justify-center text-slate-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold">Greyscale Mode</h4>
+                            <p class="text-[10px] text-slate-500 uppercase">Desaturate distractions</p>
+                        </div>
+                    </div>
+                    <input type="checkbox" id="greyscaleToggle" onchange="applyGreyscale()" class="w-5 h-5 accent-primary">
+                </div>
+
+                <div class="bg-card p-5 rounded-3xl border border-slate-800 flex items-center justify-between">
+                    <div class="flex gap-4 items-center">
+                        <div class="w-12 h-12 bg-secondary/20 rounded-2xl flex items-center justify-center text-secondary">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold">Strict Privacy</h4>
+                            <p class="text-[10px] text-slate-500 uppercase">Block Internet Access</p>
+                        </div>
+                    </div>
+                    <div class="text-[10px] bg-secondary/20 text-secondary px-2 py-1 rounded font-bold">PERMANENT</div>
+                </div>
+
+                <button onclick="resetData()" class="w-full text-slate-600 text-xs font-bold uppercase pt-10">Clear Local Room Database</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // State Management (Simulating Room DB)
+        let state = {
+            skillPoints: parseInt(localStorage.getItem('zenith_sp')) || 1240,
+            allowed: JSON.parse(localStorage.getItem('zenith_allowed')) || ['Python', 'Tutorial', 'Space', 'Documentary', 'News', 'Coding', 'Tech'],
+            blocked: JSON.parse(localStorage.getItem('zenith_blocked')) || ['Prank', 'Challenge', 'Vlog', 'Comedy', 'Dance', 'Shorts', 'Reels'],
+            logs: JSON.parse(localStorage.getItem('zenith_logs')) || [
+                { time: '10:15 AM', app: 'YouTube', action: 'Allowed', label: 'Tech Tutorial', points: '+15' },
+                { time: '11:30 AM', app: 'Instagram', action: 'Blocked', label: 'Reels Section', points: '0' },
+                { time: '12:45 PM', app: 'YouTube', action: 'Allowed', label: 'Science News', points: '+10' }
+            ],
+            onboardingStep: 0,
+            currentEquation: { eq: '', ans: 0 }
+        };
+
+        const onboardingSteps = [
+            { title: "Privacy First", desc: "No data ever leaves your device. No cloud. No tracking. Just discipline.", icon: "🛡️" },
+            { title: "Accessibility Service", desc: "We need this to read the UI labels of apps like YouTube to filter unproductive content.", icon: "⚙️" },
+            { title: "Smart Blocking", desc: "Whenever distraction keywords are detected, an unbreakable overlay will appear.", icon: "🚫" }
+        ];
+
+        // Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('main section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`page-${pageId}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-link').forEach(l => {
+                l.classList.remove('text-primary');
+                l.classList.add('text-slate-500');
+            });
+            event.currentTarget.classList.add('text-primary');
+            event.currentTarget.classList.remove('text-slate-500');
+        }
+
+        // Keywords
+        function renderKeywords() {
+            const allowedDiv = document.getElementById('allowedTags');
+            const blockedDiv = document.getElementById('blockedTags');
+            
+            allowedDiv.innerHTML = state.allowed.map(k => `
+                <span class="bg-secondary/10 text-secondary border border-secondary/20 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                    ${k} <button onclick="removeKeyword('allowed', '${
