@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenGuard - Privacy-First Productivity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; overflow: hidden; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .tab-content { display: none; height: calc(100vh - 160px); overflow-y: auto; }
+        .tab-content.active { display: block; }
+        .grayscale-filter { filter: grayscale(100%); transition: filter 0.5s ease; }
+        .blocking-overlay { display: none; position: fixed; inset: 0; z-index: 100; background: #000; display: none; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 2rem; }
+        .no-internet-badge { background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: bold; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .active-shield { animation: pulse-red 2s infinite; }
+    </style>
+</head>
+<body class="max-w-md mx-auto relative h-screen border-x border-slate-800 shadow-2xl">
+
+    <!-- TOP HEADER -->
+    <header class="p-6 pb-2 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">ZenGuard</h1>
+            <div class="flex items-center gap-2 mt-1">
+                <span class="no-internet-badge">Offline Mode</span>
+                <span class="text-[10px] text-slate-500">Local Room DB Active</span>
+            </div>
+        </div>
+        <div id="statusIndicator" class="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+        </div>
+    </header>
+
+    <!-- DASHBOARD TAB -->
+    <main id="tab-dashboard" class="tab-content active p-6">
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="glass p-4 rounded-3xl">
+                <p class="text-slate-400 text-xs uppercase font-semibold">Skill Points</p>
+                <h2 id="skillPoints" class="text-3xl font-bold text-emerald-400">1,240</h2>
+                <p class="text-[10px] text-slate-500 mt-1">+12 today</p>
+            </div>
+            <div class="glass p-4 rounded-3xl">
+                <p class="text-slate-400 text-xs uppercase font-semibold">Time Saved</p>
+                <h2 id="timeSaved" class="text-3xl font-bold text-cyan-400">4h 22m</h2>
+                <p class="text-[10px] text-slate-500 mt-1">vs last week</p>
+            </div>
+        </div>
+
+        <div class="glass p-5 rounded-3xl mb-6">
+            <h3 class="text-sm font-semibold mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                Current Activity Log
+            </h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 font-bold">YT</div>
+                        <div>
+                            <p class="font-medium">YouTube Shorts</p>
+                            <p class="text-slate-500">Keyword: "Prank Video"</p>
+                        </div>
+                    </div>
+                    <span class="text-red-400 font-semibold">BLOCKED</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold">VS</div>
+                        <div>
+                            <p class="font-medium">VS Code Mobile</p>
+                            <p class="text-slate-500">Keyword: "Kotlin Dev"</p>
+                        </div>
+                    </div>
+                    <span class="text-emerald-400 font-semibold">+5 XP</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass p-5 rounded-3xl">
+            <h3 class="text-sm font-semibold mb-3">Live Simulation</h3>
+            <p class="text-xs text-slate-400 mb-4">Type a video title to see the Accessibility Engine in action.</p>
+            <div class="flex gap-2">
+                <input id="simInput" type="text" placeholder="e.g. Crazy Prank Challenge" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                <button onclick="simulateScan()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition">Scan</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- FILTER TAB -->
+    <main id="tab-filters" class="tab-content p-6">
+        <h3 class="text-lg font-bold mb-4">Content Filter Engine</h3>
+        
+        <div class="mb-6">
+            <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Educational Whitelist (Safe)</label>
+            <div id="whiteListTags" class="flex flex-wrap gap-2 mb-3">
+                <!-- Tags populated by JS -->
+            </div>
+            <div class="flex gap-2">
+                <input id="whiteInput" type="text" placeholder="Add educational keyword..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm">
+                <button onclick="addTag('white')" class="bg-slate-800 p-2 rounded-xl text-emerald-400 border border-emerald-500/30">+</button>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Distraction Blacklist (Block)</label>
+            <div id="blackListTags" class="flex flex-wrap gap-2 mb-3">
+                <!-- Tags populated by JS -->
+            </div>
+            <div class="flex gap-2">
+                <input id="blackInput" type="text" placeholder="Add distraction keyword..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm">
+                <button onclick="addTag('black')" class="bg-slate-800 p-2 rounded-xl text-red-400 border border-red-500/30">+</button>
+            </div>
+        </div>
+
+        <div class="glass p-4 rounded-2xl">
+            <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Accessibility Target Apps</h4>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm">YouTube (Shorts Detector)</span>
+                    <div class="w-10 h-5 bg-emerald-500 rounded-full relative"><div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div></div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm">Instagram (Reels Filter)</span>
+                    <div class="w-10 h-5 bg-emerald-500 rounded-full relative"><div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div></div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm">Facebook (Watch Scan)</span>
+                    <div class="w-10 h-5 bg-emerald-500 rounded-full relative"><div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- DISCIPLINE TAB -->
+    <main id="tab-discipline" class="tab-content p-6">
+        <h3 class="text-lg font-bold mb-4">Discipline Modes</h3>
+        
+        <div class="space-y-4">
+            <div class="glass p-5 rounded-3xl">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h4 class="font-bold">Hard Mode</h4>
+                        <p class="text-xs text-slate-400">Must solve 3 math problems to bypass a block.</p>
+                    </div>
+                    <input type="checkbox" id="hardModeToggle" class="w-5 h-5 accent-emerald-500">
+                </div>
+                <div class="bg-slate-900/50 p-3 rounded-xl mt-3 border border-slate-700 italic text-[10px] text-slate-500">
+                    "Discipline is the bridge between goals and accomplishment."
+                </div>
+            </div>
+
+            <div class="glass p-5 rounded-3xl">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h4 class="font-bold">Grayscale Mode</h4>
+                        <p class="text-xs text-slate-400">Removes addictive colors from blocked apps.</p>
+                    </div>
+                    <input type="checkbox" id="grayscaleToggle" onchange="toggleGrayscaleVisual()" class="w-5 h-5 accent-emerald-500">
+                </div>
+            </div>
+
+            <div class="glass p-5 rounded-3xl">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h4 class="font-bold">Deep Work Timer</h4>
+                        <p class="text-xs text-slate-400">Total device lockdown except for educational apps.</p>
+                    </div>
+                    <button class="text-xs bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-lg border border-emerald-500/30">Start Session</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- SETTINGS TAB -->
+    <main id="tab-settings" class="tab-content p-6">
+        <h3 class="text-lg font-bold mb-4">Privacy & System</h3>
+        
+        <div class="space-y-4">
+            <div class="flex items-center gap-4 glass p-4 rounded-2xl">
+                <div class="bg-slate-800 p-2 rounded-xl text-cyan-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold">On-Device Processing</h4>
+                    <p class="text-[10px] text-slate-500">All scans stay in your Room Database.</p>
+                </div>
+            </div>
+
+            <div class="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                <h4 class="text-sm font-bold text-emerald-400 mb-1">Accessibility Service</h4>
+                <p class="text-[10px] text-emerald-500/70 mb-3">ZenGuard is currently monitoring UI hierarchy changes to protect your time.</p>
+                <button class="w-full py-2 bg-emerald-500 text-white rounded-xl text-xs font-bold">Service Running</button>
+            </div>
+
+            <div class="glass p-4 rounded-2xl opacity-50">
+                <h4 class="text-sm font-bold mb-1">Internet Permissions</h4>
+                <p class="text-[10px] text-slate-500 mb-3">This app does not have android.permission.INTERNET.</p>
+                <div class="text-[10px] font-mono bg-black/30 p-2 rounded">No cloud sync possible.</div>
+            </div>
+
+            <button onclick="resetData()" class="w-full text-red-500 text-xs font-bold py-2 border border-red-500/20 rounded-xl">Wipe All Local Data</button>
+        </div>
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-20 glass flex items-center justify-around px-6 border-t border-slate-800 rounded-t-3xl">
+        <button onclick="switchTab('dashboard')" class="nav-btn text-emerald-400 flex flex-col items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            <span class="text-[10px] mt-1">Status</span>
+        </button>
+        <button onclick="switchTab('filters')" class="nav-btn text-slate-500 flex flex-col items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+            <span class="text-[10px] mt-1">Filters</span>
+        </button>
+        <button onclick="switchTab('discipline')" class="nav-btn text-slate-500 flex flex-col items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            <span class="text-[10px] mt-1">Focus</span>
+        </button>
+        <button onclick="switchTab('settings')" class="nav-btn text-slate-500 flex flex-col items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /></svg>
+            <span class="text-[10px] mt-1">Config</span>
+        </button>
+    </nav>
+
+    <!-- ACCESSIBILITY OVERLAY -->
+    <div id="blockerOverlay" class="blocking-overlay">
+        <div class="bg-red-500/20 p-4 rounded-full mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+        </div>
+        <h2 class="text-3xl font-black mb-2 uppercase tracking-tighter">Distraction Blocked</h2>
+        <p class="text-slate-400 mb-8 max-w-xs">Your keywords matched: <span id="matchedKeyword" class="text-red-400 font-bold">"Prank"</span></p>
+        
+        <!-- Math Challenge Section -->
+        <div id="mathChallenge" class="hidden glass p-6 rounded-3xl w-full">
+            <p class="text-xs text-slate-500 mb-2 uppercase font-bold">Solve to unlock (1/3)</p>
+            <p id="mathQuestion" class="text-2xl font-bold mb-4">12 x 4 + 7 = ?</p>
+            <input id="mathInput" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-center mb-4" placeholder="Your Answer">
+            <button onclick="checkMath()" class="w-full bg-white text-black font-bold py-3 rounded-xl">Submit Answer</button>
+        </div>
+
+        <div id="defaultLockdown" class="block w-full">
+            <button onclick="closeOverlay()" class="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl mb-4 border border-slate-700">Exit App</button>
+            <p class="text-[10px] text-slate-600">ZenGuard Accessibility Overlay (TYPE_ACCESSIBILITY_OVERLAY)</p>
+        </div>
+    </div>
+
+    <script>
+        // State Management (Room DB Simulation)
+        let appState = {
+            skillPoints: 1240,
+            timeSaved: "4h 22m",
+            whitelist: ['Python', 'Tutorial', 'Space', 'Documentary', 'News', 'Kotlin', 'Physics'],
+            blacklist: ['Prank', 'Challenge', 'Vlog', 'Comedy', 'Dance', 'Reel', 'Shorts', 'Fail'],
+            hardMode: false,
+            grayscale: false,
+            mathSteps: 0
+        };
+
+        // Initialize UI
+        function init() {
+            renderTags();
+            document.getElementById('skillPoints').innerText = appState.skillPoints.toLocaleString();
+            document.getElementById('timeSaved').innerText = appState.timeSaved;
+            
+            // Load settings
+            appState.hardMode = localStorage.getItem('hardMode') === 'true';
+            appState.grayscale = localStorage.getItem('grayscale') === 'true';
+            document.getElementById('hardModeToggle').checked = appState.hardMode;
+            document.getElementById('grayscaleToggle').checked = appState.grayscale;
+            toggleGrayscaleVisual();
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.replace('text-emerald-400', 'text-slate-500'));
+            
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            event.currentTarget.classList.replace('text-slate-500', 'text-emerald-400');
+        }
+
+        // Filter Logic
+        function renderTags() {
+            const whiteContainer = document.getElementById('whiteListTags');
+            const blackContainer = document.getElementById('blackListTags');
+            
+            whiteContainer.innerHTML = appState.whitelist.map(tag => 
+                `<span class="bg-emerald-500/10 text-emerald-400 text-[10px] px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                    ${tag} <button onclick="removeTag('white', '${tag}')" class="hover:text-white">&times;</button>
+                </span>`
+            ).join('');
+
+            blackContainer.innerHTML = appState.blacklist.map(tag => 
+                `<span class="bg-red-500/10 text-red-400 text-[10px] px-3 py-1 rounded-full border border-red-500/30 flex items-center gap-1">
+                    ${tag} <button onclick="removeTag('black', '${tag}')" class="hover:text-white">&times;</button>
+                </span>`
+            ).join('');
+        }
+
+        function addTag(type) {
+            const input = document.getElementById(type + 'Input');
+            const val = input.value.trim();
+            if(val) {
+                if(type === 'white') appState.whitelist.push(val);
+                else appState.blacklist.push(val);
+                input.value = '';
+                renderTags();
+            }
+        }
+
+        function removeTag(type, tag) {
+            if(type === 'white') appState.whitelist = appState.whitelist.filter(t => t !== tag);
+            else appState.blacklist = appState.blacklist.filter(t => t !== tag);
+            renderTags();
+        }
+
+        // Accessibility Engine Simulation
+        function simulateScan() {
+            const query = document.getElementById('simInput').value.toLowerCase();
+            if(!query) return;
+
+            // Whitelist Check First
+            const isEdu = appState.whitelist.some(word => query.includes(word.toLowerCase()));
+            const isDistraction = appState.blacklist.some(word => query.includes(word.toLowerCase()));
+
+            if (isEdu) {
+                alert("✨ Educational Content Detected! +5 Skill Points awarded.");
+                appState.skillPoints += 5;
+                document.getElementById('skillPoints').innerText = appState.skillPoints.toLocaleString();
+            } else if (isDistraction) {
+                const matched = appState.blacklist.find(word => query.includes(word.toLowerCase()));
+                showOverlay(matched);
+            } else {
+                alert("Neutral content. Monitoring continued...");
+            }
+        }
+
+        function showOverlay(keyword) {
+            const overlay = document.getElementById('blockerOverlay');
+            document.getElementById('matchedKeyword').innerText = `"${keyword}"`;
+            overlay.style.display = 'flex';
+            
+            if(document.getElementById('hardModeToggle').checked) {
+                document.getElementById('mathChallenge').classList.remove('hidden');
+                document.getElementById('defaultLockdown').classList.add('hidden');
+                generateMath();
+            } else {
+                document.getElementById('mathChallenge').classList.add('hidden');
+                document.getElementById('defaultLockdown').classList.remove('hidden');
+            }
+        }
+
+        function closeOverlay() {
+            document.getElementById('blockerOverlay').style.display = 'none';
+            appState.mathSteps = 0;
+        }
+
+        // Math Discipline Mode
+        let currentAnswer = 0;
+        function generateMath() {
+            const a = Math.floor(Math.random() * 12) + 1;
+            const b = Math.floor(Math.random() * 12) + 1;
+            const c = Math.floor(Math.random() * 20);
+            currentAnswer = (a * b) + c;
+            document.getElementById('mathQuestion').innerText = `${a} x ${b} + ${c} = ?`;
+        }
+
+        function checkMath() {
+            const ans = parseInt(document.getElementById('mathInput').value);
+            if(ans === currentAnswer) {
+                appState.mathSteps++;
+                if(appState.mathSteps >= 3) {
+                    alert("Focus maintained. Unlocking temporarily.");
+                    closeOverlay();
+                } else {
+                    document.getElementById('mathInput').value = '';
+                    generateMath();
+                    document.querySelector('#mathChallenge p.text-slate-500').innerText = `Solve to unlock (${appState.mathSteps + 1}/3)`;
+                }
+            } else {
+                alert("Incorrect. Stay focused!");
+                document.getElementById('mathInput').value = '';
+            }
+        }
+
+        // Grayscale Visuals
+        function toggleGrayscaleVisual() {
+            const isChecked = document.getElementById('grayscaleToggle').checked;
+            if(isChecked) {
+                document.body.classList.add('grayscale-filter');
+            } else {
+                document.body.classList.remove('grayscale-filter');
+            }
+            localStorage.setItem('grayscale', isChecked);
+        }
+
+        // Persistent Hard Mode
+        document.getElementById('hardModeToggle').addEventListener('change', (e) => {
