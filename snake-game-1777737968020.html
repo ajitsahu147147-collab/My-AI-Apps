@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Worm Zone Royale - Multiverse Edition</title>
+    
+    <!-- PWA / Offline Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#020617">
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22JungleWorm%22,%22short_name%22:%22JungleWorm%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23020617%22,%22theme_color%22:%22%23020617%22}">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --slate-900: #0f172a; --slate-800: #1e293b; --slate-400: #94a3b8;
+            --emerald-400: #34d399; --emerald-500: #10b981; --rose-500: #f43f5e;
+            --indigo-500: #6366f1; --amber-400: #fbbf24;
+        }
+        
+        * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; box-sizing: border-box; }
+        html, body { 
+            overscroll-behavior: none; 
+            touch-action: none; 
+            background-color: #020617; 
+            color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .hidden { display: none !important; }
+
+        canvas {
+            image-rendering: auto;
+            background: #020617;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        header {
+            position: fixed; top: 0; width: 100%; display: flex; justify-content: space-between;
+            align-items: center; padding: 1rem 1.5rem; background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 60;
+        }
+
+        #xpContainer {
+            position: fixed; top: 72px; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.1); z-index: 55;
+        }
+        #xpBar { width: 0%; height: 100%; background: var(--emerald-400); transition: width 0.3s ease; box-shadow: 0 0 10px var(--emerald-400); }
+
+        #joystickZone {
+            position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px;
+            background: rgba(255, 255, 255, 0.05); border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px);
+            z-index: 30; display: flex; align-items: center; justify-content: center;
+        }
+        #joystickStick {
+            width: 50px; height: 50px; background: radial-gradient(circle, #facc15, #eab308);
+            border-radius: 50%; box-shadow: 0 0 20px rgba(234, 179, 8, 0.4);
+            position: absolute; transition: transform 0.05s ease-out; pointer-events: none;
+        }
+        #turboBtn {
+            position: absolute; bottom: 40px; right: 40px; width: 85px; height: 85px;
+            background: rgba(244, 63, 94, 0.2); border: 3px solid #f43f5e; border-radius: 50%;
+            z-index: 30; display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 900; font-size: 14px; box-shadow: 0 0 15px rgba(244, 63, 94, 0.3);
+        }
+        #turboBtn:active { transform: scale(0.9); background: #f43f5e; }
+        
+        #minimap {
+            position: absolute; top: 90px; right: 20px; width: 100px; height: 100px;
+            background: rgba(15, 23, 42, 0.8); border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; z-index: 20; overflow: hidden;
+        }
+        #minimapCanvas { width: 100%; height: 100%; }
+
+        .leaderboard {
+            position: absolute; top: 90px; left: 20px; background: rgba(15, 23, 42, 0.8);
+            padding: 10px; border-radius: 12px; font-size: 10px; pointer-events: none;
+            z-index: 20; border: 1px solid rgba(255,255,255,0.1); width: 130px;
+        }
+
+        .overlay {
+            position: absolute; inset: 0; background: rgba(2, 6, 23, 0.96);
+            backdrop-filter: blur(15px); z-index: 100; overflow-y: auto; display: flex;
+            flex-direction: column; align-items: center; padding: 4rem 1.5rem 2rem;
+        }
+
+        #pauseBtn {
+            width: 44px; height: 44px; background: rgba(255,255,255,0.05);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; margin-right: 12px; border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .powerup-pill {
+            padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 800;
+            display: flex; align-items: center; gap: 6px; animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            from { opacity: 0.7; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .option-btn { border: 3px solid transparent; transition: all 0.2s; background: #1e293b; padding: 8px; border-radius: 12px; cursor: pointer; }
+        .option-btn.selected { border-color: #10b981; transform: scale(1.05); background: rgba(16, 185, 129, 0.1); }
+        
+        .music-option { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 4px; border-radius: 8px; cursor: pointer; font-size: 10px; font-weight: bold; text-align: center; }
+        .music-option.selected { background: #10b981; color: #020617; border-color: #10b981; }
+        
+        .btn-primary {
+            width: 100%; background: #10b981; color: #0f172a; font-weight: 900;
+            padding: 20px; border-radius: 16px; font-size: 24px; border: none; cursor: pointer;
+            text-transform: uppercase; font-style: italic; margin-top: 20px;
+        }
+
+        #killFeed {
+            position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%);
+            z-index: 50; pointer-events: none; display: flex; flex-direction: column; gap: 8px;
+        }
+        .kill-msg {
+            background: rgba(244, 63, 94, 0.9); padding: 6px 16px; border-radius: 20px;
+            font-size: 12px; font-weight: 900; animation: slideUp 2s forwards;
+            color: white; border: 2px solid white;
+        }
+        @keyframes slideUp {
+            0% { transform: translateY(20px); opacity: 0; }
+            10% { transform: translateY(0); opacity: 1; }
+            80% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-40px); opacity: 0; }
+        }
+
+        /* Flag specific styling for buttons */
+        .flag-preview { width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 4px; overflow: hidden; position: relative; }
+        .flag-india { background: linear-gradient(#FF9933 33%, #FFFFFF 33% 66%, #138808 66%); }
+        .flag-usa { background: linear-gradient(45deg, #B22234 50%, #FFFFFF 50%); background-size: 10px 10px; background-color: #3C3B6E; }
+        .flag-russia { background: linear-gradient(#FFFFFF 33%, #0039A6 33% 66%, #D52B1E 66%); }
+        .flag-brazil { background: #009739; }
+        .flag-brazil::after { content: ''; position: absolute; top: 25%; left: 25%; width: 50%; height: 50%; background: #FEDD00; transform: rotate(45deg); }
+    </style>
+</head>
+<body class="flex flex-col select-none">
+
+    <header>
+        <div class="flex items-center">
+            <div id="pauseBtn" class="hidden">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </div>
+            <div>
+                <h1 id="gameTitle" style="color:var(--emerald-400); font-weight:900; font-size: 20px; margin:0; font-style: italic; line-height:1;">JUNGLE<span style="color:white">WORM</span></h1>
+                <p id="stats" style="font-size: 9px; color: var(--slate-400); font-weight: bold; text-transform: uppercase; margin-top: 4px; letter-spacing: 1px;">LVL 1 | Length: 0 | Kills: 0</p>
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <div id="score" style="font-size: 24px; font-weight: 900; color: white;">0</div>
+        </div>
+    </header>
+
+    <div id="xpContainer"><div id="xpBar"></div></div>
+
+    <div id="killFeed"></div>
+    <div class="powerup-indicators" style="position:fixed; top:85px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:25;" id="powerupUI"></div>
+
+    <div style="position:relative; flex:1; width:100%; height:100%; overflow:hidden;" id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="minimap"><canvas id="minimapCanvas"></canvas></div>
+        <div class="leaderboard" id="leaderboard">
+            <div id="leaderList" style="display:flex; flex-direction:column; gap:4px;"></div>
+        </div>
+
+        <div id="joystickZone"><div id="joystickStick"></div></div>
+        <div id="turboBtn">BOOST</div>
+
+        <!-- Start Menu -->
+        <div id="menu" class="overlay">
+            <div id="gameStatusTitle" style="font-size: 32px; font-weight: 900; font-style: italic; margin-bottom: 16px; color: var(--emerald-400);" class="hidden">GAME OVER</div>
+            
+            <div style="width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- World Selection -->
+                <div>
+                    <h3 style="font-size: 10px; font-weight: bold; color: var(--slate-400); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin-bottom: 12px;">Ground Terrain</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                        <button onclick="setWorld('jungle')" id="world-jungle" class="option-btn selected flex flex-col items-center">
+                            <div style="width: 100%; height: 40px; border-radius: 8px; background: linear-gradient(to bottom right, #064e3b, #10b981); margin-bottom: 4px;"></div>
+                            <span style="font-size: 10px; font-weight: bold;">JUNGLE GRASS</span>
+                        </button>
+                        <button onclick="setWorld('universe')" id="world-universe" class="option-btn flex flex-col items-center">
+                            <div style="width: 100%; height: 40px; border-radius: 8px; background: radial-gradient(circle, #1e293b, #020617); border: 1px solid #6366f1; margin-bottom: 4px;"></div>
+                            <span style="font-size: 10px; font-weight: bold;">UNIVERSE VOID</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Skin Selection -->
+                <div>
+                    <h3 style="font-size: 10px; font-weight: bold; color: var(--slate-400); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin-bottom: 12px;">Snake Skins</h3>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;" id="skinGrid">
+                        <!-- Flag Skins -->
+                        <button onclick="setSkin('india')" id="skin-india" class="option-btn flex flex-col items-center">
+                            <div class="flag-preview flag-india"></div>
+                            <span style="font-size: 8px; font-weight: bold;">INDIA</span>
+                        </button>
+                        <button onclick="setSkin('usa')" id="skin-usa" class="option-btn flex flex-col items-center">
+                            <div class="flag-preview flag-usa"></div>
+                            <span style="font-size: 8px; font-weight: bold;">USA</span>
+                        </button>
+                        <button onclick="setSkin('russia')" id="skin-russia" class="option-btn flex flex-col items-center">
+                            <div class="flag-preview flag-russia"></div>
+                            <span style="font-size: 8px; font-weight: bold;">RUSSIA</span>
+                        </button>
+                        <button onclick="setSkin('brazil')" id="skin-brazil" class="option-btn flex flex-col items-center">
+                            <div class="flag-preview flag-brazil"></div>
+                            <span style="font-size: 8px; font-weight: bold;">BRAZIL</span>
+                        </button>
+
+                        <button onclick="setSkin('tiger')" id="skin-tiger" class="option-btn selected flex flex-col items-center">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #f97316; margin-bottom: 4px; border: 1px solid #000;"></div>
+                            <span style="font-size: 8px; font-weight: bold;">TIGER</span>
+                        </button>
+                        <button onclick="setSkin('neon')" id="skin-neon" class="option-btn flex flex-col items-center">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #22d3ee; margin-bottom: 4px; box-shadow: 0 0 5px #22d3ee;"></div>
+                            <span style="font-size: 8px; font-weight: bold;">NEON</span>
+                        </button>
+                        <button onclick="setSkin('lava')" id="skin-lava" class="option-btn flex flex-col items-center">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #e11d48; margin-bottom: 4px;"></div>
+                            <span style="font-size: 8px; font-weight: bold;">LAVA</span>
+                        </button>
+                        <button onclick="setSkin('rainbow')" id="skin-rainbow" class="option-btn flex flex-col items-center">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(to right, red, orange, yellow, green, blue, violet); margin-bottom: 4px;"></div>
+                            <span style="font-size: 8px; font-weight: bold;">PRISM</span>
+                        </button>
+                        <button onclick="setSkin('gold')" id="skin-gold" class="option-btn flex flex-col items-center">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #fbbf24; margin-bottom: 4px; box-shadow: 0 0 8px #fbbf24;"></div>
+                            <span style="font-size: 8px; font-weight: bold;">GOLD</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Music Selection -->
+                <div>
+                    <h3 style="font-size: 10px; font-weight: bold; color: var(--slate-400); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin-bottom: 12px;">Atmosphere</h3>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                        <button onclick="setMusic('none')" id="mu-none" class="music-option">MUTE</button>
+                        <button onclick="setMusic('jungle')" id="mu-jungle" class="music-option selected">JUNGLE</button>
+                        <button onclick="setMusic('chill')" id="mu-chill" class="music-option">LIQUID</button>
+                        <button onclick="setMusic('retro')" id="mu-retro" class="music-option">RETRO</button>
+                        <button onclick="setMusic('tribal')" id="mu-tribal" class="music-option">TRIBAL</button>
+                        <button onclick="setMusic('techno')" id="mu-techno" class="music-option">TECHNO</button>
+                        <button onclick="setMusic('mystic')" id="mu-mystic" class="music-option">MYSTIC</button>
+                        <button onclick="setMusic('neon')" id="mu-neon" class="music-option">NEON</button>
+                    </div>
+                </div>
+
+                <button id="playBtn" class="btn-primary">Start Hunt</button>
+                
+                <div style="background: rgba(30, 41, 59, 0.5); padding: 16px; border-radius: 12px; display: flex; justify-content: space-between; font-size: 12px; border: 1px solid #334155;">
+                    <span style="color: var(--slate-400); text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">High Score</span>
+                    <span id="bestScore" style="color: var(--emerald-400); font-weight: 900;">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pause Menu -->
+        <div id="pauseMenu" class="overlay hidden justify-center" style="padding: 1.5rem;">
+            <h2 style="font-size: 64px; font-weight: 900; font-style: italic; color: white; margin-bottom: 32px;">PAUSED</h2>
+            <div style="width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 16px;">
+                <button id="resumeBtn" class="btn-primary" style="margin: 0;">Resume</button>
+                <button id="quitBtn" style="background: #1e293b; color: white; font-weight: bold; padding: 12px; border-radius: 12px; font-size: 18px; border: none; cursor: pointer;">Quit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const miniCanvas = document.getElementById('minimapCanvas');
+        const miniCtx = miniCanvas.getContext('2d');
+        const menu = document.getElementById('menu');
+        const pauseMenu = document.getElementById('pauseMenu');
+        const playBtn = document.getElementById('playBtn');
+        const resumeBtn = document.getElementById('resumeBtn');
+        const quitBtn = document.getElementById('quitBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const scoreEl = document.getElementById('score');
+        const statsEl = document.getElementById('stats');
+        const xpBar = document.getElementById('xpBar');
+        const bestScoreEl = document.getElementById('bestScore');
+        const leaderList = document.getElementById('leaderList');
+        const joystickZone = document.getElementById('joystickZone');
+        const joystickStick = document.getElementById('joystickStick');
+        const turboBtn = document.getElementById('turboBtn');
+        const gameStatusTitle = document.getElementById('gameStatusTitle');
+        const powerupUI = document.getElementById('powerupUI');
+        const gameTitle = document.getElementById('gameTitle');
+        const killFeed = document.getElementById('killFeed');
+
+        // Config
+        const WORLD_SIZE = 4500;
+        const FOOD_COUNT = 450;
+        const POWERUP_COUNT = 22;
+        const AI_COUNT = 18;
+        const INITIAL_LENGTH = 20;
+        const SEGMENT_DISTANCE = 5; 
+        const BASE_SPEED = 3.5;
+        const BOOST_SPEED = 7.0;
+        const TURBO_COST = 0.25;
+        const MAGNET_RADIUS = 320;
+
+        let gameActive = false;
+        let isPaused = false;
+        let score = 0;
+        let kills = 0;
+        let level = 1;
+        let xp = 0;
+        let player;
+        let bots = [];
+        let foods = [];
+        let particles = [];
+        let floatingTexts = [];
+        let worldDecor = []; 
+        let camera = { x: 0, y: 0 };
+        let joystick = { active: false, angle: -Math.PI/2, dx: 0, dy: 0 };
+        let isBoosting = false;
+        let leaderboardRankings = [];
+
+        const EMOJIS = ['🍎','🍓','🍇','🍉','🥭','🍊','🍌','🍍','🍈','🌽'];
+        const SPACE_EMOJIS = ['⭐','✨','🪐','☄️','🌕','🚀','🛸','💎','🔮','🧿'];
+        const POWERUP_TYPES = [
+            { id: 'magnet', emoji: '🧲', color: '#f43f5e', label: 'MAGNET' },
+            { id: 'shield', emoji: '🧪', color: '#22d3ee', label: 'SHIELD' },
+            { id: 'ghost', emoji: '👻', color: '#ffffff', label: 'GHOST' }
+        ];
+
+        let selectedSkin = 'tiger';
+        let selectedMusic = 'jungle';
+        let selectedWorld = 'jungle';
+        let audioCtx = null;
+        let audioTimer = null;
+
+        function setWorld(type) {
+            selectedWorld = type;
+            document.querySelectorAll('[id^="world-"]').forEach(el => el.classList.remove('selected'));
+            document.getElementById('world-' + type).classList.add('selected');
+            if (type === 'jungle') {
+                gameTitle.innerHTML = 'JUNGLE<span style="color:white">WORM</span>';
+                gameTitle.style.color = 'var(--emerald-400)';
+            } else {
+                gameTitle.innerHTML = 'COSMO<span style="color:white">WORM</span>';
+                gameTitle.style.color = 'var(--indigo-500)';
+            }
+            initWorldDecor();
+        }
+
+        function setSkin(type) {
+            selectedSkin = type;
+            document.querySelectorAll('[id^="skin-"]').forEach(el => el.classList.remove('selected'));
+            const btn = document.getElementById('skin-' + type);
+            if(btn) btn.classList.add('selected');
+        }
+
+        function setMusic(type) {
+            selectedMusic = type;
+            document.querySelectorAll('.music-option').forEach(el => el.classList.remove('selected'));
+            document.getElementById('mu-' + type).classList.add('selected');
+            if (audioTimer) stopMusic();
+            if (gameActive && type !== 'none') startMusic();
+        }
+
+        function startMusic() {
+            if (selectedMusic === 'none') return;
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            let beat = 0;
+            let tempo = 0.15;
+            switch(selectedMusic) {
+                case 'chill': tempo = 0.25; break;
+                case 'retro': tempo = 0.12; break;
+                case 'techno': tempo = 0.10; break;
+                case 'mystic': tempo = 0.40; break;
+                case 'tribal': tempo = 0.20; break;
+                case 'neon': tempo = 0.18; break;
+                default: tempo = 0.15;
+            }
+            audioTimer = setInterval(() => {
+                const now = audioCtx.currentTime;
+                if (selectedMusic === 'jungle') {
+                    if (beat % 4 === 0) playTone(150, 0, 0.1, 'sine', 0.2);
+                    const notes = [110, 110, 130, 146, 110, 164, 110, 130];
+                    playTone(notes[beat % 8], 0, 0.2, 'triangle', 0.08);
+                } else if (selectedMusic === 'chill') {
+                    if (beat % 8 === 0) playTone(80, 0, 0.3, 'sine', 0.1);
+                    const notes = [82, 98, 110, 98];
+                    playTone(notes[Math.floor(beat/2) % 4], 0, 0.4, 'sine', 0.08);
+                } else if (selectedMusic === 'retro') {
+                    const notes = [261, 329, 392, 523, 392, 329];
+                    playTone(notes[beat % 6], 0, 0.1, 'square', 0.05);
+                } else if (selectedMusic === 'tribal') {
+                    if (beat % 2 === 0) playTone(60, 0, 0.15, 'sine', 0.3);
+                    if (beat % 3 === 0) playTone(440, 0, 0.05, 'triangle', 0.05);
+                } else if (selectedMusic === 'techno') {
+                    playTone(55, 0, 0.05, 'sawtooth', 0.15);
+                    if (beat % 2 === 1) playTone(880, 0, 0.02, 'sine', 0.03);
+                } else if (selectedMusic === 'mystic') {
+                    const notes = [440, 554, 659, 880];
+                    playTone(notes[beat % 4], 0, 0.8, 'sine', 0.04);
+                } else if (selectedMusic === 'neon') {
+                    const notes = [110, 164, 196, 220, 196, 164];
+                    playTone(notes[beat % 6], 0, 0.3, 'sawtooth', 0.04);
+                }
+                beat++;
+            }, tempo * 1000);
+        }
+
+        function stopMusic() { clearInterval(audioTimer); audioTimer = null; }
+
+        function playTone(freq, delay, duration, type, vol) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+            osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + delay + duration);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime + delay);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + delay + duration);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(audioCtx.currentTime + delay); osc.stop(audioCtx.currentTime + delay + duration);
+        }
+
+        function playSfx(type) {
+            if (!audioCtx || selectedMusic === 'none') return;
+            if (type === 'eat') playTone(800 + Math.random()*200, 0, 0.05, 'sine', 0.1);
+            if (type === 'death') {
+                playTone(200, 0, 0.3, 'sawtooth', 0.2);
+                playTone(100, 0.1, 0.4, 'sine', 0.3);
+                if (navigator.vibrate) navigator.vibrate(100);
+            }
+            if (type === 'kill') playTone(1200, 0, 0.1, 'square', 0.15);
+            if (type === 'levelup') {
+                playTone(400, 0, 0.2, 'sine', 0.2);
+                playTone(600, 0.1, 0.2, 'sine', 0.2);
+                playTone(800, 0.2, 0.4, 'sine', 0.2);
+            }
+        }
+
+        class Worm {
+            constructor(x, y, skinType, isPlayer = false) {
+                this.segments = [];
+                for(let i=0; i<INITIAL_LENGTH; i++) {
+                    this.segments.push({ x: x, y: y + i * SEGMENT_DISTANCE });
+                }
+                this.angle = isPlayer ? -Math.PI/2 : Math.random() * Math.PI * 2;
+                this.skinType = skinType;
+                this.isPlayer = isPlayer;
+                this.speed = BASE_SPEED;
+                this.radius = 16;
+                this.dead = false;
+                this.name = isPlayer ? "YOU" : ["Cobra", "Venom", "Apex", "Predator", "Naga", "Python", "Striker", "Blade"][Math.floor(Math.random()*8)] + "_" + Math.floor(Math.random()*99);
+                this.targetAngle = this.angle;
+                this.virtualScore = isPlayer ? 0 : 400 + Math.random() * 3000;
+                this.magnetTime = 0;
+                this.shieldTime = 0;
+                this.ghostTime = 0;
+                this.pulseAnim = 0;
+            }
+
+            update() {
+                if (this.dead) return;
+                if (this.magnetTime > 0) this.magnetTime--;
+                if (this.shieldTime > 0) this.shieldTime--;
+                if (this.ghostTime > 0) this.ghostTime--;
+                this.pulseAnim += 0.1;
+
+                if (this.isPlayer) {
+                    this.speed = (isBoosting && score > 20) ? BOOST_SPEED : BASE_SPEED;
+                    if (isBoosting && score > 20) {
+                        score -= TURBO_COST;
+                        if (Math.random() > 0.5) spawnParticle(this.segments[0].x, this.segments[0].y, '#ffffff', 2);
+                    }
+                } else {
+                    if (Math.random() < 0.02) this.targetAngle = Math.random() * Math.PI * 2;
+                    let diff = this.targetAngle - this.angle;
+                    while (diff < -Math.PI) diff += Math.PI * 2;
+                    while (diff > Math.PI) diff -= Math.PI * 2;
+                    this.angle += diff * 0.1;
+                    if (this.segments[0].x < 200 || this.segments[0].x > WORLD_SIZE - 200 || 
+                        this.segments[0].y < 200 || this.segments[0].y > WORLD_SIZE - 200) {
+                        this.targetAngle = Math.atan2(WORLD_SIZE/2 - this.segments[0].y, WORLD_SIZE/2 - this.segments[0].x);
+                    }
+                }
+
+                if (this.isPlayer && joystick.active) this.angle = joystick.angle;
+
+                const head = this.segments[0];
+                let nextX = head.x + Math.cos(this.angle) * this.speed;
+                let nextY = head.y + Math.sin(this.angle) * this.speed;
+
+                if (nextX < 0 || nextX > WORLD_SIZE) this.angle = Math.PI - this.angle;
+                if (nextY < 0 || nextY > WORLD_SIZE) this.angle = -this.angle;
+
+                this.segments.unshift({ x: nextX, y: nextY });
+                const targetLen = INITIAL_LENGTH + Math.floor((this.isPlayer ? score : this.virtualScore) / 20);
+                while (this.segments.length > targetLen) this.segments.pop();
+
+                this.checkCollisions();
+            }
+
+            checkCollisions() {
+                const head = this.segments[0];
+                for (let i = foods.length - 1; i >= 0; i--) {
+                    const f = foods[i];
+                    const dist = Math.hypot(head.x - f.x, head.y - f.y);
+                    if (this.magnetTime > 0 && f.type === 'food' && dist < MAGNET_RADIUS) {
+                        const attractAngle = Math.atan2(head.y - f.y, head.x - f.x);
+                        f.x += Math.cos(attractAngle) * 8; f.y += Math.sin(attractAngle) * 8;
+                    }
+                    if (dist < this.radius + 15) {
+                        if (f.type === 'powerup') {
+                            if (f.powerId === 'magnet') this.magnetTime = 600;
+                            if (f.powerId === 'shield') this.shieldTime = 600;
+                            if (f.powerId === 'ghost') this.ghostTime = 400;
+                            foods.splice(i, 1); spawnItem(true);
+                            playSfx('eat');
+                        } else {
+                            if (this.isPlayer) { 
+                                score += f.value; 
+                                xp += f.value;
+                                if (xp >= level * 500) {
+                                    level++; xp = 0;
+                                    playSfx('levelup');
+                                    addKillMessage(`LEVEL UP: ${level}!`);
+                                }
+                                updateUI(); 
+                            } 
+                            else { this.virtualScore += f.value; }
+                            spawnParticle(f.x, f.y, '#fbbf24', 5);
+                            if (f.value > 100) floatingTexts.push({ x: f.x, y: f.y, text: `+${f.value}`, life: 1.0 });
+                            foods.splice(i, 1); spawnItem();
+                            if (Math.random() > 0.8) playSfx('eat');
+                        }
+                    }
+                }
+            }
+
+            die() {
+                if (this.dead) return;
+                if (this.shieldTime > 0 || this.ghostTime > 0) { 
+                    if (this.shieldTime > 0) this.shieldTime = 0;
+                    return; 
+                }
+                this.dead = true;
+                playSfx('death');
+                for(let i=0; i<15; i++) spawnParticle(this.segments[0].x, this.segments[0].y, '#f43f5e', 8);
+                this.segments.forEach((s, i) => {
+                    if (i % 3 === 0) foods.push({ x: s.x, y: s.y, emoji: (selectedWorld === 'universe' ? SPACE_EMOJIS : EMOJIS)[Math.floor(Math.random()*10)], value: 60, type: 'food' });
+                });
+                if (this.isPlayer) gameOver();
+            }
+
+            draw(ctx) {
+                if (this.dead) return;
+                
+                const head = this.segments[0];
+                const isLeader = leaderboardRankings[0] && leaderboardRankings[0].name === this.name;
+                
+                // Ghost effect alpha
+                ctx.globalAlpha = this.ghostTime > 0 ? 0.4 : 1.0;
+
+                if (this.shieldTime > 0) {
+                    ctx.beginPath(); ctx.arc(head.x, head.y, this.radius + 20, 0, Math.PI*2);
+                    ctx.fillStyle = 'rgba(34, 211, 238, 0.2)'; ctx.fill();
+                    ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 2; ctx.stroke();
+                }
+
+                // Body Segments
+                for(let i = this.segments.length - 1; i >= 0; i--) {
+                    const seg = this.segments[i];
+                    const size = this.radius * (1 - (i / this.segments.length) * 0.4);
+                    ctx.save(); ctx.translate(seg.x, seg.y);
+                    
+                    switch(this.skinType) {
+                        case 'india':
+                            if (i % 3 === 0) ctx.fillStyle = '#FF9933';
+                            else if (i % 3 === 1) ctx.fillStyle = '#FFFFFF';
+                            else ctx.fillStyle = '#138808';
+                            ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+                            if (i % 3 === 1) { ctx.strokeStyle = '#000080'; ctx.lineWidth = 1; ctx.stroke(); }
+                            break;
+                        case 'usa':
+                            if (i < 5) ctx.fillStyle = '#3C3B6E';
+                            else ctx.fillStyle = (Math.floor(i/2) % 2 === 0) ? '#B22234' : '#FFFFFF';
+                            ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+                            break;
+                        case 'russia':
+                            if (i % 3 === 0) ctx.fillStyle = '#FFFFFF';
+                            else if (i % 3 === 1) ctx.fillStyle = '#0039A6';
+                            else ctx.fillStyle = '#D52B1E';
+                            ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+                            break;
+                        case 'brazil':
+                            ctx.fillStyle = '#009739';
+                            ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+                            if (i % 4 === 0) {
+                                ctx.fillStyle = '#FEDD00';
+                                ctx.beginPath(); ctx.rect(-size/2, -size/2, size, size); ctx.fill();
+                            }
+                            break;
+                        case 'tiger':
+                            ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+                            if (i % 4 === 0) { ctx.rotate(this.angle + Math.PI/2); ctx.fillStyle = '#000'; ctx.fillRect(-size, -2, size*2, 4); }
+                            break;
+                        case 'neon':
+                            ctx.shadowBlur = 10; ctx.shadowColor = '#22d3ee'; ctx.fillStyle = '#0891b2'; 
+                            ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+                            ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+                            break;
+                        case 'lava':
+                            ctx.fillStyle = i % 2 === 0 ? '#e11d48' : '#fb923c'; 
+                            ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+                            break;
+                        case 'rainbow':
+                            ctx.fillStyle = `hsl(${(i * 15) % 360}, 80%, 50%)`;
+                            ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+                            break;
+                        case 'gold':
+                            const grad = ctx.createRadialGradient(0,0,1, 0,0,size); grad.addColorStop(0, '#fef3c7'); grad.addColorStop(1, '#d97706');
+                            ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+                            if (Math.random() > 0.95) { ctx.fillStyle = 'white'; ctx.fillRect(Math.random()*size-size/2, Math.random()*size-size/2, 2, 2); }
+                            break;
+                        default:
+                            ctx.fillStyle = '#64748b'; ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                // Head details
+                ctx.save(); ctx.translate(head.x, head.y); 
+                ctx.fillStyle = "white"; ctx.font = "bold 12px Arial"; ctx.textAlign = "center";
+                ctx.fillText(this.name, 0, -30);
+                if (isLeader) { ctx.font = "20px Arial"; ctx.fillText("👑", 0, -50); }
+
+                ctx.rotate(this.angle);
+                ctx.beginPath(); ctx.arc(0, 0, this.radius + 2, 0, Math.PI*2);
+                ctx.fillStyle = '#0f172a'; ctx.fill();
+                ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(8, 7, 5, 0, Math.PI*2); ctx.arc(8, -7, 5, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(10, 7, 2, 0, Math.PI*2); ctx.arc(10, -7, 2, 0, Math.PI*2); ctx.fill();
+                ctx.restore();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        function spawnParticle(x, y, color, count) {
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x, y, color,
+                    vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10,
+                    life: 1.0, size: 2 + Math.random()*4
+                });
+            }
+        }
+
+        function updateParticles() {
+            for(let i=particles.length-1; i>=0; i--) {
+                const p = particles[i];
+                p.x += p.vx; p.y += p.vy;
+                p.life -= 0.05;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+            for(let i=floatingTexts.length-1; i>=0; i--) {
+                const ft = floatingTexts[i];
+                ft.y -= 1; ft.life -= 0.02;
+                if (ft.life <= 0) floatingTexts.splice(i, 1);
+            }
+        }
+
+        function addKillMessage(msg) {
+            const div = document.createElement('div');
+            div.className = 'kill-msg';
+            div.innerText = msg;
+            killFeed.appendChild(div);
+            setTimeout(() => div.remove(), 2000);
+        }
+
+        function spawnItem(isPowerup = false) {
+            const list = selectedWorld === 'universe' ? SPACE_EMOJIS : EMOJIS;
+            if (isPowerup) {
+                const type = POWERUP_TYPES[Math.floor(Math.random()*POWERUP_TYPES.length)];
+                foods.push({ x: Math.random()*(WORLD_SIZE-600)+300, y: Math.random()*(WORLD_SIZE-600)+300, emoji: type.emoji, powerId: type.id, type: 'powerup', color: type.color });
+            } else {
+                foods.push({ x: Math.random()*WORLD_SIZE, y: Math.random()*WORLD_SIZE, emoji: list[Math.floor(Math.random()*list.length)], value: 20, type: 'food' });
+            }
+        }
+
+        function initWorldDecor() {
+            worldDecor = [];
+            if (selectedWorld === 'jungle') {
+                for(let i=0; i<150; i++) {
+                    worldDecor.push({
+                        x: Math.random()*WORLD_SIZE, y: Math.random()*WORLD_SIZE,
+                        size: 30 + Math.random()*50, type: Math.random() > 0.3 ? 'clump' : 'leaf',
+                        opacity: 0.1 + Math.random()*0.2, color: Math.random() > 0.5 ? '#065f46' : '#14532d'
+                    });
+                }
+            } else {
+                for(let i=0; i<300; i++) {
+                    worldDecor.push({
+                        x: Math.random()*WORLD_SIZE, y: Math.random()*WORLD_SIZE,
+                        size: 1 + Math.random()*3, type: 'star',
+                        opacity: 0.4 + Math.random()*0.6, color: '#fff'
+                    });
+                }
+            }
+        }
+
+        function init() {
+            resize();
+            bestScoreEl.innerText = localStorage.getItem('wormHighJungle') || 0;
+            initWorldDecor();
+            foods = [];
+            particles = [];
+            for(let i=0; i<FOOD_COUNT; i++) spawnItem();
+            for(let i=0; i<POWERUP_COUNT; i++) spawnItem(true);
+        }
+
+        function resize() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            miniCanvas.width = 100; miniCanvas.height = 100;
+        }
+
+        function startGame() {
+            score = 0; kills = 0; level = 1; xp = 0; isPaused = false;
+            updateUI();
+            player = new Worm(WORLD_SIZE/2, WORLD_SIZE/2, selectedSkin, true);
+            bots = [];
+            const skins = ['tiger', 'india', 'usa', 'russia', 'brazil', 'lava', 'gold'];
+            for(let i=0; i<AI_COUNT; i++) bots.push(new Worm(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, skins[i%skins.length]));
+            gameActive = true;
+            menu.classList.add('hidden'); pauseMenu.classList.add('hidden'); pauseBtn.classList.remove('hidden');
+            startMusic();
+            requestAnimationFrame(loop);
+        }
+
+        function togglePause() {
+            if (!gameActive) return;
+            isPaused = !isPaused;
+            if (isPaused) { pauseMenu.classList.remove('hidden'); stopMusic(); } 
+            else { pauseMenu.classList.add('hidden'); startMusic(); requestAnimationFrame(loop); }
+        }
+
+        function loop() {
+            if (!gameActive || isPaused) return;
+            update(); draw();
+            requestAnimationFrame(loop);
+        }
+
+        function update() {
+            player.update();
+            updateParticles();
+            camera.x = player.segments[0].x - canvas.width/2;
+            camera.y = player.segments[0].y - canvas.height/2;
+
+            bots.forEach(bot => {
+                bot.update();
+                const bHead = bot.segments[0];
+                const pHead = player.segments[0];
+                
+                // Player hits Bot
+                if (player.ghostTime <= 0) {
+                    bot.segments.forEach((seg, idx) => { 
+                        if (idx > 3 && Math.hypot(pHead.x - seg.x, pHead.y - seg.y) < bot.radius + player.radius - 5) {
+                            player.die(); 
+                        }
+                    });
+                }
+                
+                // Bot hits Player
+                if (bot.ghostTime <= 0) {
+                    player.segments.forEach((seg, idx) => { 
+                        if (idx > 3 && Math.hypot(bHead.x - seg.x, bHead.y - seg.y) < player.radius + bot.radius - 5) { 
+                            bot.die(); 
+                            if (!player.dead) { 
+                                kills++; score += 500; updateUI(); 
+                                playSfx('kill');
+                                addKillMessage(`YOU SLAYED ${bot.name.split('_')[0]}!`);
+                                floatingTexts.push({ x: bHead.x, y: bHead.y, text: "SLAYED!", life: 1.5 });
+                            } 
+                        } 
+                    });
+                }
+            });
+
+            bots = bots.filter(b => !b.dead);
+            while(bots.length < AI_COUNT) bots.push(new Worm(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, ['india', 'usa', 'tiger'][Math.floor(Math.random()*3)]));
+            
+            let pui = '';
+            if (player.magnetTime > 0) pui += `<div class="powerup-pill" style="background:var(--rose-500);">🧲 ${Math.ceil(player.magnetTime/60)}s</div>`;
+            if (player.shieldTime > 0) pui += `<div class="powerup-pill" style="background:#22d3ee; color:#020617;">🧪 ${Math.ceil(player.shieldTime/60)}s</div>`;
+            if (player.ghostTime > 0) pui += `<div class="powerup-pill" style="background:#ffffff; color:#020617;">👻 ${Math.ceil(player.ghostTime/60)}s</div>`;
+            powerupUI.innerHTML = pui;
+        }
+
+        function draw() {
+            ctx.fillStyle = selectedWorld === 'jungle' ? '#064e3b' : '#020617';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.save(); ctx.translate(-camera.x, -camera.y);
+            
+            // Grid Lines
+            ctx.strokeStyle = selectedWorld === 'jungle' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(99, 102, 241, 0.1)';
+            ctx.lineWidth = 1;
+            for(let x=0; x<=WORLD_SIZE; x+=200) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, WORLD_SIZE); ctx.stroke(); }
+            for(let y=0; y<=WORLD_SIZE; y+=200) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WORLD_SIZE, y); ctx.stroke(); }
+            
+            // World Decor
+            worldDecor.forEach(d => {
+                if (d.x > camera.x - 500 && d.x < camera.x + canvas.width + 500 && d.y > camera.y - 500 && d.y < camera.y + canvas.height + 500) {
+                    ctx.globalAlpha = d.opacity;
+                    ctx.fillStyle = d.color;
+                    ctx.beginPath(); ctx.arc(d.x, d.y, d.size, 0, Math.PI*2); ctx.fill();
+                    ctx.globalAlpha = 1.0;
+                }
+            });
+
+            ctx.strokeStyle = selectedWorld === 'jungle' ? '#10b981' : '#6366f1'; 
+            ctx.lineWidth = 15; ctx.strokeRect(-10, -10, WORLD_SIZE + 20, WORLD_SIZE + 20);
+
+            foods.forEach(f => {
+                if (f.x > camera.x - 50 && f.x < camera.x + canvas.width + 50 && f.y > camera.y - 50 && f.y < camera.y + canvas.height + 50) {
+                    ctx.font = f.type === 'powerup' ? '36px Arial' : '26px Arial';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(f.emoji, f.x, f.y);
+                }
+            });
+
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+            });
+
+            floatingTexts.forEach(ft => {
+                ctx.globalAlpha = ft.life;
+                ctx.fillStyle = "white"; ctx.font = "bold 20px Arial"; ctx.textAlign = "center";
+                ctx.fillText(ft.text, ft.x, ft.y);
+            });
+            ctx.globalAlpha = 1.0;
+
+            bots.forEach(bot => bot.draw(ctx));
+            player.draw(ctx);
+            ctx.restore();
+            
+            // Minimap
+            miniCtx.fillStyle = 'rgba(15, 23, 42, 0.9)'; miniCtx.fillRect(0, 0, 100, 100);
+            const s = 100/WORLD_SIZE;
+            miniCtx.fillStyle = selectedWorld === 'jungle' ? '#10b981' : '#6366f1'; 
+            miniCtx.beginPath(); miniCtx.arc(player.segments[0].x*s, player.segments[0].y*s, 3, 0, Math.PI*2); miniCtx.fill();
+            miniCtx.fillStyle = '#f43f5e'; bots.forEach(b => miniCtx.fillRect(b.segments[0].x*s, b.segments[0].y*s, 2, 2));
+
+            leaderboardRankings = [player, ...bots].sort((a,b) => (b.isPlayer ? score : b.virtualScore) - (a.isPlayer ? score : a.virtualScore));
+            const top5 = leaderboardRankings.slice(0, 5);
+            leaderList.innerHTML = top5.map((w, i) => `<div style="display:flex; justify-content:space-between; ${w.isPlayer ? 'color:var(--emerald-400); font-weight:bold;' : 'color:var(--slate-400);'}"><span>${i+1}. ${w.name}</span><span>${Math.floor(w.isPlayer ? score : w.virtualScore)}</span></div>`).join('');
+        }
+
+        function updateUI() {
+            scoreEl.innerText = Math.floor(score);
+            statsEl.innerText = `LVL ${level} | Length: ${player ? player.segments.length : 0} | Kills: ${kills}`;
+            xpBar.style.width = `${(xp / (level * 500)) * 100}%`;
+        }
+
+        function gameOver() {
+            gameActive = false; stopMusic();
+            pauseBtn.classList.add('hidden');
+            if (score > (localStorage.getItem('wormHighJungle') || 0)) localStorage.setItem('wormHighJungle', Math.floor(score));
+            menu.classList.remove('hidden');
+            gameStatusTitle.classList.remove('hidden');
+            bestScoreEl.innerText = localStorage.getItem('wormHighJungle');
+            playBtn.innerText = "RESTART HUNT";
+            powerupUI.innerHTML = '';
+        }
+
+        function handleJoystick(e) {
+            if (!joystick.active || isPaused) return;
+            const touch = e.touches ? e.touches[0] : e;
+            const rect = joystickZone.getBoundingClientRect();
+            const dx = touch.clientX - (rect.left + 60), dy = touch.clientY - (rect.top + 60);
+            const dist = Math.hypot(dx, dy);
+            const limitedDx = dx * (Math.min(dist, 40) / (dist || 1)), limitedDy = dy * (Math.min(dist, 40) / (dist || 1));
+            joystickStick.style.transform = `translate(${limitedDx}px, ${limitedDy}px)`;
+            if (dist > 5) joystick.angle = Math.atan2(dy, dx);
+        }
+
+        joystickZone.addEventListener('touchstart', (e) => { joystick.active = true; handleJoystick(e); });
+        window.addEventListener('touchmove', (e) => { if(joystick.active) { e.preventDefault(); handleJoystick(e); } }, { passive: false });
+        window.addEventListener('touchend', () => { joystick.active = false; joystickStick.style.transform = `translate(0,0)`; });
+        turboBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isBoosting = true; });
+        turboBtn.addEventListener('touchend', () => isBoosting = false);
+        pauseBtn.onclick = togglePause;
+        resumeBtn.onclick = togglePause;
+        quitBtn.onclick = () => { isPaused = false; pauseMenu.classList.add('hidden'); gameOver(); };
+        playBtn.onclick = startGame;
+        window.addEventListener('resize', resize);
+        init();
+    </script>
+</body>
+</html></html>
