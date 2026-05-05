@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <title>ProOS v15 - Extreme Desktop Experience</title>
+    
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlByb09TIFBybyIsCiAgInNob3J0X25hbWUiOiAiUHJvT1MiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgIm9yaWVudGF0aW9uIjogImxhbmRzY2FwZSIsCiAgInRoZW1lX2NvbG9yIjogIiMwMDAwMDAiCn0=">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --acrylic: rgba(15, 15, 15, 0.7);
+            --mica: rgba(35, 35, 35, 0.85);
+            --accent: #0078d4;
+            --glass-border: rgba(255, 255, 255, 0.12);
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', -apple-system, sans-serif;
+            user-select: none;
+            outline: none;
+            scrollbar-width: none;
+        }
+
+        body {
+            margin: 0;
+            background: #000;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            color: #fff;
+        }
+
+        .acrylic {
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            background: var(--acrylic);
+        }
+
+        .mica {
+            backdrop-filter: blur(50px) brightness(110%);
+            -webkit-backdrop-filter: blur(50px) brightness(110%);
+            background: var(--mica);
+            border: 1px solid var(--glass-border);
+        }
+
+        .window-shadow {
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--glass-border);
+        }
+
+        .desktop-icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 90px);
+            grid-template-rows: repeat(auto-fill, 100px);
+            grid-auto-flow: column;
+            gap: 10px;
+        }
+
+        .resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 15px;
+            height: 15px;
+            cursor: nwse-resize;
+            background: linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.2) 50%);
+        }
+
+        @keyframes boot-pulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        .boot-loader {
+            animation: boot-pulse 2s infinite ease-in-out;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.1);
+            height: 4px;
+            border-radius: 10px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        @media screen and (orientation: portrait) {
+            #orientation-warning { display: flex !important; }
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+    <div id="orientation-warning" class="fixed inset-0 bg-black z-[10000] hidden flex-col items-center justify-center text-center p-10">
+        <i data-lucide="monitor-off" class="w-16 h-16 mb-4 text-red-500"></i>
+        <h1 class="text-xl font-bold">Landscape Mode Required</h1>
+        <p class="text-white/60 mt-2 text-sm">To provide a true PC experience, please rotate your device.</p>
+    </div>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const { motion, AnimatePresence } = FramerMotion;
+
+        const SYSTEM_APPS = [
+            { id: 'explorer', name: 'File Explorer', icon: 'folder', color: 'text-yellow-400', defaultSize: {w: 700, h: 450} },
+            { id: 'edge', name: 'Web Browser', icon: 'globe', color: 'text-blue-400', defaultSize: {w: 800, h: 550} },
+            { id: 'terminal', name: 'PowerShell', icon: 'terminal', color: 'text-gray-300', defaultSize: {w: 600, h: 400} },
+            { id: 'settings', name: 'Settings', icon: 'settings', color: 'text-slate-400', defaultSize: {w: 650, h: 500} },
+            { id: 'notepad', name: 'Notepad', icon: 'file-text', color: 'text-blue-300', defaultSize: {w: 500, h: 400} },
+            { id: 'calc', name: 'Calculator', icon: 'calculator', color: 'text-emerald-400', defaultSize: {w: 320, h: 480} },
+            { id: 'store', name: 'Pro Store', icon: 'shopping-bag', color: 'text-pink-400', defaultSize: {w: 750, h: 550} }
+        ];
+
+        const Icon = ({ name, size = 20, className = "" }) => {
+            useEffect(() => { window.lucide && window.lucide.createIcons(); }, [name]);
+            return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
+        };
+
+        const App = () => {
+            const [stage, setStage] = useState('boot'); // boot, login, desktop
+            const [windows, setWindows] = useState([]);
+            const [focusedId, setFocusedId] = useState(null);
+            const [isStartOpen, setIsStartOpen] = useState(false);
+            const [isControlOpen, setIsControlOpen] = useState(false);
+            const [isWidgetsOpen, setIsWidgetsOpen] = useState(false);
+            const [time, setTime] = useState(new Date());
+            const [contextMenu, setContextMenu] = useState(null);
+            const [wallpaper, setWallpaper] = useState('https://images.unsplash.com/photo-1477346611705-65d1883cee1e?q=80&w=2000');
+
+            useEffect(() => {
+                const timer = setTimeout(() => setStage('login'), 3000);
+                const clock = setInterval(() => setTime(new Date()), 1000);
+                return () => { clearTimeout(timer); clearInterval(clock); };
+            }, []);
+
+            const openApp = (appId) => {
+                if (navigator.vibrate) navigator.vibrate(5);
+                setIsStartOpen(false);
+                if (windows.find(w => w.id === appId)) {
+                    setFocusedId(appId);
+                    return;
+                }
+                const app = SYSTEM_APPS.find(a => a.id === appId);
+                setWindows([...windows, { ...app, z: windows.length + 10, minimized: false }]);
+                setFocusedId(appId);
+            };
+
+            const closeApp = (id) => {
+                setWindows(windows.filter(w => w.id !== id));
+            };
+
+            const minimizeApp = (id) => {
+                setWindows(windows.map(w => w.id === id ? { ...w, minimized: true } : w));
+                setFocusedId(null);
+            };
+
+            const handleDesktopClick = (e) => {
+                if (e.button === 2) {
+                    setContextMenu({ x: e.clientX, y: e.clientY });
+                } else {
+                    setContextMenu(null);
+                    setIsStartOpen(false);
+                    setIsControlOpen(false);
+                    setIsWidgetsOpen(false);
+                }
+            };
+
+            if (stage === 'boot') {
+                return (
+                    <div className="h-screen w-screen bg-black flex flex-col items-center justify-center">
+                        <Icon name="command" size={100} className="text-blue-600 mb-20 boot-loader" />
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-xs tracking-[0.3em] uppercase opacity-40 font-bold">ProOS Secure Boot</span>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (stage === 'login') {
+                return (
+                    <div className="h-screen w-screen bg-cover bg-center relative" style={{ backgroundImage: `url(${wallpaper})` }}>
+                        <div className="absolute inset-0 bg-black/30 backdrop-blur-xl flex flex-col items-center justify-center">
+                            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-center">
+                                <div className="w-24 h-24 rounded-full bg-white/20 border border-white/30 mx-auto mb-6 flex items-center justify-center backdrop-blur-md">
+                                    <Icon name="user" size={48} />
+                                </div>
+                                <h1 className="text-3xl font-light mb-8">Administrator</h1>
+                                <button 
+                                    onClick={() => setStage('desktop')}
+                                    className="px-10 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg transition-all font-medium text-sm shadow-xl"
+                                >
+                                    Sign In
+                                </button>
+                                <div className="mt-20 flex gap-8 opacity-60">
+                                    <Icon name="wifi" size={18} />
+                                    <Icon name="battery" size={18} />
+                                    <Icon name="power" size={18} />
+                                </div>
+                            </motion.div>
+                        </div>
+                        <div className="absolute bottom-10 left-10 text-left">
+                            <h2 className="text-6xl font-light">{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</h2>
+                            <p className="text-xl opacity-80">{time.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div 
+                    className="h-screen w-screen relative overflow-hidden bg-cover bg-center transition-all duration-1000" 
+                    style={{ backgroundImage: `url(${wallpaper})` }}
+                    onMouseDown={handleDesktopClick}
+                >
+                    {/* Widgets Sidebar */}
+                    <AnimatePresence>
+                        {isWidgetsOpen && (
+                            <motion.div 
+                                initial={{ x: -400 }} animate={{ x: 0 }} exit={{ x: -400 }}
+                                className="fixed left-0 top-0 bottom-14 w-96 acrylic border-r border-white/10 z-[100] p-6"
+                            >
+                                <h2 className="text-2xl font-bold mb-6">Widgets</h2>
+                                <div className="space-y-4">
+                                    <div className="mica p-4 rounded-2xl">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <span className="text-sm font-bold opacity-60">WEATHER</span>
+                                            <Icon name="cloud-sun" size={16} />
+                                        </div>
+                                        <div className="text-3xl font-bold">24°C</div>
+                                        <div className="text-sm opacity-60">Mostly Sunny - San Francisco</div>
+                                    </div>
+                                    <div className="mica p-4 rounded-2xl">
+                                        <span className="text-sm font-bold opacity-60 mb-4 block">MARKET</span>
+                                        <div className="flex justify-between text-sm">
+                                            <span>NASDAQ</span>
+                                            <span className="text-green-400">+1.24%</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm mt-2">
+                                            <span>AAPL</span>
+                                            <span className="text-red-400">-0.45%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Desktop Icons */}
+                    <div className="desktop-icon-grid absolute inset-0 p-6 z-10">
+                        {SYSTEM_APPS.map(app => (
+                            <div 
+                                key={app.id} 
+                                onDoubleClick={() => openApp(app.id)}
+                                onClick={() => { if(navigator.vibrate) navigator.vibrate(2); }}
+                                className="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-white/10 border border-transparent hover:border-white/10 group cursor-default"
+                            >
+                                <Icon name={app.icon} size={42} className={`${app.color} drop-shadow-lg group-hover:scale-110 transition-transform`} />
+                                <span className="text-[11px] text-white mt-2 text-center font-medium drop-shadow-md">{app.name}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Window Layer */}
+                    {windows.map(win => !win.minimized && (
+                        <Window 
+                            key={win.id} 
+                            win={win} 
+                            isFocused={focusedId === win.id}
+                            onClose={() => closeApp(win.id)}
+                            onMinimize={() => minimizeApp(win.id)}
+                            onFocus={() => setFocusedId(win.id)}
+                        />
+                    ))}
+
+                    {/* Taskbar */}
+                    <div className="fixed bottom-0 left-0 right-0 h-12 acrylic border-t border-white/10 flex items-center px-2 z-[1000]">
+                        <div className="flex-1 flex items-center gap-1">
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); setIsStartOpen(!isStartOpen); setIsControlOpen(false); }}
+                                className={`w-10 h-10 rounded flex items-center justify-center transition-all ${isStartOpen ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                            >
+                                <Icon name="layout-grid" size={20} className="text-blue-400" />
+                            </button>
+                            
+                            <div className="w-px h-6 bg-white/10 mx-1" />
+
+                            <div className="flex gap-1 overflow-x-auto no-scrollbar">
+                                {windows.map(win => (
+                                    <button 
+                                        key={win.id}
+                                        onClick={() => {
+                                            if (win.minimized || focusedId !== win.id) {
+                                                setWindows(windows.map(w => w.id === win.id ? { ...w, minimized: false } : w));
+                                                setFocusedId(win.id);
+                                            } else {
+                                                minimizeApp(win.id);
+                                            }
+                                        }}
+                                        className={`w-10 h-10 rounded flex items-center justify-center transition-all relative ${focusedId === win.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                                    >
+                                        <Icon name={win.icon} size={20} className={win.color} />
+                                        <div className={`absolute bottom-1 left-2 right-2 h-0.5 rounded-full bg-blue-400 transition-all ${focusedId === win.id ? 'opacity-100' : 'opacity-40'}`} />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 px-2">
+                            <div className="flex items-center gap-3 px-3 py-1 hover:bg-white/5 rounded-md cursor-pointer transition-all" onClick={() => setIsControlOpen(!isControlOpen)}>
+                                <div className="flex gap-2 items-center opacity-70">
+                                    <Icon name="wifi" size={14} />
+                                    <Icon name="volume-2" size={14} />
+                                    <Icon name="battery" size={14} />
+                                </div>
+                                <div className="flex flex-col items-end leading-none border-l border-white/10 pl-3">
+                                    <span className="text-[11px] font-bold">{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    <span className="text-[10px] opacity-60 mt-0.5">{time.toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setIsWidgetsOpen(!isWidgetsOpen)} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-md">
+                                <Icon name="sidebar" size={18} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Start Menu Overlay */}
+                    <AnimatePresence>
+                        {isStartOpen && (
+                            <motion.div 
+                                initial={{ y: 200, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 200, opacity: 0 }}
+                                className="fixed bottom-14 left-2 w-[550px] max-w-[95vw] mica rounded-2xl z-[2000] p-6 shadow-2xl overflow-hidden"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <div className="flex items-center gap-2 mb-8 bg-white/5 p-3 rounded-xl">
+                                    <Icon name="search" size={18} className="opacity-50" />
+                                    <input placeholder="Search apps, settings, and documents" className="bg-transparent w-full text-sm outline-none" />
+                                </div>
+                                
+                                <div className="grid grid-cols-4 gap-4 mb-8">
+                                    <div className="col-span-4 text-[11px] font-bold opacity-40 uppercase tracking-widest mb-2">Pinned</div>
+                                    {SYSTEM_APPS.map(app => (
+                                        <button key={app.id} onClick={() => openApp(app.id)} className="flex flex-col items-center gap-2 p-3 hover:bg-white/5 rounded-xl transition-all group">
+                                            <Icon name={app.icon} size={32} className={app.color} />
+                                            <span className="text-[11px]">{app.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="border-t border-white/10 pt-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">AD</div>
+                                        <span className="text-sm font-medium">Administrator</span>
+                                    </div>
+                                    <button onClick={() => window.location.reload()} className="p-2 hover:bg-red-500/20 rounded-lg text-red-500 transition-colors">
+                                        <Icon name="power" size={18} />
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Control Center */}
+                    <AnimatePresence>
+                        {isControlOpen && (
+                            <motion.div 
+                                initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 100, opacity: 0 }}
+                                className="fixed bottom-14 right-2 w-80 mica rounded-2xl z-[2000] p-5 shadow-2xl"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <div className="grid grid-cols-3 gap-3 mb-6">
+                                    {['wifi', 'bluetooth', 'moon', 'plane', 'battery', 'cast'].map(ic => (
+                                        <button key={ic} className="flex flex-col items-center gap-2 p-3 hover:bg-white/10 bg-white/5 rounded-xl transition-all">
+                                            <Icon name={ic} size={18} />
+                                            <span className="text-[10px] uppercase font-bold opacity-40">{ic}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <Icon name="sun" size={16} className="text-yellow-400" />
+                                        <input type="range" className="flex-1" />
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Icon name="volume-2" size={16} className="text-blue-400" />
+                                        <input type="range" className="flex-1" />
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Desktop Context Menu */}
+                    {contextMenu && (
+                        <div 
+                            className="fixed mica rounded-lg p-1.5 z-[5000] w-48 shadow-2xl"
+                            style={{ top: contextMenu.y, left: contextMenu.x }}
+                        >
+                            <ContextItem icon="layout" label="View" />
+                            <ContextItem icon="sort-asc" label="Sort by" />
+                            <ContextItem icon="refresh-cw" label="Refresh" onClick={() => window.location.reload()} />
+                            <div className="h-px bg-white/10 my-1" />
+                            <ContextItem icon="plus" label="New" />
+                            <ContextItem icon="monitor" label="Display Settings" />
+                            <ContextItem icon="palette" label="Personalize" />
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const ContextItem = ({ icon, label, onClick }) => (
+            <button onClick={onClick} className="w-full flex items-center gap-3 px-3 py-1.5 hover:bg-blue-600 rounded-md text-sm transition-colors text-left">
+                <Icon name={icon} size={14} className="opacity-70" />
+                <span>{label}</span>
+            </button>
+        );
+
+        const Window = ({ win, isFocused, onClose, onMinimize, onFocus }) => {
+            const [pos, setPos] = useState({ x: 100 + (Math.random() * 50), y: 50 + (Math.random() * 50) });
+            const [size, setSize] = useState(win.defaultSize || { w: 600, h: 400 });
+            const [isMaximized, setIsMaximized] = useState(false);
+            const dragRef = useRef(null);
+
+            const handleDrag = (e, info) => {
+                if (!isMaximized) setPos({ x: pos.x + info.delta.x, y: pos.y + info.delta.y });
+            };
+
+            return (
+                <motion.div 
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className={`fixed mica rounded-xl overflow-hidden window-shadow flex flex-col ${isFocused ? 'z-[500]' : 'z-[400]'}`}
+                    style={{ 
+                        left: isMaximized ? 0 : pos.x, 
+                        top: isMaximized ? 0 : pos.y, 
+                        width: isMaximized ? '100vw' : size.w, 
+                        height: isMaximized ? 'calc(100vh - 48px)' : size.h,
+                        borderRadius: isMaximized ? 0 : 12,
+                        transition: 'box-shadow 0.2s'
+                    }}
+                    onMouseDown={onFocus}
+                >
+                    {/* Titlebar */}
+                    <div 
+                        className="h-10 flex items-center justify-between px-3 bg-white/5 cursor-default"
+                        onPointerDown={e => e.stopPropagation()}
+                    >
+                        <motion.div 
+                            drag
+                            dragMomentum={false}
+                            onDrag={handleDrag}
+                            className="flex-1 h-full flex items-center gap-3"
+                        >
+                            <Icon name={win.icon} size={16} className={win.color} />
+                            <span className="text-xs font-semibold opacity-80">{win.name}</span>
+                        </motion.div>
+                        <div className="flex items-center gap-1">
+                            <button onClick={onMinimize} className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-md transition-colors">
+                                <Icon name="minus" size={14} />
+                            </button>
+                            <button onClick={() => setIsMaximized(!isMaximized)} className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-md transition-colors">
+                                <Icon name={isMaximized ? "shrink" : "maximize-2"} size={12} />
+                            </button>
+                            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center hover:bg-red-500 rounded-md transition-colors">
+                                <Icon name="x" size={14} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Window Content */}
+                    <div className="flex-1 overflow-auto bg-black/20">
+                        {win.id === 'explorer' && <ExplorerApp />}
+                        {win.id === 'edge' && <BrowserApp />}
+                        {win.id === 'terminal' && <TerminalApp />}
+                        {win.id === 'notepad' && <NotepadApp />}
+                        {win.id === 'calc' && <CalculatorApp />}
+                        {win.id === 'settings' && <SettingsApp />}
+                    </div>
+
+                    {!isMaximized && <div className="resize-handle" />}
+                </motion.div>
+            );
+        };
+
+        const ExplorerApp = () => (
+            <div className="flex h-full text-sm">
+                <div className="w-48 bg-white/5 p-4 border-r border-white/5 space-y-4">
+                    <div className="space-y-1">
+                        <div className="px-2 py-1 bg-white/10 rounded flex items-center gap-2"><Icon name="star" size={14} /> Quick Access</div>
+                        <div className="px-2 py-1 hover:bg-white/5 rounded flex items-center gap-2"><Icon name="clock" size={14} /> Recent</div>
+                        <div className="px-2 py-1 hover:bg-white/5 rounded flex items-center gap-2"><Icon name="download" size={14} /> Downloads</div>
+                    </div>
+                    <div className="space-y-1">
+                        <div className="text-[10px] font-bold opacity-30 px-2 uppercase">This PC</div>
+                        <div className="px-2 py-1 hover:bg-white/5 rounded flex items-center gap-2"><Icon name="hard-drive" size={14} /> System (C:)</div>
+                        <div className="px-2 py-1 hover:bg-white/5 rounded flex items-center gap-2"><Icon name="database" size={14} /> Data (D:)</div>
+                    </div>
+                </div>
+                <div className="flex-1 p-6 grid grid-cols-4 content-start gap-4">
+                    {['Documents', 'Pictures', 'Music', 'Videos', 'Projects', 'Backups'].map(folder => (
+                        <div key={folder} className="flex flex-col items-center gap-2 p-3 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-xl group transition-all">
+                            <Icon name="folder" size={48} className="text-yellow-500 group-hover:scale-105 transition-transform" />
+                            <span className="text-[11px] font-medium">{folder}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const BrowserApp = () => (
+            <div className="flex flex-col h-full bg-[#f3f3f3] text-black">
+                <div className="h-10 bg-[#e7e7e7] flex items-center px-3 gap-2 border-b">
+                    <div className="flex gap-2 mr-2">
+                        <Icon name="chevron-left" size={16} />
+                        <Icon name="chevron-right" size={16} />
+                        <Icon name="refresh-cw" size={16} />
+                    </div>
+                    <div className="flex-1 bg-white h-7 rounded-full border px-4 flex items-center gap-2 text-xs">
+                        <Icon name="lock" size={12} className="text-green-600" />
+                        <span>https://www.google.com/search?q=pro_os</span>
+                    </div>
+                </div>
+                <div className="flex-1 flex flex-col items-center justify-center">
+                    <div className="text-4xl font-bold mb-8">
+                        <span className="text-blue-500">G</span>
+                        <span className="text-red-500">o</span>
+                        <span className="text-yellow-500">o</span>
+                        <span className="text-blue-500">g</span>
+                        <span className="text-green-500">l</span>
+                        <span className="text-red-500">e</span>
+                    </div>
+                    <div className="w-[500px] h-12 rounded-full border shadow-sm flex items-center px-6 gap-3">
+                        <Icon name="search" size={18} className="text-gray-400" />
+                        <input className="flex-1 outline-none text-sm" placeholder="Search Google or type a URL" />
+                        <Icon name="mic" size={18} className="text-blue-500" />
+                    </div>
+                </div>
+            </div>
+        );
+
+        const TerminalApp = () => {
+            const [lines, setLines] = useState(['ProOS PowerShell Core v7.4.1', 'Copyright (c) Microsoft Corporation.', '']);
+            const [input, setInput] = useState('');
+            const handleKey = (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = input.trim().toLowerCase();
+                    let response = `Command '${cmd}' not found.`;
+                    if (cmd === 'help') response = 'Available: clear, date, system, help, whoami';
+                    if (cmd === 'date') response = new Date().toString();
+                    if (cmd === 'whoami') response = 'pro_os/administrator';
+                    if (cmd === 'system') response = 'Kernel: ProOS x64 v15.0\nMemory: 32GB LPDDR5\nProcessor: Quantum M3X';
+                    
+                    if (cmd === 'clear') setLines([]);
+                    else setLines([...lines, `PS C:\\Users\\Admin> ${input}`, response, '']);
+                    setInput('');
+                }
+            };
+            return (
+                <div className="h-full bg-[#012456] p-3 font-mono text-sm text-gray-100">
+                    {lines.map((l, i) => <div key={i} className="min-h-[1.2rem] whitespace-pre-wrap">{l}</div>)}
+                    <div className="flex gap-2">
+                        <span className="text-yellow-400">PS C:\Users\Admin&gt;</span>
+                        <input className="flex-1 bg-transparent outline-none" autoFocus value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey} />
+                    </div>
+                </div>
+            );
+        };
+
+        const NotepadApp = () => (
+            <textarea className="w-full h-full bg-[#1e1e1e] p-6 text-gray-300 outline-none resize-none font-mono leading-relaxed" placeholder="Type something..."></textarea>
+        );
+
+        const CalculatorApp = () => {
+            const [val, setVal] = useState('0');
+            return (
+                <div className="h-full bg-[#202020] flex flex-col p-4">
+                    <div className="h-24 flex items-end justify-end text-4xl font-light mb-4 px-2">{val}</div>
+                    <div className="flex-1 grid grid-cols-4 gap-1">
+                        {['C', 'CE', '%', '/', '7', '8', '9', 'x', '4', '5', '6', '-', '1', '2', '3', '+', '+/-', '0', '.', '='].map(btn => (
+                            <button 
+                                key={btn} 
+                                onClick={() => btn === 'C' ? setVal('0') : setVal(btn)}
+                                className={`rounded flex items-center justify-center text-sm transition-all ${btn === '=' ? 'bg-blue-600' : 'bg-white/5 hover:bg-white/10'}`}
+                            >
+                                {btn}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const SettingsApp = () => (
+            <div className="p-8">
+                <h1 className="text-3xl font-bold mb-8">Settings</h1>
+                <div className="grid grid-cols-2 gap-4">
+                    {[
+                        {n: 'System', d: 'Display, sound, power', i: 'monitor'},
+                        {n: 'Bluetooth & Devices', d: 'Mouse, keyboard, phone', i: 'bluetooth'},
+                        {n: 'Network & Internet', d: 'Wi-Fi, hotspot', i: 'wifi'},
+                        {n: 'Personalization', d: 'Background, colors', i: 'palette'},
+                        {n: 'Apps', d: 'Uninstall, defaults', i: 'layout'},
+                        {n: 'Accounts', d: 'Sync, email, security', i: 'user'}
+                    ].map(s => (
+                        <div key={s.n} className="mica p-4 rounded-xl flex items-center gap-4 hover:bg-white/10 cursor-pointer transition-all">
+                            <div className="p-3 bg-blue-600/20 rounded-lg text-blue-400"><Icon name={s.i} /></div>
+                            <div>
+                                <div className="text-sm font-semibold">{s.n}</div>
+                                <div className="text-[11px] opacity-50">{s.d}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
