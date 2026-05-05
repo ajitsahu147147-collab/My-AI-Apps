@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>X-CORE FUTURE OS</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="X-CORE OS">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#020205">
+    
+    <!-- Manifest Link (Inline Data URI for Single File) -->
+    <link rel="manifest" href='data:application/json,{"name":"X-CORE FUTURE OS","short_name":"X-CORE","start_url":".","display":"standalone","background_color":"#020205","theme_color":"#00f2ff","orientation":"landscape","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/5770/5770258.png","sizes":"512x512","type":"image/png"}]}'>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap');
+
+        :root {
+            --primary: #00f2ff;
+            --accent: #ff00ea;
+            --danger: #ff0055;
+            --bg: #020205;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            overscroll-behavior: none;
+            touch-action: manipulation;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg);
+            color: var(--primary);
+        }
+
+        .cyber-border {
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+        }
+
+        .glass-ultra {
+            background: rgba(10, 15, 25, 0.85);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        .glitch-text {
+            text-shadow: 2px 0 var(--accent), -2px 0 var(--primary);
+            animation: glitch 2s infinite;
+        }
+
+        @keyframes glitch {
+            0% { text-shadow: 2px 0 var(--accent), -2px 0 var(--primary); }
+            50% { text-shadow: -2px 0 var(--accent), 2px 0 var(--primary); }
+            100% { text-shadow: 2px 0 var(--accent), -2px 0 var(--primary); }
+        }
+
+        .taskbar-float {
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: fit-content;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        .scanline {
+            width: 100%;
+            height: 100px;
+            z-index: 10000;
+            background: linear-gradient(0deg, rgba(0,242,255,0) 0%, rgba(0,242,255,0.02) 50%, rgba(0,242,255,0) 100%);
+            position: absolute;
+            pointer-events: none;
+            animation: scanline 10s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .app-window {
+            transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
+        }
+
+        @media (orientation: portrait) {
+            #mobile-pc-container { display: none; }
+            #orientation-warning { display: flex; }
+        }
+        @media (orientation: landscape) {
+            #mobile-pc-container { display: flex; }
+            #orientation-warning { display: none; }
+        }
+
+        .cyber-grid {
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .win-close:hover {
+            background-color: var(--danger);
+            box-shadow: 0 0 15px var(--danger);
+        }
+
+        .battery-segment {
+            height: 8px;
+            width: 4px;
+            background: var(--primary);
+            margin: 1px;
+        }
+
+        /* Animated Ambient Background */
+        .ambient-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, #0a1020 0%, #020205 100%);
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="overflow-hidden bg-[#020205]" oncontextmenu="return false;">
+
+    <div class="ambient-bg"></div>
+    <div class="scanline" id="scanline-overlay"></div>
+
+    <!-- Orientation Warning -->
+    <div id="orientation-warning" class="fixed inset-0 bg-black z-[20000] flex flex-col items-center justify-center text-center p-10">
+        <div class="w-24 h-24 border-2 border-[#00f2ff] rounded-lg animate-pulse mb-6 flex items-center justify-center">
+            <svg class="w-12 h-12 text-[#00f2ff] rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 18h.01M7 21h10a2 22 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2zM9 5h6"></path></svg>
+        </div>
+        <h1 class="text-[#00f2ff] text-xl font-bold tracking-widest glitch-text">NEURAL INTERFACE LOCKED</h1>
+        <p class="text-[#00f2ff]/60 mt-4 text-xs">ROTATE DEVICE FOR WIDESCREEN HUD ACCESS</p>
+    </div>
+
+    <!-- Boot Loader -->
+    <div id="boot-loader" class="fixed inset-0 z-[15000] bg-black flex flex-col items-center justify-center">
+        <div class="relative">
+            <div class="w-40 h-40 border border-[#00f2ff]/10 rounded-full animate-ping absolute inset-0"></div>
+            <div class="w-40 h-40 border-b-2 border-l-2 border-[#00f2ff] rounded-full animate-spin"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-[10px] text-[#00f2ff] animate-pulse">X-CORE</span>
+            </div>
+        </div>
+        <div class="mt-12 text-center">
+            <h2 class="text-[#00f2ff] font-bold text-lg tracking-[0.6em] mb-2">VIRTUALIZED OS v.3.0</h2>
+            <p id="boot-status" class="text-[#00f2ff]/40 text-[9px] uppercase tracking-widest">Awaiting Neural Link...</p>
+            <button id="start-btn" onclick="initializeSystem()" class="hidden mt-8 px-12 py-4 border border-[#00f2ff] hover:bg-[#00f2ff]/10 text-[#00f2ff] text-[10px] font-bold transition-all uppercase tracking-[0.3em]">
+                Initialize Kernel
+            </button>
+        </div>
+    </div>
+
+    <!-- Interface -->
+    <div id="mobile-pc-container" class="relative w-full h-full flex flex-col cyber-grid">
+        
+        <!-- Top Status Bar -->
+        <div class="h-8 w-full border-b border-[#00f2ff]/10 bg-black/40 flex items-center justify-between px-6 z-[800]">
+            <div class="flex items-center space-x-4">
+                <span class="text-[8px] font-bold tracking-[0.2em] text-[#00f2ff]/60 uppercase">System Integrity: OK</span>
+                <span id="core-temp" class="text-[8px] font-bold tracking-[0.2em] text-[#00f2ff]/60 uppercase">CORE: 32°C</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="flex space-x-0.5" id="sim-battery">
+                    <div class="battery-segment"></div>
+                    <div class="battery-segment"></div>
+                    <div class="battery-segment"></div>
+                    <div class="battery-segment"></div>
+                </div>
+                <span class="text-[9px] font-bold text-[#00f2ff]/80">100% PWR</span>
+            </div>
+        </div>
+
+        <!-- Desktop Grid -->
+        <div id="desktop" class="flex-grow p-6 grid grid-flow-col grid-rows-4 gap-6 items-start content-start">
+            <!-- App Icons -->
+            <div onclick="openApp('terminal')" class="flex flex-col items-center w-20 group">
+                <div class="w-14 h-14 flex items-center justify-center glass-ultra mb-2 border-[#00f2ff]/30 group-active:scale-90 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 9l3 3-3 3m5 0h3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+                <span class="text-[#00f2ff] text-[8px] font-bold uppercase tracking-widest">Terminal</span>
+            </div>
+            
+            <div onclick="openApp('files')" class="flex flex-col items-center w-20 group">
+                <div class="w-14 h-14 flex items-center justify-center glass-ultra mb-2 border-[#00f2ff]/30 group-active:scale-90 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" stroke-width="2"></path></svg>
+                </div>
+                <span class="text-[#00f2ff] text-[8px] font-bold uppercase tracking-widest">Vault</span>
+            </div>
+
+            <div onclick="openApp('security')" class="flex flex-col items-center w-20 group">
+                <div class="w-14 h-14 flex items-center justify-center glass-ultra mb-2 border-red-500/30 group-active:scale-90 transition-transform">
+                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zM7 11V7a5 5 0 0110 0v4" stroke-width="2"></path></svg>
+                </div>
+                <span class="text-red-500 text-[8px] font-bold uppercase tracking-widest">Defense</span>
+            </div>
+
+            <div onclick="openApp('settings')" class="flex flex-col items-center w-20 group">
+                <div class="w-14 h-14 flex items-center justify-center glass-ultra mb-2 border-white/20 group-active:scale-90 transition-transform">
+                    <svg class="w-6 h-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-width="2"></path></svg>
+                </div>
+                <span class="text-white/70 text-[8px] font-bold uppercase tracking-widest">Config</span>
+            </div>
+        </div>
+
+        <!-- Taskbar -->
+        <div class="fixed taskbar-float glass-ultra cyber-border flex items-center space-x-6 z-[1000] px-4 py-2">
+            <button onclick="toggleStart()" class="w-10 h-10 flex items-center justify-center hover:bg-[#00f2ff]/20 rounded-full transition-all">
+                <div class="w-4 h-4 bg-[#00f2ff] rounded-sm rotate-45 shadow-[0_0_15px_#00f2ff]"></div>
+            </button>
+            <div class="h-6 w-[1px] bg-[#00f2ff]/20"></div>
+            <div id="active-icons" class="flex space-x-3"></div>
+            <div class="h-6 w-[1px] bg-[#00f2ff]/20"></div>
+            <div class="text-[10px] font-bold tracking-tighter pr-2 min-w-[80px]">
+                <div id="sys-time" class="text-white">00:00:00</div>
+                <div id="sys-date" class="text-[#00f2ff]/40 text-[8px]">2099.01.01</div>
+            </div>
+        </div>
+
+        <!-- Start Menu -->
+        <div id="start-menu" class="hidden fixed inset-x-8 bottom-24 glass-ultra cyber-border rounded-2xl p-6 z-[2000] max-w-sm mx-auto animate-in fade-in slide-in-from-bottom-4">
+            <div class="flex items-center space-x-4 mb-8">
+                <div class="w-14 h-14 bg-[#00f2ff]/10 rounded-full border border-[#00f2ff] flex items-center justify-center font-bold text-xl">XC</div>
+                <div>
+                    <div class="text-[#00f2ff] text-sm font-bold tracking-widest">SYSTEM OPERATOR</div>
+                    <div class="text-[8px] text-white/40 uppercase tracking-[0.2em]">Tier: Omega Level Access</div>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="text-[8px] text-[#00f2ff]/60 uppercase mb-4 tracking-widest">Power Commands</div>
+                <button onclick="location.reload()" class="w-full flex items-center justify-between p-4 hover:bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] text-red-500 uppercase font-bold transition-all">
+                    <span>Hot Reboot</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-width="2"></path></svg>
+                </button>
+                <div class="text-[8px] text-[#00f2ff]/60 uppercase pt-4 mb-4 tracking-widest">Device Support</div>
+                <p class="text-[8px] text-white/40 px-2 italic">Open on Mobile Chrome/Safari & 'Add to Home Screen' for Full Experience.</p>
+            </div>
+        </div>
+
+        <!-- App Windows -->
+        <div id="window-container" class="fixed inset-0 pointer-events-none z-[500]">
+            
+            <!-- Terminal -->
+            <div id="win-terminal" class="app-window hidden pointer-events-auto absolute glass-ultra cyber-border w-[80%] h-[65%] left-[10%] top-[15%] rounded-xl overflow-hidden flex flex-col shadow-2xl">
+                <div class="h-10 flex items-center justify-between px-4 bg-white/5 border-b border-[#00f2ff]/20 cursor-move">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                        <span class="text-[9px] font-bold tracking-[0.2em] uppercase text-white/80">X-TERMINAL 4.0</span>
+                    </div>
+                    <button onclick="closeApp('terminal')" class="win-close w-6 h-6 flex items-center justify-center rounded text-white font-bold transition-all">×</button>
+                </div>
+                <div class="flex-grow p-4 flex flex-col font-mono">
+                    <div id="terminal-output" class="text-[10px] text-[#00f2ff]/80 overflow-y-auto mb-2 space-y-1">
+                        <span class="text-white">> SYSTEM KERNEL LOADED...</span><br>
+                        <span class="text-[#00f2ff]/40">> ENCRYPTION_LAYER: ACTIVE</span><br>
+                        <span class="text-[#00f2ff]/40">> READY FOR USER COMMAND...</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="text-[#00f2ff] text-[10px] mr-2">root@x-core:~$</span>
+                        <input id="terminal-input" type="text" class="bg-transparent outline-none text-[10px] text-white w-full" autofocus>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vault -->
+            <div id="win-files" class="app-window hidden pointer-events-auto absolute glass-ultra cyber-border w-[85%] h-[75%] left-[7.5%] top-[10%] rounded-xl overflow-hidden flex flex-col shadow-2xl">
+                <div class="h-10 flex items-center justify-between px-4 bg-white/5 border-b border-[#00f2ff]/20 cursor-move">
+                    <span class="text-[9px] font-bold tracking-[0.2em] uppercase">Storage_Vault</span>
+                    <button onclick="closeApp('files')" class="win-close w-6 h-6 flex items-center justify-center rounded text-white font-bold transition-all">×</button>
+                </div>
+                <div class="flex-grow flex">
+                    <div class="w-40 border-r border-[#00f2ff]/10 p-4 space-y-3 hidden sm:block">
+                        <div class="text-[8px] font-bold text-[#00f2ff]/40 uppercase tracking-widest mb-4">Partition</div>
+                        <div class="text-[9px] text-[#00f2ff] bg-[#00f2ff]/10 p-2 rounded-lg border border-[#00f2ff]/30">Primary_Disk</div>
+                        <div class="text-[9px] text-white/40 p-2">Neural_Cloud</div>
+                        <div class="text-[9px] text-white/40 p-2">Ghost_Data</div>
+                    </div>
+                    <div class="flex-grow p-6 grid grid-cols-4 sm:grid-cols-6 gap-6 content-start">
+                        <div class="flex flex-col items-center group cursor-pointer">
+                            <div class="w-12 h-12 flex items-center justify-center border border-white/10 group-active:scale-95 transition-all rounded-lg bg-white/5">
+                                <svg class="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2"></path></svg>
+                            </div>
+                            <span class="text-[8px] mt-2 uppercase text-white/60">log_001.txt</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div id="win-settings" class="app-window hidden pointer-events-auto absolute glass-ultra cyber-border w-[70%] h-[60%] left-[15%] top-[20%] rounded-xl overflow-hidden flex flex-col shadow-2xl">
+                <div class="h-10 flex items-center justify-between px-4 bg-white/5 border-b border-[#00f2ff]/20 cursor-move">
+                    <span class="text-[9px] font-bold tracking-[0.2em] uppercase">Core_Config</span>
+                    <button onclick="closeApp('settings')" class="win-close w-6 h-6 flex items-center justify-center rounded text-white font-bold transition-all">×</button>
+                </div>
+                <div class="p-6 space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-[10px] text-white font-bold uppercase">Visual Scanline</div>
+                            <div class="text-[8px] text-white/40 uppercase">Toggle HUD filter</div>
+                        </div>
+                        <button onclick="toggleScanline()" class="w-12 h-6 rounded-full border border-[#00f2ff]/40 p-1 relative transition-all bg-black">
+                            <div id="scanline-knob" class="w-4 h-4 bg-[#00f2ff] rounded-full translate-x-6"></div>
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-[10px] text-white font-bold uppercase">Audio Feedback</div>
+                            <div class="text-[8px] text-white/40 uppercase">System sound effects</div>
+                        </div>
+                        <button onclick="toggleAudio()" class="w-12 h-6 rounded-full border border-[#00f2ff]/40 p-1 relative transition-all bg-black">
+                            <div id="audio-knob" class="w-4 h-4 bg-[#00f2ff] rounded-full translate-x-6"></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Defense (NORMAL MODE) -->
+            <div id="win-security" class="app-window hidden pointer-events-auto absolute glass-ultra border-red-500/40 w-[90%] h-[80%] left-[5%] top-[10%] rounded-xl overflow-hidden flex flex-col shadow-2xl">
+                <div class="h-10 flex items-center justify-between px-4 bg-red-500/20 border-b border-red-500/40 cursor-move">
+                    <span class="text-[9px] font-bold tracking-[0.2em] uppercase text-red-500">INTRUSION RESPONSE [NORMAL]</span>
+                    <button onclick="closeApp('security')" class="win-close w-6 h-6 flex items-center justify-center rounded text-red-500 font-bold transition-all">×</button>
+                </div>
+                <div class="flex-grow relative bg-black p-2 overflow-hidden" id="game-canvas-container">
+                    <div id="game-stats" class="absolute top-4 left-4 z-10 text-red-500 text-[9px] font-bold uppercase pointer-events-none tracking-widest">
+                        Firewall Integrity: <span id="life-count" class="text-white">100%</span>
+                    </div>
+                    <div id="game-over" class="hidden absolute inset-0 bg-black/95 z-20 flex flex-col items-center justify-center text-center">
+                        <h2 class="text-red-500 text-3xl font-bold glitch-text mb-4">SYSTEM BREACHED</h2>
+                        <button onclick="startGame()" class="px-10 py-3 border border-red-500 text-red-500 text-[10px] hover:bg-red-500/10 font-bold uppercase tracking-[0.3em]">Purge & Reboot</button>
+                    </div>
+                    <canvas id="defenseCanvas" class="w-full h-full cursor-crosshair"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // PWA Service Worker Registration (Inline Blob)
+        if ('serviceWorker' in navigator) {
+            const swCode = `self.addEventListener('fetch', function(e) { e.respondWith(fetch(e.request)); });`;
+            const blob = new Blob([swCode], {type: 'text/javascript'});
+            const url = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(url);
+        }
+
+        // Sound Engine
+        let soundEnabled = true;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function sfx(freq = 400, dur = 0.1, type = 'square', vol = 0.05) {
+            if (!soundEnabled) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + dur);
+            } catch(e) {}
+        }
+
+        // Initialize
+        setTimeout(() => {
+            document.getElementById('boot-status').textContent = "Neural Link Established.";
+            document.getElementById('start-btn').classList.remove('hidden');
+            document.querySelector('.animate-spin').classList.add('hidden');
+        }, 2000);
+
+        async function initializeSystem() {
+            sfx(800, 0.2, 'sine', 0.1);
+            try {
+                if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+            } catch(e) {}
+            const loader = document.getElementById('boot-loader');
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 500);
+            updateCoreData();
+        }
+
+        // Advance Feature: Simulated Core Data
+        function updateCoreData() {
+            const temp = Math.floor(Math.random() * 5) + 32;
+            document.getElementById('core-temp').textContent = `CORE: ${temp}°C`;
+            setTimeout(updateCoreData, 5000);
+        }
+
+        // Clock
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('sys-time').textContent = now.toLocaleTimeString([], { hour12: false });
+            document.getElementById('sys-date').textContent = now.getFullYear() + "." + (now.getMonth()+1).toString().padStart(2,'0') + "." + now.getDate().toString().padStart(2,'0');
+        }, 1000);
+
+        // UI State
+        let activeApps = [];
+        let topZ = 1000;
+        let isStartOpen = false;
+
+        function toggleStart() {
+            sfx(600, 0.05);
+            isStartOpen = !isStartOpen;
+            document.getElementById('start-menu').classList.toggle('hidden', !isStartOpen);
+        }
+
+        function openApp(id) {
+            sfx(1000, 0.05, 'sine');
+            if(isStartOpen) toggleStart();
+            const win = document.getElementById('win-' + id);
+            if (!win) return;
+            win.classList.remove('hidden');
+            topZ++;
+            win.style.zIndex = topZ;
+            if (!activeApps.includes(id)) {
+                activeApps.push(id);
+                updateTaskbar();
+            }
+            if (id === 'security') startGame();
+        }
+
+        function closeApp(id) {
+            sfx(200, 0.1);
+            document.getElementById('win-' + id).classList.add('hidden');
+            activeApps = activeApps.filter(a => a !== id);
+            updateTaskbar();
+            if(id === 'security') gameActive = false;
+        }
+
+        function updateTaskbar() {
+            const container = document.getElementById('active-icons');
+            container.innerHTML = '';
+            activeApps.forEach(id => {
+                const btn = document.createElement('div');
+                btn.className = "w-10 h-10 rounded-xl border border-[#00f2ff]/30 bg-[#00f2ff]/10 flex items-center justify-center cursor-pointer transition-all active:scale-90";
+                btn.innerHTML = `<div class="w-2 h-2 bg-[#00f2ff] shadow-[0_0_10px_#00f2ff]"></div>`;
+                btn.onclick = () => {
+                    const win = document.getElementById('win-' + id);
+                    topZ++;
+                    win.style.zIndex = topZ;
+                    sfx(400, 0.05);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // Settings Logic
+        let scanlineOn = true;
+        function toggleScanline() {
+            scanlineOn = !scanlineOn;
+            document.getElementById('scanline-overlay').style.display = scanlineOn ? 'block' : 'none';
+            document.getElementById('scanline-knob').style.transform = scanlineOn ? 'translateX(24px)' : 'translateX(0px)';
+            sfx(800, 0.05);
+        }
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('audio-knob').style.transform = soundEnabled ? 'translateX(24px)' : 'translateX(0px)';
+            sfx(800, 0.05);
+        }
+
+        // Terminal logic
+        const termInput = document.getElementById('terminal-input');
+        const termOutput = document.getElementById('terminal-output');
+        termInput.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                const cmd = termInput.value;
+                sfx(500, 0.05, 'square');
+                termOutput.innerHTML += `<br><span class="text-white">> ${cmd}</span>`;
+                termOutput.innerHTML += `<br><span class="text-[#00f2ff]/50">PROCESSING REQUEST... [SUCCESS]</span>`;
+                termInput.value = '';
+                termOutput.scrollTop = termOutput.scrollHeight;
+            }
+        };
+
+        // Mini-Game (NORMAL DIFFICULTY)
+        let gameActive = false;
+        let life = 100;
+        const canvas = document.getElementById('defenseCanvas');
+        const ctx = canvas.getContext('2d');
+        let enemies = [];
+
+        function startGame() {
+            gameActive = true;
+            life = 100;
+            enemies = [];
+            document.getElementById('life-count').textContent = "100%";
+            document.getElementById('game-over').classList.add('hidden');
+            resizeCanvas();
+            animateGame();
+        }
+
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+
+        function animateGame() {
+            if (!gameActive) return;
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+
+            // NORMAL MODE: Slower spawn & speed
+            if (Math.random() < 0.06) { 
+                enemies.push({
+                    x: Math.random() * (canvas.width - 30),
+                    y: -30,
+                    speed: 3 + Math.random() * 4, 
+                    size: 25 + Math.random() * 15
+                });
+            }
+
+            enemies.forEach((enemy, index) => {
+                enemy.y += enemy.speed;
+                ctx.strokeStyle = '#ff0055';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(enemy.x, enemy.y, enemy.size, enemy.size);
+                
+                if (enemy.y > canvas.height) {
+                    life -= 5;
+                    sfx(100, 0.2, 'sawtooth', 0.1);
+                    enemies.splice(index, 1);
+                    document.getElementById('life-count').textContent = life + "%";
+                    if (life <= 0) {
+                        gameActive = false;
+                        document.getElementById('game-over').classList.remove('hidden');
+                    }
+                }
+            });
+
+            if (gameActive) requestAnimationFrame(animateGame);
+        }
+
+        const handleHit = (cx, cy) => {
+            if (!gameActive) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = cx - rect.left;
+            const y = cy - rect.top;
+            enemies.forEach((enemy, index) => {
+                if (x > enemy.x && x < enemy.x + enemy.size && y > enemy.y && y < enemy.y + enemy.size) {
+                    sfx(1200, 0.05, 'sine', 0.1);
+                    enemies.splice(index, 1);
+                }
+            });
+        };
+
+        canvas.addEventListener('mousedown', (e) => handleHit(e.clientX, e.clientY));
+        canvas.addEventListener('touchstart', (e) => handleHit(e.touches[0].clientX, e.touches[0].clientY), {passive: true});
+
+        // Draggable Windows
+        document.querySelectorAll('.app-window').forEach(win => {
+            const header = win.querySelector('div:first-child');
+            let isDragging = false;
+            let startX, startY, initX, initY;
+
+            const startDrag = (e) => {
+                isDragging = true;
+                topZ++;
+                win.style.zIndex = topZ;
+                const pos = e.type.includes('touch') ? e.touches[0] : e;
+                startX = pos.clientX;
+                startY = pos.clientY;
+                initX = win.offsetLeft;
+                initY = win.offsetTop;
+            };
+
+            const doDrag = (e) => {
+                if (!isDragging) return;
+                const pos = e.type.includes('touch') ? e.touches[0] : e;
+                win.style.left = (initX + (pos.clientX - startX)) + 'px';
+                win.style.top = (initY + (pos.clientY - startY)) + 'px';
+            };
+
+            const endDrag = () => isDragging = false;
+
+            header.addEventListener('mousedown', startDrag);
+            header.addEventListener('touchstart', startDrag, {passive: true});
+            document.addEventListener('mousemove', doDrag);
+            document.addEventListener('touchmove', doDrag, {passive: false});
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDrag);
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+    </script>
+</body>
+</html>
