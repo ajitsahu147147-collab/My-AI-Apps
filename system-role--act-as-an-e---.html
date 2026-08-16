@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NexOS Mobile Desktop</title>
+    <title>NexOS Premium Mobile</title>
     
     <!-- PWA & Mobile Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,18 +12,19 @@
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/layers.png">
     
-    <!-- Dynamic Manifest for PWA -->
     <link rel="manifest" id="pwa-manifest">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fira+Code:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
 
         :root {
-            --glass: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --glass: rgba(15, 23, 42, 0.6);
+            --glass-bright: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            --accent: #6366f1;
         }
 
         * { 
@@ -31,7 +32,10 @@
             -webkit-touch-callout: none; 
             box-sizing: border-box;
             user-select: none;
+            scrollbar-width: none;
         }
+
+        ::-webkit-scrollbar { display: none; }
 
         body, html {
             margin: 0;
@@ -39,120 +43,126 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            font-family: 'Inter', sans-serif;
-            background: #0f172a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #020617;
             overscroll-behavior: none; 
             touch-action: none;
+            color: white;
         }
 
         .desktop-bg {
             position: fixed;
             inset: 0;
-            background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #0f172a 100%);
-            background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=2564');
-            background-size: cover;
-            background-position: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
             z-index: -1;
+        }
+
+        .mesh-gradient {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.1) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(59, 130, 246, 0.1) 0px, transparent 50%);
+            z-index: -1;
+            filter: blur(80px);
         }
 
         .glass {
             background: var(--glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: 1px solid var(--glass-border);
             box-shadow: var(--glass-shadow);
         }
 
+        .glass-header {
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
         .window {
             position: absolute;
-            min-width: 300px;
-            min-height: 200px;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease;
+            animation: win-open 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes win-open {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .window-header {
-            height: 40px;
-            padding: 0 12px;
+            height: 44px;
+            padding: 0 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(255, 255, 255, 0.05);
             cursor: grab;
             touch-action: none;
         }
 
-        .window-controls {
-            display: flex;
-            gap: 8px;
-        }
-
-        .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .dot-close { background: #ff5f56; }
-        .dot-min { background: #ffbd2e; }
-        .dot-max { background: #27c93f; }
+        .window-controls { display: flex; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); }
+        .dot-close { background: #ff5f57; }
+        .dot-min { background: #febc2e; }
+        .dot-max { background: #28c840; }
 
         .taskbar-icon {
             position: relative;
-            transition: transform 0.2s, background 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .taskbar-icon:active {
-            transform: scale(0.9);
-        }
+        .taskbar-icon:active { transform: scale(0.85); }
+        .taskbar-icon:hover { background: rgba(255, 255, 255, 0.1); }
 
         .active-dot {
             position: absolute;
-            bottom: -4px;
+            bottom: -6px;
             left: 50%;
             transform: translateX(-50%);
             width: 4px;
             height: 4px;
-            background: white;
+            background: var(--accent);
             border-radius: 50%;
             opacity: 0;
+            box-shadow: 0 0 8px var(--accent);
         }
-
         .active-dot.visible { opacity: 1; }
 
         .start-menu {
             position: absolute;
-            bottom: 70px;
-            left: 10px;
-            width: 320px;
-            height: 450px;
-            border-radius: 16px;
-            transform: translateY(20px);
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(40px);
+            width: min(90vw, 400px);
+            border-radius: 24px;
             opacity: 0;
             pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 1000;
         }
 
         .start-menu.open {
-            transform: translateY(0);
+            transform: translateX(-50%) translateY(0);
             opacity: 1;
             pointer-events: all;
         }
 
         .control-center {
             position: absolute;
-            bottom: 70px;
-            right: 10px;
-            width: 300px;
-            border-radius: 16px;
-            transform: translateY(20px);
+            bottom: 80px;
+            right: 20px;
+            width: 320px;
+            border-radius: 24px;
+            transform: translateY(40px);
             opacity: 0;
             pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 1000;
         }
 
@@ -166,35 +176,32 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            width: 80px;
-            padding: 8px;
-            border-radius: 8px;
-            color: white;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            font-size: 12px;
-            text-align: center;
+            gap: 6px;
+            width: 90px;
+            padding: 12px;
+            border-radius: 16px;
+            transition: background 0.2s;
         }
 
-        .desktop-icon:active {
-            background: rgba(255,255,255,0.2);
-        }
+        .desktop-icon:active { background: rgba(255, 255, 255, 0.1); }
+        .desktop-icon i { filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); }
+        .desktop-icon span { font-size: 11px; font-weight: 500; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
         .context-menu {
             position: fixed;
-            width: 180px;
-            border-radius: 8px;
+            width: 200px;
+            border-radius: 12px;
             z-index: 9999;
-            padding: 4px;
+            padding: 6px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         #portrait-warning {
             display: none;
             position: fixed;
             inset: 0;
-            background: #0f172a;
+            background: #020617;
             z-index: 10000;
-            color: white;
             padding: 40px;
             text-align: center;
             flex-direction: column;
@@ -208,568 +215,424 @@
 
         .resizer {
             position: absolute;
-            width: 15px;
-            height: 15px;
+            width: 20px;
+            height: 20px;
             right: 0;
             bottom: 0;
             cursor: nwse-resize;
             touch-action: none;
         }
 
-        .code-syntax { font-family: 'Fira Code', monospace; }
+        .progress-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.5s ease;
+        }
 
         input[type="range"] {
             -webkit-appearance: none;
             height: 6px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
             border-radius: 5px;
             outline: none;
         }
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             background: white;
             border-radius: 50%;
             cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
     <div id="portrait-warning">
-        <i data-lucide="rotate-cw" class="w-12 h-12 mb-4 animate-spin"></i>
-        <h1 class="text-xl font-bold">Please rotate your device</h1>
-        <p class="text-gray-400 mt-2">NexOS is designed for landscape mode to provide a desktop experience.</p>
+        <div class="w-20 h-20 bg-indigo-500/20 rounded-3xl flex items-center justify-center mb-6">
+            <i data-lucide="smartphone" class="w-10 h-10 text-indigo-400 rotate-90"></i>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight">Rotate for NexOS</h1>
+        <p class="text-slate-400 mt-2 max-w-[200px]">Unlock the full desktop experience in landscape mode.</p>
     </div>
 
     <div class="desktop-bg"></div>
+    <div class="mesh-gradient"></div>
 
     <!-- Desktop Area -->
-    <div id="desktop" class="w-full h-full relative p-4 flex flex-col flex-wrap gap-4 content-start">
-        <!-- Icons populated by JS -->
+    <div id="desktop" class="w-full h-full relative p-6 flex flex-col flex-wrap gap-4 content-start">
+        <!-- Icons via JS -->
     </div>
 
     <!-- Right Side Widgets -->
-    <div class="fixed right-6 top-6 w-64 space-y-6 pointer-events-none">
-        <!-- System Monitor -->
-        <div class="glass p-4 rounded-2xl pointer-events-auto">
-            <h3 class="text-white text-xs font-semibold mb-3 uppercase tracking-wider opacity-60">System Monitor</h3>
-            <div class="flex justify-between items-center mb-4">
-                <div class="relative w-16 h-16">
-                    <svg class="w-full h-full" viewBox="0 0 36 36">
-                        <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"></circle>
-                        <circle id="cpu-ring" cx="18" cy="18" r="16" fill="none" stroke="#3b82f6" stroke-width="3" stroke-dasharray="100, 100" stroke-linecap="round"></circle>
-                    </svg>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span id="cpu-val" class="text-white text-xs font-bold">24%</span>
-                        <span class="text-[8px] text-gray-400">CPU</span>
+    <div class="fixed right-6 top-6 w-72 space-y-6 pointer-events-none">
+        <!-- Live System Stats -->
+        <div class="glass p-5 rounded-3xl pointer-events-auto">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-400">System Activity</span>
+                <i data-lucide="cpu" class="w-4 h-4 text-slate-500"></i>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between text-[11px] mb-1.5 font-medium">
+                        <span class="text-slate-300">Processor</span>
+                        <span id="cpu-perc" class="text-indigo-400">24%</span>
                     </div>
+                    <div class="progress-bar"><div id="cpu-bar" class="progress-fill" style="width: 24%"></div></div>
                 </div>
-                <div class="relative w-16 h-16">
-                    <svg class="w-full h-full" viewBox="0 0 36 36">
-                        <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"></circle>
-                        <circle id="ram-ring" cx="18" cy="18" r="16" fill="none" stroke="#8b5cf6" stroke-width="3" stroke-dasharray="62, 100" stroke-linecap="round"></circle>
-                    </svg>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span id="ram-val" class="text-white text-xs font-bold">4.2GB</span>
-                        <span class="text-[8px] text-gray-400">RAM</span>
+                <div>
+                    <div class="flex justify-between text-[11px] mb-1.5 font-medium">
+                        <span class="text-slate-300">Memory</span>
+                        <span id="ram-perc" class="text-purple-400">58%</span>
                     </div>
+                    <div class="progress-bar"><div id="ram-bar" class="progress-fill bg-purple-500" style="width: 58%"></div></div>
                 </div>
             </div>
         </div>
 
-        <!-- Calendar Widget -->
-        <div class="glass p-4 rounded-2xl pointer-events-auto">
-            <div class="flex justify-between items-center mb-2">
-                <span id="cal-month" class="text-white font-bold text-sm">October</span>
-                <span class="text-white/60 text-[10px]">2023</span>
+        <!-- Clock Widget -->
+        <div class="glass p-5 rounded-3xl pointer-events-auto flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
+                <i data-lucide="calendar" class="text-indigo-400 w-6 h-6"></i>
             </div>
-            <div class="grid grid-cols-7 gap-1 text-center">
-                <div class="text-[8px] text-white/40">S</div><div class="text-[8px] text-white/40">M</div><div class="text-[8px] text-white/40">T</div>
-                <div class="text-[8px] text-white/40">W</div><div class="text-[8px] text-white/40">T</div><div class="text-[8px] text-white/40">F</div>
-                <div class="text-[8px] text-white/40">S</div>
-                <!-- Mini calendar grid -->
-                <div class="text-[10px] text-white/20">28</div><div class="text-[10px] text-white/20">29</div><div class="text-[10px] text-white/20">30</div>
-                <div class="text-[10px] text-white">1</div><div class="text-[10px] text-white">2</div><div class="text-[10px] text-white">3</div><div class="text-[10px] text-white">4</div>
-                <div class="text-[10px] text-white">5</div><div class="text-[10px] text-white">6</div><div class="text-[10px] text-blue-400 font-bold border border-blue-400/30 rounded">7</div>
+            <div>
+                <div id="widget-time" class="text-xl font-bold leading-none">12:45</div>
+                <div id="widget-date" class="text-[10px] text-slate-400 uppercase tracking-tighter mt-1 font-semibold">October 24, 2023</div>
             </div>
         </div>
     </div>
 
     <!-- Start Menu Overlay -->
-    <div id="start-menu" class="start-menu glass p-6 overflow-hidden">
-        <div class="flex items-center gap-4 mb-6">
-            <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center">
-                <span class="text-white font-bold">JD</span>
+    <div id="start-menu" class="start-menu glass p-8">
+        <div class="flex items-center gap-5 mb-8">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 p-0.5">
+                <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center font-bold text-xl">JD</div>
             </div>
             <div>
-                <h2 class="text-white font-semibold">John Doe</h2>
-                <p class="text-white/60 text-xs">Standard User</p>
+                <h2 class="text-lg font-bold">John Doe</h2>
+                <p class="text-indigo-400 text-xs font-medium">Developer Edition</p>
             </div>
         </div>
-        <div class="mb-4">
-            <input type="text" placeholder="Search apps, settings..." class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white text-sm outline-none focus:border-white/30 transition-all">
+        
+        <div class="relative mb-6">
+            <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-500"></i>
+            <input type="text" placeholder="Search applications..." class="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all">
         </div>
-        <div class="grid grid-cols-3 gap-4">
-            <button class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/10 transition-colors">
-                <i data-lucide="mail" class="text-blue-400"></i>
-                <span class="text-white text-[10px]">Mail</span>
-            </button>
-            <button class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/10 transition-colors">
-                <i data-lucide="camera" class="text-green-400"></i>
-                <span class="text-white text-[10px]">Camera</span>
-            </button>
-            <button class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/10 transition-colors">
-                <i data-lucide="music" class="text-pink-400"></i>
-                <span class="text-white text-[10px]">Spotify</span>
-            </button>
-            <button class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/10 transition-colors">
-                <i data-lucide="message-square" class="text-yellow-400"></i>
-                <span class="text-white text-[10px]">Chat</span>
-            </button>
-            <button class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/10 transition-colors">
-                <i data-lucide="cloud-rain" class="text-indigo-400"></i>
-                <span class="text-white text-[10px]">Weather</span>
-            </button>
-            <button class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/10 transition-colors">
-                <i data-lucide="calculator" class="text-orange-400"></i>
-                <span class="text-white text-[10px]">Calc</span>
-            </button>
+
+        <div class="grid grid-cols-4 gap-4 mb-8">
+            <button class="flex flex-col items-center gap-2 group"><div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/20 transition-all"><i data-lucide="mail" class="w-5 h-5 text-indigo-400"></i></div><span class="text-[10px]">Mail</span></button>
+            <button class="flex flex-col items-center gap-2 group"><div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-green-500/20 transition-all"><i data-lucide="camera" class="w-5 h-5 text-green-400"></i></div><span class="text-[10px]">Cam</span></button>
+            <button class="flex flex-col items-center gap-2 group"><div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-pink-500/20 transition-all"><i data-lucide="music" class="w-5 h-5 text-pink-400"></i></div><span class="text-[10px]">Audio</span></button>
+            <button class="flex flex-col items-center gap-2 group"><div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-amber-500/20 transition-all"><i data-lucide="terminal" class="w-5 h-5 text-amber-400"></i></div><span class="text-[10px]">Dev</span></button>
         </div>
-        <div class="absolute bottom-6 left-6 right-6 flex justify-between items-center">
-            <button class="p-2 text-white/60 hover:text-white"><i data-lucide="power" class="w-5 h-5"></i></button>
-            <button class="p-2 text-white/60 hover:text-white"><i data-lucide="settings" class="w-5 h-5"></i></button>
+
+        <div class="flex justify-between items-center pt-6 border-t border-white/5">
+            <button class="p-2 text-slate-400 hover:text-white transition-colors"><i data-lucide="power" class="w-5 h-5"></i></button>
+            <div class="flex gap-2">
+                <button class="p-2 text-slate-400 hover:text-white transition-colors"><i data-lucide="settings" class="w-5 h-5"></i></button>
+                <button class="p-2 text-slate-400 hover:text-white transition-colors"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+            </div>
         </div>
     </div>
 
     <!-- Control Center Overlay -->
-    <div id="control-center" class="control-center glass p-5 space-y-4">
-        <div class="grid grid-cols-2 gap-3">
-            <button id="wifi-toggle" class="glass bg-blue-600/50 p-3 rounded-xl flex items-center gap-3 text-white transition-all">
+    <div id="control-center" class="control-center glass p-6">
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="bg-indigo-600 p-4 rounded-2xl flex items-center gap-3">
                 <i data-lucide="wifi" class="w-5 h-5"></i>
-                <span class="text-xs font-medium">Wi-Fi</span>
-            </button>
-            <button id="bt-toggle" class="glass p-3 rounded-xl flex items-center gap-3 text-white/80 transition-all">
-                <i data-lucide="bluetooth" class="w-5 h-5"></i>
-                <span class="text-xs font-medium">Bluetooth</span>
-            </button>
-        </div>
-        <div class="space-y-3">
-            <div class="flex items-center gap-3">
-                <i data-lucide="sun" class="w-4 h-4 text-white/60"></i>
-                <input type="range" class="flex-grow" value="80">
+                <div class="flex flex-col"><span class="text-[10px] font-bold opacity-70">Wi-Fi</span><span class="text-xs font-bold">NexOS_5G</span></div>
             </div>
-            <div class="flex items-center gap-3">
-                <i data-lucide="volume-2" class="w-4 h-4 text-white/60"></i>
-                <input type="range" class="flex-grow" value="65">
+            <div class="bg-white/5 p-4 rounded-2xl flex items-center gap-3">
+                <i data-lucide="bluetooth" class="w-5 h-5 text-slate-400"></i>
+                <div class="flex flex-col"><span class="text-[10px] font-bold opacity-70">Bluetooth</span><span class="text-xs font-bold">Off</span></div>
             </div>
         </div>
-        <div class="bg-white/5 rounded-xl p-3 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <i data-lucide="battery" class="text-green-400 w-5 h-5"></i>
-                <span class="text-white text-xs">84% Charged</span>
+        <div class="space-y-6">
+            <div class="flex items-center gap-4">
+                <i data-lucide="sun" class="w-4 h-4 text-slate-400"></i>
+                <input type="range" class="flex-grow" value="85">
             </div>
-            <span class="text-white/40 text-[10px]">2h 15m left</span>
+            <div class="flex items-center gap-4">
+                <i data-lucide="volume-2" class="w-4 h-4 text-slate-400"></i>
+                <input type="range" class="flex-grow" value="60">
+            </div>
+        </div>
+        <div class="mt-8 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i data-lucide="zap" class="text-indigo-400 w-5 h-5"></i>
+                <span class="text-sm font-semibold">92% Charged</span>
+            </div>
+            <span class="text-[10px] text-slate-500">Power Mode</span>
         </div>
     </div>
 
     <!-- Taskbar -->
-    <div class="fixed bottom-2 left-1/2 -translate-x-1/2 w-[95%] max-w-[800px] h-[60px] glass rounded-2xl flex items-center justify-between px-4 z-[9999]">
-        <div class="flex items-center gap-2">
-            <button id="start-btn" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors">
-                <i data-lucide="layout-grid" class="text-white w-6 h-6"></i>
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-[700px] h-[64px] glass rounded-3xl flex items-center justify-between px-2 z-[9999] border border-white/20">
+        <div class="flex items-center gap-1">
+            <button id="start-btn" class="w-12 h-12 flex items-center justify-center rounded-2xl hover:bg-white/10 transition-all">
+                <i data-lucide="layout-grid" class="text-indigo-400 w-6 h-6 fill-indigo-400/20"></i>
             </button>
         </div>
 
-        <div id="taskbar-apps" class="flex items-center gap-4">
-            <!-- App icons -->
+        <div id="taskbar-apps" class="flex items-center gap-2">
+            <!-- Dynamic Apps -->
         </div>
 
-        <div id="system-tray" class="flex items-center gap-4 px-3 py-2 rounded-xl hover:bg-white/10 cursor-pointer transition-colors" role="button">
-            <div class="flex items-center gap-2 text-white/80">
-                <i data-lucide="wifi" class="w-4 h-4"></i>
-                <i data-lucide="battery" class="w-4 h-4"></i>
+        <div id="system-tray" class="flex items-center gap-4 px-4 py-2 rounded-2xl hover:bg-white/5 cursor-pointer transition-all border border-transparent hover:border-white/10" role="button">
+            <div class="flex items-center gap-2 text-slate-400">
+                <i data-lucide="shield-check" class="w-4 h-4 text-green-500"></i>
+                <div class="h-4 w-[1px] bg-white/10 mx-1"></div>
             </div>
             <div class="text-right">
-                <div id="tray-time" class="text-white text-xs font-bold leading-none">12:00 PM</div>
-                <div id="tray-date" class="text-white/60 text-[10px] leading-none mt-1">10/24/2023</div>
+                <div id="tray-time" class="text-[11px] font-bold">12:45</div>
+                <div id="tray-date" class="text-[9px] text-slate-400 font-medium">10.24.23</div>
             </div>
         </div>
     </div>
 
     <!-- Context Menu Template -->
     <div id="context-menu" class="context-menu glass hidden">
-        <div class="py-1">
-            <button class="w-full text-left px-4 py-2 text-white text-sm hover:bg-blue-500/50 rounded flex items-center gap-2">
-                <i data-lucide="external-link" class="w-4 h-4"></i> Open
+        <div class="flex flex-col gap-1">
+            <button class="w-full text-left px-3 py-2 text-xs hover:bg-white/10 rounded-lg flex items-center gap-3 transition-colors">
+                <i data-lucide="external-link" class="w-3.5 h-3.5 text-indigo-400"></i> Open App
             </button>
-            <button class="w-full text-left px-4 py-2 text-white text-sm hover:bg-blue-500/50 rounded flex items-center gap-2">
-                <i data-lucide="copy" class="w-4 h-4"></i> Copy
+            <button class="w-full text-left px-3 py-2 text-xs hover:bg-white/10 rounded-lg flex items-center gap-3 transition-colors">
+                <i data-lucide="pin" class="w-3.5 h-3.5 text-slate-400"></i> Pin to Taskbar
             </button>
             <div class="h-[1px] bg-white/10 my-1"></div>
-            <button class="w-full text-left px-4 py-2 text-red-400 text-sm hover:bg-red-500/20 rounded flex items-center gap-2">
-                <i data-lucide="trash-2" class="w-4 h-4"></i> Delete
+            <button class="w-full text-left px-3 py-2 text-xs text-rose-400 hover:bg-rose-500/20 rounded-lg flex items-center gap-3 transition-colors">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
             </button>
         </div>
     </div>
 
-    <div class="fixed bottom-1 left-2 text-[10px] text-white/30 z-[10000]">
-        Built: PWA manifest and service worker registration. Next: Offline asset caching.
+    <div class="fixed bottom-1 left-4 text-[9px] text-white/20 z-[10000] tracking-widest uppercase">
+        Built: Enhanced UI aesthetics with mesh gradients and smoother glass effects. Next: Add real window snapping logic.
     </div>
 
     <script>
-        // PWA Implementation for Home Screen functionality
+        // PWA Implementation
         function setupPWA() {
-            // 1. Generate Manifest
             const manifest = {
-                "name": "NexOS Mobile Desktop",
+                "name": "NexOS Premium",
                 "short_name": "NexOS",
                 "start_url": window.location.href,
                 "display": "standalone",
-                "background_color": "#0f172a",
-                "theme_color": "#0f172a",
-                "icons": [
-                    {
-                        "src": "https://img.icons8.com/fluency/192/layers.png",
-                        "sizes": "192x192",
-                        "type": "image/png",
-                        "purpose": "any maskable"
-                    },
-                    {
-                        "src": "https://img.icons8.com/fluency/512/layers.png",
-                        "sizes": "512x512",
-                        "type": "image/png"
-                    }
-                ]
+                "background_color": "#020617",
+                "theme_color": "#020617",
+                "icons": [{ "src": "https://img.icons8.com/fluency/192/layers.png", "sizes": "192x192", "type": "image/png" }]
             };
-            const stringManifest = JSON.stringify(manifest);
-            const blob = new Blob([stringManifest], {type: 'application/json'});
+            const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
             document.getElementById('pwa-manifest').setAttribute('href', URL.createObjectURL(blob));
 
-            // 2. Register Service Worker (Blob method for single-file compatibility)
             if ('serviceWorker' in navigator) {
-                const swCode = `
-                    self.addEventListener('install', (e) => {
-                        self.skipWaiting();
-                    });
-                    self.addEventListener('fetch', (e) => {
-                        e.respondWith(fetch(e.request).catch(() => e.default()));
-                    });
-                `;
+                const swCode = `self.addEventListener('fetch', (e) => {});`;
                 const swBlob = new Blob([swCode], {type: 'text/javascript'});
-                const swUrl = URL.createObjectURL(swBlob);
-                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW failed', err));
+                navigator.serviceWorker.register(URL.createObjectURL(swBlob));
             }
         }
 
-        // Constants & Config
         const APPS = [
-            { id: 'browser', name: 'Browser', icon: 'globe', color: 'text-blue-400', windowType: 'browser' },
-            { id: 'files', name: 'Explorer', icon: 'folder', color: 'text-yellow-400', windowType: 'files' },
-            { id: 'code', name: 'Editor', icon: 'code-2', color: 'text-purple-400', windowType: 'code' },
-            { id: 'notes', name: 'Notes', icon: 'file-text', color: 'text-green-400', windowType: 'notes' },
-            { id: 'settings', name: 'Settings', icon: 'settings', color: 'text-gray-400', windowType: 'settings' }
+            { id: 'browser', name: 'NexNav', icon: 'globe', color: 'text-sky-400', windowType: 'browser' },
+            { id: 'files', name: 'Storage', icon: 'hard-drive', color: 'text-indigo-400', windowType: 'files' },
+            { id: 'code', name: 'Studio', icon: 'code-xml', color: 'text-fuchsia-400', windowType: 'code' },
+            { id: 'notes', name: 'Journal', icon: 'edit-3', color: 'text-emerald-400', windowType: 'notes' },
+            { id: 'settings', name: 'Settings', icon: 'sliders', color: 'text-slate-400', windowType: 'settings' }
         ];
 
         const DESKTOP_ICONS = [
-            { id: 'assets', name: 'Project Assets', icon: 'folder-closed' },
-            { id: 'trash', name: 'Trash', icon: 'trash-2' },
-            { id: 'terminal', name: 'Terminal', icon: 'terminal' }
+            { id: 'user', name: 'Personal', icon: 'user' },
+            { id: 'trash', name: 'Recycle', icon: 'trash-2' }
         ];
 
-        // State Manager
-        const State = {
-            windows: [],
-            zIndexCounter: 100,
-            activeWindow: null,
-            isStartOpen: false,
-            isControlOpen: false
-        };
+        const State = { windows: [], zIndex: 100, active: null, menusOpen: false };
 
-        // Initialize UI
         function init() {
             setupPWA();
             lucide.createIcons();
-            renderDesktopIcons();
-            renderTaskbarApps();
-            updateTime();
-            setInterval(updateTime, 1000);
-            updateSystemMonitor();
-            setInterval(updateSystemMonitor, 3000);
-            setupEventListeners();
+            renderIcons();
+            updateLiveElements();
+            setInterval(updateLiveElements, 1000);
+            setupHandlers();
         }
 
-        function renderDesktopIcons() {
-            const container = document.getElementById('desktop');
-            DESKTOP_ICONS.concat(APPS).forEach(app => {
-                const icon = document.createElement('div');
-                icon.className = 'desktop-icon cursor-pointer';
-                icon.setAttribute('role', 'button');
-                icon.innerHTML = `
-                    <div class="w-12 h-12 glass flex items-center justify-center rounded-xl mb-1">
-                        <i data-lucide="${app.icon}" class="${app.color || 'text-white'}"></i>
+        function renderIcons() {
+            const desk = document.getElementById('desktop');
+            const task = document.getElementById('taskbar-apps');
+            
+            [...DESKTOP_ICONS, ...APPS].forEach(app => {
+                const div = document.createElement('div');
+                div.className = 'desktop-icon cursor-pointer';
+                div.innerHTML = `
+                    <div class="w-14 h-14 glass flex items-center justify-center rounded-2xl mb-1 border border-white/5">
+                        <i data-lucide="${app.icon}" class="${app.color || 'text-white'} w-7 h-7"></i>
                     </div>
                     <span>${app.name}</span>
                 `;
-                icon.onclick = () => openWindow(app.id);
-                icon.oncontextmenu = (e) => showContextMenu(e);
-                container.appendChild(icon);
+                div.onclick = () => openWindow(app.id);
+                div.oncontextmenu = showMenu;
+                desk.appendChild(div);
             });
-            lucide.createIcons();
-        }
 
-        function renderTaskbarApps() {
-            const container = document.getElementById('taskbar-apps');
             APPS.forEach(app => {
                 const btn = document.createElement('button');
-                btn.className = 'taskbar-icon w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10';
-                btn.id = `taskbar-${app.id}`;
+                btn.className = 'taskbar-icon w-11 h-11 flex items-center justify-center rounded-xl';
                 btn.innerHTML = `
-                    <i data-lucide="${app.icon}" class="${app.color} w-6 h-6"></i>
+                    <i data-lucide="${app.icon}" class="${app.color} w-5 h-5"></i>
                     <div class="active-dot" id="dot-${app.id}"></div>
                 `;
                 btn.onclick = () => openWindow(app.id);
-                container.appendChild(btn);
+                task.appendChild(btn);
             });
             lucide.createIcons();
         }
 
-        // Window Management
-        function openWindow(appId) {
-            const existing = State.windows.find(w => w.id === appId);
-            if (existing) {
-                focusWindow(appId);
-                return;
-            }
+        function openWindow(id) {
+            if (State.windows.find(w => w.id === id)) return focusWin(id);
 
-            const appData = APPS.find(a => a.id === appId) || DESKTOP_ICONS.find(a => a.id === appId);
+            const app = [...APPS, ...DESKTOP_ICONS].find(a => a.id === id);
             const win = document.createElement('div');
-            win.id = `win-${appId}`;
-            win.className = 'window glass';
-            win.style.width = '600px';
-            win.style.height = '400px';
-            win.style.left = `${50 + State.windows.length * 30}px`;
-            win.style.top = `${50 + State.windows.length * 30}px`;
-            win.style.zIndex = ++State.zIndexCounter;
+            win.id = `win-${id}`;
+            win.className = 'window glass w-[640px] h-[420px]';
+            win.style.left = `${100 + State.windows.length * 40}px`;
+            win.style.top = `${60 + State.windows.length * 20}px`;
+            win.style.zIndex = ++State.zIndex;
 
             win.innerHTML = `
-                <div class="window-header" onpointerdown="startDrag(event, '${appId}')">
+                <div class="window-header glass-header" onpointerdown="startDrag(event, '${id}')">
                     <div class="flex items-center gap-3">
-                        <i data-lucide="${appData.icon}" class="w-4 h-4 ${appData.color}"></i>
-                        <span class="text-white text-xs font-medium">${appData.name}</span>
+                        <i data-lucide="${app.icon}" class="w-4 h-4 ${app.color}"></i>
+                        <span class="text-[11px] font-bold tracking-tight opacity-80 uppercase">${app.name}</span>
                     </div>
                     <div class="window-controls">
-                        <button onclick="minimizeWindow('${appId}')" class="dot dot-min"></button>
-                        <button onclick="maximizeWindow('${appId}')" class="dot dot-max"></button>
-                        <button onclick="closeWindow('${appId}')" class="dot dot-close"></button>
+                        <div class="dot dot-min"></div>
+                        <div class="dot dot-max"></div>
+                        <div class="dot dot-close" onclick="closeWin('${id}')"></div>
                     </div>
                 </div>
-                <div class="flex-grow overflow-auto p-4 text-white bg-black/20">
-                    ${getWindowContent(appId)}
+                <div class="flex-grow overflow-auto p-6 bg-slate-900/40">
+                    ${getContent(id)}
                 </div>
-                <div class="resizer" onpointerdown="startResize(event, '${appId}')"></div>
+                <div class="resizer" onpointerdown="startResize(event, '${id}')"></div>
             `;
 
             document.body.appendChild(win);
-            State.windows.push({ id: appId, element: win });
-            lucide.createIcons();
-            
-            const dot = document.getElementById(`dot-${appId}`);
+            State.windows.push({ id, el: win });
+            const dot = document.getElementById(`dot-${id}`);
             if (dot) dot.classList.add('visible');
-
-            win.onpointerdown = () => focusWindow(appId);
+            lucide.createIcons();
+            focusWin(id);
         }
 
-        function getWindowContent(id) {
-            switch(id) {
-                case 'code':
-                    return `
-                        <div class="flex h-full gap-4 font-mono text-sm">
-                            <div class="w-32 border-r border-white/10 opacity-50 space-y-2">
-                                <div>index.js</div>
-                                <div>styles.css</div>
-                                <div>README.md</div>
-                            </div>
-                            <div class="flex-grow">
-                                <div class="text-purple-400">const</div> <div class="inline text-blue-400">App</div> = () => {<br>
-                                &nbsp;&nbsp;<div class="inline text-purple-400">return</div> (<br>
-                                &nbsp;&nbsp;&nbsp;&nbsp;&lt;<div class="inline text-yellow-400">div</div> className="desktop"&gt;<br>
-                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NexOS v1.0<br>
-                                &nbsp;&nbsp;&nbsp;&nbsp;&lt;/<div class="inline text-yellow-400">div</div>&gt;<br>
-                                &nbsp;&nbsp;);<br>
-                                };
-                            </div>
-                        </div>
-                    `;
-                case 'files':
-                    return `
-                        <div class="grid grid-cols-4 gap-6">
-                            ${['Assets', 'Icons', 'Builds', 'Docs', 'Backup'].map(f => `
-                                <div class="flex flex-col items-center gap-2 group cursor-pointer">
-                                    <i data-lucide="folder" class="w-12 h-12 text-blue-400 group-hover:scale-110 transition-transform"></i>
-                                    <span class="text-xs">${f}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    `;
-                case 'notes':
-                    return `
-                        <div class="space-y-4">
-                            <div class="flex gap-2 border-b border-white/10 pb-2">
-                                <button class="p-1 hover:bg-white/10 rounded"><b>B</b></button>
-                                <button class="p-1 hover:bg-white/10 rounded"><i>I</i></button>
-                                <button class="p-1 hover:bg-white/10 rounded"><u>U</u></button>
-                            </div>
-                            <div contenteditable="true" class="outline-none min-h-[200px] text-gray-200">
-                                <p>• System design meeting at 2 PM</p>
-                                <p>• Review glassmorphism shaders</p>
-                                <p>• Update mobile touch handlers</p>
-                            </div>
-                        </div>
-                    `;
-                default:
-                    return `<div class="flex items-center justify-center h-full opacity-50">Content for ${id} is coming soon...</div>`;
-            }
+        function getContent(id) {
+            if (id === 'code') return `<div class="font-mono text-sm leading-relaxed"><span class="text-indigo-400">import</span> { NexOS } <span class="text-indigo-400">from</span> <span class="text-emerald-400">'core'</span>;<br><br><span class="text-indigo-400">const</span> init = () => {<br>&nbsp;&nbsp;<span class="text-slate-500">// Initialize UI Engine</span><br>&nbsp;&nbsp;NexOS.<span class="text-fuchsia-400">boot</span>({<br>&nbsp;&nbsp;&nbsp;&nbsp;theme: <span class="text-emerald-400">'premium'</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;glass: <span class="text-indigo-400">true</span><br>&nbsp;&nbsp;});<br>};</div>`;
+            if (id === 'files') return `<div class="grid grid-cols-4 gap-4">${['Cloud','Local','System','Backups'].map(x => `<div class="flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-white/5"><i data-lucide="folder" class="text-indigo-500 w-10 h-10"></i><span class="text-[10px] font-medium">${x}</span></div>`).join('')}</div>`;
+            return `<div class="flex flex-col items-center justify-center h-full text-slate-500"><i data-lucide="component" class="w-12 h-12 mb-4 opacity-20"></i><p class="text-xs uppercase tracking-widest font-bold">Module Loading...</p></div>`;
         }
 
-        function closeWindow(id) {
-            const index = State.windows.findIndex(w => w.id === id);
-            if (index > -1) {
-                State.windows[index].element.remove();
-                State.windows.splice(index, 1);
+        function focusWin(id) {
+            const win = State.windows.find(w => w.id === id);
+            if (win) win.el.style.zIndex = ++State.zIndex;
+        }
+
+        function closeWin(id) {
+            const idx = State.windows.findIndex(w => w.id === id);
+            if (idx > -1) {
+                State.windows[idx].el.remove();
+                State.windows.splice(idx, 1);
                 const dot = document.getElementById(`dot-${id}`);
                 if (dot) dot.classList.remove('visible');
             }
         }
 
-        function focusWindow(id) {
-            const win = State.windows.find(w => w.id === id);
-            if (win) {
-                win.element.style.zIndex = ++State.zIndexCounter;
-            }
-        }
-
-        // Drag & Resize Logic
-        let currentDrag = null;
+        let drag = null;
         function startDrag(e, id) {
-            e.preventDefault();
-            const win = State.windows.find(w => w.id === id).element;
+            if (e.target.closest('.window-controls')) return;
+            const win = State.windows.find(w => w.id === id).el;
             const rect = win.getBoundingClientRect();
-            currentDrag = {
-                type: 'drag',
-                element: win,
-                offsetX: e.clientX - rect.left,
-                offsetY: e.clientY - rect.top
-            };
-            focusWindow(id);
+            drag = { type: 'drag', el: win, ox: e.clientX - rect.left, oy: e.clientY - rect.top };
+            focusWin(id);
         }
 
         function startResize(e, id) {
-            e.preventDefault();
-            const win = State.windows.find(w => w.id === id).element;
+            const win = State.windows.find(w => w.id === id).el;
             const rect = win.getBoundingClientRect();
-            currentDrag = {
-                type: 'resize',
-                element: win,
-                startX: e.clientX,
-                startY: e.clientY,
-                startWidth: rect.width,
-                startHeight: rect.height
-            };
-            focusWindow(id);
+            drag = { type: 'resize', el: win, sx: e.clientX, sy: e.clientY, sw: rect.width, sh: rect.height };
+            focusWin(id);
         }
 
         window.onpointermove = (e) => {
-            if (!currentDrag) return;
-
-            if (currentDrag.type === 'drag') {
-                let x = e.clientX - currentDrag.offsetX;
-                let y = e.clientY - currentDrag.offsetY;
-                
-                if (x < 10) x = 0;
-                if (y < 0) y = 0;
-
-                currentDrag.element.style.left = `${x}px`;
-                currentDrag.element.style.top = `${y}px`;
-            } else if (currentDrag.type === 'resize') {
-                const newWidth = currentDrag.startWidth + (e.clientX - currentDrag.startX);
-                const newHeight = currentDrag.startHeight + (e.clientY - currentDrag.startY);
-                currentDrag.element.style.width = `${Math.max(300, newWidth)}px`;
-                currentDrag.element.style.height = `${Math.max(200, newHeight)}px`;
+            if (!drag) return;
+            if (drag.type === 'drag') {
+                drag.el.style.left = `${e.clientX - drag.ox}px`;
+                drag.el.style.top = `${e.clientY - drag.oy}px`;
+            } else {
+                drag.el.style.width = `${Math.max(300, drag.sw + (e.clientX - drag.sx))}px`;
+                drag.el.style.height = `${Math.max(200, drag.sh + (e.clientY - drag.sy))}px`;
             }
         };
 
-        window.onpointerup = () => {
-            currentDrag = null;
-        };
+        window.onpointerup = () => drag = null;
 
-        // UI Interactions
-        function updateTime() {
+        function updateLiveElements() {
             const now = new Date();
-            document.getElementById('tray-time').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('tray-date').innerText = now.toLocaleDateString([], { month: '2-digit', day: '2-digit', year: 'numeric' });
-        }
-
-        function updateSystemMonitor() {
-            const cpuVal = Math.floor(Math.random() * 30) + 10;
-            const ramVal = (Math.random() * 2 + 3).toFixed(1);
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).replace(',', '');
             
-            document.getElementById('cpu-val').innerText = `${cpuVal}%`;
-            document.getElementById('ram-val').innerText = `${ramVal}GB`;
-            const cpuRing = document.getElementById('cpu-ring');
-            const ramRing = document.getElementById('ram-ring');
-            if(cpuRing) cpuRing.setAttribute('stroke-dasharray', `${cpuVal}, 100`);
-            if(ramRing) ramRing.setAttribute('stroke-dasharray', `${(ramVal/16)*100}, 100`);
+            document.getElementById('tray-time').innerText = timeStr;
+            document.getElementById('tray-date').innerText = dateStr;
+            document.getElementById('widget-time').innerText = timeStr;
+            
+            const cpu = Math.floor(Math.random() * 20 + 15);
+            const ram = Math.floor(Math.random() * 10 + 50);
+            document.getElementById('cpu-perc').innerText = `${cpu}%`;
+            document.getElementById('cpu-bar').style.width = `${cpu}%`;
+            document.getElementById('ram-perc').innerText = `${ram}%`;
+            document.getElementById('ram-bar').style.width = `${ram}%`;
         }
 
-        function showContextMenu(e) {
+        function showMenu(e) {
             e.preventDefault();
-            const menu = document.getElementById('context-menu');
-            menu.style.display = 'block';
-            menu.style.left = `${e.clientX}px`;
-            menu.style.top = `${e.clientY}px`;
+            const m = document.getElementById('context-menu');
+            m.style.display = 'block';
+            m.style.left = `${e.clientX}px`;
+            m.style.top = `${e.clientY}px`;
         }
 
-        function setupEventListeners() {
-            const startBtn = document.getElementById('start-btn');
-            const startMenu = document.getElementById('start-menu');
-            const tray = document.getElementById('system-tray');
-            const controlCenter = document.getElementById('control-center');
+        function setupHandlers() {
+            const sb = document.getElementById('start-btn');
+            const sm = document.getElementById('start-menu');
+            const tr = document.getElementById('system-tray');
+            const cc = document.getElementById('control-center');
 
-            startBtn.onclick = (e) => {
+            sb.onclick = (e) => {
                 e.stopPropagation();
-                State.isStartOpen = !State.isStartOpen;
-                startMenu.classList.toggle('open', State.isStartOpen);
-                controlCenter.classList.remove('open');
+                sm.classList.toggle('open');
+                cc.classList.remove('open');
             };
 
-            tray.onclick = (e) => {
+            tr.onclick = (e) => {
                 e.stopPropagation();
-                State.isControlOpen = !State.isControlOpen;
-                controlCenter.classList.toggle('open', State.isControlOpen);
-                startMenu.classList.remove('open');
+                cc.classList.toggle('open');
+                sm.classList.remove('open');
             };
 
             window.onclick = () => {
-                startMenu.classList.remove('open');
-                controlCenter.classList.remove('open');
-                const contextMenu = document.getElementById('context-menu');
-                if(contextMenu) contextMenu.style.display = 'none';
-                State.isStartOpen = false;
-                State.isControlOpen = false;
+                sm.classList.remove('open');
+                cc.classList.remove('open');
+                document.getElementById('context-menu').style.display = 'none';
             };
-
-            const wifiToggle = document.getElementById('wifi-toggle');
-            if(wifiToggle) {
-                wifiToggle.onclick = function() {
-                    this.classList.toggle('bg-blue-600/50');
-                    this.classList.toggle('text-white');
-                };
-            }
         }
 
         window.onload = init;
     </script>
 </body>
-</html>
+</html></html>
