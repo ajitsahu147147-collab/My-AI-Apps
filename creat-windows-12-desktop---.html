@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Windows 12 Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        html, body {
+            overscroll-behavior: none;
+            touch-action: none;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        button, a, [role="button"], canvas {
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        input, textarea {
+            -webkit-user-select: text;
+            user-select: text;
+            font-size: 16px;
+        }
+
+        .desktop-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .window-shadow {
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        .app-icon {
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .app-icon:active {
+            transform: scale(0.9);
+        }
+
+        .taskbar-item {
+            position: relative;
+        }
+        .taskbar-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .animate-pop {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+
+        #game-canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="desktop-bg text-slate-900">
+
+    <!-- Desktop Area -->
+    <div id="desktop" class="relative w-full h-full p-4 flex flex-col items-start gap-6 pt-12">
+        
+        <!-- Icons -->
+        <button onclick="openApp('defender')" class="app-icon flex flex-col items-center w-20 space-y-1">
+            <div class="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            </div>
+            <span class="text-xs font-medium text-white drop-shadow-md text-center">Security Defender</span>
+        </button>
+
+        <button onclick="openApp('terminal')" class="app-icon flex flex-col items-center w-20 space-y-1">
+            <div class="w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center shadow-lg border border-slate-600">
+                <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            </div>
+            <span class="text-xs font-medium text-white drop-shadow-md text-center">Terminal</span>
+        </button>
+
+        <button onclick="openApp('browser')" class="app-icon flex flex-col items-center w-20 space-y-1">
+            <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+            </div>
+            <span class="text-xs font-medium text-white drop-shadow-md text-center">Edge Pro</span>
+        </button>
+    </div>
+
+    <!-- App Windows Container -->
+    <div id="window-layer" class="absolute inset-0 pointer-events-none">
+        
+        <!-- Defender Game App -->
+        <div id="win-defender" class="window hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[70%] max-w-md glass rounded-3xl overflow-hidden window-shadow animate-pop pointer-events-auto flex flex-col">
+            <div class="h-12 flex items-center justify-between px-4 bg-white/30 border-b border-white/20">
+                <span class="text-sm font-semibold flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"></path></svg>
+                    Security Defender
+                </span>
+                <button onclick="closeApp('defender')" class="w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white rounded-full transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="flex-1 relative bg-slate-900 overflow-hidden flex flex-col p-4 text-white">
+                <div class="flex justify-between mb-2">
+                    <div id="game-score" class="text-sm font-bold">Health: 100%</div>
+                    <div id="game-difficulty" class="text-xs text-blue-400 font-mono">MODE: NORMAL</div>
+                </div>
+                <div id="game-screen" class="flex-1 border border-white/10 rounded-xl relative overflow-hidden bg-slate-950">
+                    <div id="game-start-btn" class="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
+                        <button onclick="startGame()" class="px-6 py-2 bg-blue-600 rounded-full font-bold shadow-lg active:scale-95 transition-transform">Start Cleanup</button>
+                    </div>
+                    <canvas id="game-canvas" class="w-full h-full"></canvas>
+                </div>
+                <p class="mt-2 text-[10px] text-slate-400 text-center uppercase tracking-widest">Intercept incoming threats before they breach</p>
+            </div>
+        </div>
+
+        <!-- Terminal App -->
+        <div id="win-terminal" class="window hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] h-[60%] glass-dark rounded-2xl overflow-hidden window-shadow animate-pop pointer-events-auto flex flex-col">
+            <div class="h-10 flex items-center justify-between px-4 bg-black/20">
+                <span class="text-xs font-mono text-slate-300">cmd.exe - admin@windows12</span>
+                <button onclick="closeApp('terminal')" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+            <div id="terminal-content" class="flex-1 p-3 font-mono text-sm text-green-400 overflow-y-auto">
+                <div>Microsoft Windows [Version 12.0.22509.1]</div>
+                <div>(c) Microsoft Corporation. All rights reserved.</div>
+                <div class="mt-4">C:\Users\Admin> _</div>
+            </div>
+        </div>
+
+        <!-- Browser App -->
+        <div id="win-browser" class="window hidden absolute inset-0 sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[90%] sm:h-[80%] bg-white pointer-events-auto flex flex-col">
+            <div class="h-12 flex items-center gap-3 px-4 bg-slate-100 border-b">
+                <div class="flex gap-2">
+                    <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                </div>
+                <div class="flex-1 bg-white rounded-md border text-xs px-3 py-1 text-slate-500 flex items-center">
+                    https://www.microsoft.com/en-us/windows-12
+                </div>
+                <button onclick="closeApp('browser')" class="text-slate-500">✕</button>
+            </div>
+            <div class="flex-1 p-6 overflow-y-auto bg-white text-slate-800">
+                <h1 class="text-3xl font-bold mb-4">The new Era of Windows.</h1>
+                <p class="mb-4 text-slate-600">Experience fluid AI-driven productivity across all your mobile and desktop devices.</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="h-32 bg-slate-100 rounded-xl p-4">
+                        <h3 class="font-bold">Co-Pilot 2.0</h3>
+                        <p class="text-xs text-slate-500 mt-2">Built-in AI for every interaction.</p>
+                    </div>
+                    <div class="h-32 bg-blue-50 rounded-xl p-4 border border-blue-100">
+                        <h3 class="font-bold text-blue-800">Quantum Snap</h3>
+                        <p class="text-xs text-blue-600 mt-2">Intelligent window management.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Menu -->
+    <div id="start-menu" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 w-[90%] max-w-lg glass-dark rounded-[2.5rem] p-6 shadow-2xl z-50 animate-pop border border-white/20">
+        <div class="mb-6">
+            <input type="text" placeholder="Search for apps, settings, and documents" class="w-full bg-white/10 rounded-full py-2 px-6 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:ring-2 ring-blue-500/50">
+        </div>
+        <div class="grid grid-cols-4 gap-y-6 mb-8">
+            <div class="flex flex-col items-center gap-1" onclick="openApp('defender'); toggleStart()">
+                <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">🛡️</div>
+                <span class="text-[10px] text-white">Security</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+                <div class="w-12 h-12 bg-pink-600 rounded-xl flex items-center justify-center">📷</div>
+                <span class="text-[10px] text-white">Photos</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+                <div class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center">⚙️</div>
+                <span class="text-[10px] text-white">Settings</span>
+            </div>
+            <div class="flex flex-col items-center gap-1" onclick="openApp('terminal'); toggleStart()">
+                <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center">⌨️</div>
+                <span class="text-[10px] text-white">Terminal</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+                <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">📁</div>
+                <span class="text-[10px] text-white">Files</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+                <div class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">📱</div>
+                <span class="text-[10px] text-white">Phone Link</span>
+            </div>
+        </div>
+        <div class="border-t border-white/10 pt-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-gradient-to-tr from-blue-400 to-indigo-500 rounded-full"></div>
+                <span class="text-xs text-white font-medium">Guest User</span>
+            </div>
+            <button class="text-white opacity-60 hover:opacity-100 transition-opacity">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div class="fixed bottom-0 left-0 right-0 h-16 glass-dark flex items-center justify-center z-50">
+        <div class="flex items-center gap-2 sm:gap-4 px-2">
+            <button onclick="toggleStart()" class="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-lg transition-colors">
+                <svg class="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/></svg>
+            </button>
+            <div class="h-6 w-px bg-white/10 mx-1"></div>
+            <button onclick="openApp('defender')" class="taskbar-item w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-lg transition-colors">
+                <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center shadow-lg text-[10px] text-white">🛡️</div>
+            </button>
+            <button onclick="openApp('browser')" class="taskbar-item w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-lg transition-colors">
+                <div class="w-8 h-8 bg-white rounded-md flex items-center justify-center shadow-lg text-[10px]">🌐</div>
+            </button>
+            <button onclick="openApp('terminal')" class="taskbar-item w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-lg transition-colors">
+                <div class="w-8 h-8 bg-slate-700 rounded-md flex items-center justify-center shadow-lg text-[10px] text-green-400">#_</div>
+            </button>
+        </div>
+
+        <!-- System Tray -->
+        <div class="absolute right-4 flex items-center gap-3 text-white text-[10px] font-medium opacity-80">
+            <div class="hidden sm:flex items-center gap-2">
+                <span>ENG</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071a9.9 9.9 0 0114.142 0M5.106 17.972l.001.001m13.788-0.001l.001.001"></path></svg>
+            </div>
+            <div class="flex flex-col items-end leading-tight">
+                <span id="taskbar-time">12:00 PM</span>
+                <span id="taskbar-date">10/24/2024</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footnote -->
+    <div class="fixed bottom-16 left-0 right-0 py-1 text-center bg-black/20 pointer-events-none">
+        <p class="text-[10px] text-white/50">Built: Win12 Sim with Defender Game. Next: Add multi-window snapping.</p>
+    </div>
+
+    <script>
+        // System Clock
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString([], { month: 'numeric', day: 'numeric', year: 'numeric' });
+            document.getElementById('taskbar-time').textContent = timeStr;
+            document.getElementById('taskbar-date').textContent = dateStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Window Manager
+        let openApps = new Set();
+        let zIndex = 10;
+
+        function openApp(appId) {
+            const win = document.getElementById(`win-${appId}`);
+            if (win) {
+                win.classList.remove('hidden');
+                win.style.zIndex = ++zIndex;
+                openApps.add(appId);
+                updateTaskbarIndicators();
+            }
+        }
+
+        function closeApp(appId) {
+            const win = document.getElementById(`win-${appId}`);
+            if (win) {
+                win.classList.add('hidden');
+                openApps.delete(appId);
+                updateTaskbarIndicators();
+                if (appId === 'defender') stopGame();
+            }
+        }
+
+        function toggleStart() {
+            const menu = document.getElementById('start-menu');
+            menu.classList.toggle('hidden');
+            if (!menu.classList.contains('hidden')) {
+                menu.style.zIndex = 1000;
+            }
+        }
+
+        function updateTaskbarIndicators() {
+            // Placeholder logic to show dots under taskbar icons
+            // In a full app we'd map icons to IDs
+        }
+
+        // --- Security Defender Mini-Game (SMART DIFFICULTY: NORMAL) ---
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('game-score');
+        const startBtn = document.getElementById('game-start-btn');
+
+        let gameActive = false;
+        let health = 100;
+        let enemies = [];
+        let particles = [];
+        let spawnRate = 60; // Spawn enemy every 60 frames
+        let frameCount = 0;
+        let enemySpeed = 1.8; // Normal Difficulty: Balanced speed
+
+        class Enemy {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = -20;
+                this.size = 25 + Math.random() * 20;
+                this.speed = enemySpeed + (Math.random() * 0.5);
+                this.color = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                this.text = ['BUG', 'VIRUS', 'TROJAN', 'MALWARE'][Math.floor(Math.random() * 4)];
+            }
+            update() {
+                this.y += this.speed;
+                if (this.y > canvas.height + 20) {
+                    health -= 10;
+                    return false;
+                }
+                return true;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.roundRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size, 8);
+                ctx.fill();
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 8px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.text, this.x, this.y + 4);
+            }
+        }
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+
+        function startGame() {
+            health = 100;
+            enemies = [];
+            gameActive = true;
+            startBtn.classList.add('hidden');
+            resizeCanvas();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function stopGame() {
+            gameActive = false;
+            startBtn.classList.remove('hidden');
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            frameCount++;
+            if (frameCount % spawnRate === 0) {
+                enemies.push(new Enemy());
+                if (spawnRate > 30) spawnRate--; // Gradually increase difficulty
+            }
+
+            enemies = enemies.filter(enemy => {
+                const alive = enemy.update();
+                if (alive) enemy.draw();
+                return alive;
+            });
+
+            scoreEl.textContent = `Health: ${health}%`;
+            
+            if (health <= 0) {
+                gameActive = false;
+                startBtn.classList.remove('hidden');
+                startBtn.querySelector('button').textContent = "System Crashed - Retry?";
+                return;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Handle Touch/Clicks on Game
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            checkHit(touch.clientX - rect.left, touch.clientY - rect.top);
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            checkHit(e.clientX - rect.left, e.clientY - rect.top);
+        });
+
+        function checkHit(x, y) {
+            enemies = enemies.filter(enemy => {
+                const dist = Math.hypot(enemy.x - x, enemy.y - y);
+                if (dist < enemy.size) {
+                    // Hit!
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        // Terminal Simulation
+        const termContent = document.getElementById('terminal-content');
+        const commands = [
+            "ping microsoft.com...",
+            "Request timed out.",
+            "Analyzing system kernel...",
+            "Kernel status: OPTIMIZED",
+            "Checking for AI updates...",
+            "Windows 12 Co-Pilot is up to date."
+        ];
+        let cmdIdx = 0;
+        setInterval(() => {
+            if (openApps.has('terminal')) {
+                const div = document.createElement('div');
+                div.textContent = `C:\\Users\\Admin> ${commands[cmdIdx]}`;
+                termContent.appendChild(div);
+                termContent.scrollTop = termContent.scrollHeight;
+                cmdIdx = (cmdIdx + 1) % commands.length;
+            }
+        }, 3000);
+
+        // Resize handler for game
+        window.addEventListener('resize', resizeCanvas);
+
+    </script>
+</body>
+</html>
