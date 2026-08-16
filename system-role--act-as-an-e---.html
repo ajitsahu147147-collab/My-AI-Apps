@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>NexOS Mobile Desktop</title>
+    
+    <!-- PWA & Mobile Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NexOS">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/layers.png">
+    
+    <!-- Dynamic Manifest for PWA -->
+    <link rel="manifest" id="pwa-manifest">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
     <style>
@@ -404,10 +415,54 @@
     </div>
 
     <div class="fixed bottom-1 left-2 text-[10px] text-white/30 z-[10000]">
-        Built: Modern Glassmorphism Desktop OS Sim. Next: Persistent File Storage & Cloud Sync.
+        Built: PWA manifest and service worker registration. Next: Offline asset caching.
     </div>
 
     <script>
+        // PWA Implementation for Home Screen functionality
+        function setupPWA() {
+            // 1. Generate Manifest
+            const manifest = {
+                "name": "NexOS Mobile Desktop",
+                "short_name": "NexOS",
+                "start_url": window.location.href,
+                "display": "standalone",
+                "background_color": "#0f172a",
+                "theme_color": "#0f172a",
+                "icons": [
+                    {
+                        "src": "https://img.icons8.com/fluency/192/layers.png",
+                        "sizes": "192x192",
+                        "type": "image/png",
+                        "purpose": "any maskable"
+                    },
+                    {
+                        "src": "https://img.icons8.com/fluency/512/layers.png",
+                        "sizes": "512x512",
+                        "type": "image/png"
+                    }
+                ]
+            };
+            const stringManifest = JSON.stringify(manifest);
+            const blob = new Blob([stringManifest], {type: 'application/json'});
+            document.getElementById('pwa-manifest').setAttribute('href', URL.createObjectURL(blob));
+
+            // 2. Register Service Worker (Blob method for single-file compatibility)
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    self.addEventListener('install', (e) => {
+                        self.skipWaiting();
+                    });
+                    self.addEventListener('fetch', (e) => {
+                        e.respondWith(fetch(e.request).catch(() => e.default()));
+                    });
+                `;
+                const swBlob = new Blob([swCode], {type: 'text/javascript'});
+                const swUrl = URL.createObjectURL(swBlob);
+                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW failed', err));
+            }
+        }
+
         // Constants & Config
         const APPS = [
             { id: 'browser', name: 'Browser', icon: 'globe', color: 'text-blue-400', windowType: 'browser' },
@@ -434,6 +489,7 @@
 
         // Initialize UI
         function init() {
+            setupPWA();
             lucide.createIcons();
             renderDesktopIcons();
             renderTaskbarApps();
@@ -631,7 +687,6 @@
                 let x = e.clientX - currentDrag.offsetX;
                 let y = e.clientY - currentDrag.offsetY;
                 
-                // Snap zones
                 if (x < 10) x = 0;
                 if (y < 0) y = 0;
 
@@ -662,8 +717,10 @@
             
             document.getElementById('cpu-val').innerText = `${cpuVal}%`;
             document.getElementById('ram-val').innerText = `${ramVal}GB`;
-            document.getElementById('cpu-ring').setAttribute('stroke-dasharray', `${cpuVal}, 100`);
-            document.getElementById('ram-ring').setAttribute('stroke-dasharray', `${(ramVal/16)*100}, 100`);
+            const cpuRing = document.getElementById('cpu-ring');
+            const ramRing = document.getElementById('ram-ring');
+            if(cpuRing) cpuRing.setAttribute('stroke-dasharray', `${cpuVal}, 100`);
+            if(ramRing) ramRing.setAttribute('stroke-dasharray', `${(ramVal/16)*100}, 100`);
         }
 
         function showContextMenu(e) {
@@ -697,19 +754,21 @@
             window.onclick = () => {
                 startMenu.classList.remove('open');
                 controlCenter.classList.remove('open');
-                document.getElementById('context-menu').style.display = 'none';
+                const contextMenu = document.getElementById('context-menu');
+                if(contextMenu) contextMenu.style.display = 'none';
                 State.isStartOpen = false;
                 State.isControlOpen = false;
             };
 
-            // Toggle effects for UI
-            document.getElementById('wifi-toggle').onclick = function() {
-                this.classList.toggle('bg-blue-600/50');
-                this.classList.toggle('text-white');
-            };
+            const wifiToggle = document.getElementById('wifi-toggle');
+            if(wifiToggle) {
+                wifiToggle.onclick = function() {
+                    this.classList.toggle('bg-blue-600/50');
+                    this.classList.toggle('text-white');
+                };
+            }
         }
 
-        // Initialize on load
         window.onload = init;
     </script>
 </body>
