@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Win11 Mobile Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-touch-callout: none; 
+            box-sizing: border-box;
+        }
+        html, body { 
+            overscroll-behavior: none; 
+            touch-action: manipulation; 
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s ease;
+        }
+        button, a, [role="button"], canvas { 
+            -webkit-user-select: none; 
+            user-select: none; 
+            touch-action: manipulation; 
+            cursor: pointer; 
+        }
+        input, textarea { 
+            -webkit-user-select: text; 
+            user-select: text; 
+            font-size: 16px !important;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: background 0.3s ease;
+        }
+
+        .dark-glass {
+            background: rgba(32, 32, 32, 0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Light Mode Overrides */
+        body.light-mode .dark-glass {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #1a1a1a;
+        }
+        body.light-mode .glass {
+            background: rgba(243, 243, 243, 0.8);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        body.light-mode #start-menu input {
+            background: rgba(0, 0, 0, 0.05);
+            color: black;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        body.light-mode .desktop-bg {
+            background: url('https://images.unsplash.com/photo-1620209127221-1f50a848b893?q=80&w=2042&auto=format&fit=crop') center/cover no-repeat;
+        }
+        body.light-mode .taskbar-icon svg {
+            color: #444;
+        }
+        body.light-mode #current-time, body.light-mode #current-date {
+            color: #333;
+        }
+
+        .window-shadow {
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        .taskbar-icon {
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .taskbar-icon:active {
+            transform: scale(0.8);
+        }
+
+        @keyframes startUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .animate-start {
+            animation: startUp 0.3s cubic-bezier(0, 0.55, 0.45, 1) forwards;
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.5); border-radius: 10px; }
+
+        .app-window {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .app-window.hidden {
+            transform: scale(0.9) translateY(20px);
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .desktop-bg {
+            background: url('https://images.unsplash.com/photo-1620121692029-d088224efc74?q=80&w=2064&auto=format&fit=crop') center/cover no-repeat;
+            transition: background 0.5s ease;
+        }
+
+        #defender-canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="bg-black text-white">
+
+    <!-- Desktop Layer -->
+    <div id="desktop" class="desktop-bg relative w-full h-full overflow-hidden flex flex-col">
+        
+        <!-- Icons Area -->
+        <div class="flex-1 p-4 grid grid-cols-4 grid-rows-8 gap-4 auto-rows-max pointer-events-none">
+            <button onclick="openApp('explorer')" class="pointer-events-auto flex flex-col items-center gap-1 w-20">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/48/Folder_Icon.svg" class="w-12 h-12" alt="Files">
+                <span class="text-xs text-white drop-shadow-md font-medium">This PC</span>
+            </button>
+            <button onclick="openApp('defender')" class="pointer-events-auto flex flex-col items-center gap-1 w-20">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Windows_Security_Icon.svg" class="w-12 h-12" alt="Security">
+                <span class="text-xs text-white drop-shadow-md font-medium text-center">Defender Game</span>
+            </button>
+        </div>
+
+        <!-- Start Menu Overlay -->
+        <div id="start-menu" class="hidden fixed inset-x-4 bottom-20 z-50 dark-glass rounded-xl p-6 window-shadow animate-start max-w-lg mx-auto">
+            <div class="mb-6">
+                <input type="text" placeholder="Type here to search" class="w-full bg-black/30 border border-white/10 rounded px-4 py-2 outline-none focus:border-blue-400 transition-colors">
+            </div>
+            
+            <div class="grid grid-cols-4 gap-6 mb-8">
+                <button onclick="openApp('edge')" class="flex flex-col items-center gap-2">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Microsoft_Edge_logo_%282019%29.svg" class="w-10 h-10" alt="Edge">
+                    <span class="text-xs">Edge</span>
+                </button>
+                <button onclick="openApp('notepad')" class="flex flex-col items-center gap-2">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Notepad_icon.svg" class="w-10 h-10" alt="Notepad">
+                    <span class="text-xs">Notepad</span>
+                </button>
+                <button onclick="openApp('calculator')" class="flex flex-col items-center gap-2">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/25/Windows_Calculator_icon.svg" class="w-10 h-10" alt="Calc">
+                    <span class="text-xs">Calculator</span>
+                </button>
+                <button onclick="openApp('settings')" class="flex flex-col items-center gap-2">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/58/Windows_Settings_icon.svg" class="w-10 h-10" alt="Settings">
+                    <span class="text-xs">Settings</span>
+                </button>
+            </div>
+
+            <div class="border-t border-white/10 pt-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm font-bold text-white">JD</div>
+                    <span class="text-sm">John Doe</span>
+                </div>
+                <button onclick="location.reload()" class="p-2 hover:bg-white/10 rounded-full">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- App Windows -->
+        <div id="window-container" class="fixed inset-0 pointer-events-none z-40">
+            <!-- Notepad App -->
+            <div id="win-notepad" class="app-window hidden absolute inset-4 md:inset-20 dark-glass rounded-xl flex flex-col pointer-events-auto window-shadow overflow-hidden">
+                <div class="h-10 flex items-center justify-between px-4 bg-black/5">
+                    <div class="flex items-center gap-2">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Notepad_icon.svg" class="w-4 h-4">
+                        <span class="text-xs opacity-80 font-medium">Untitled - Notepad</span>
+                    </div>
+                    <button onclick="closeApp('notepad')" class="hover:bg-red-500 p-2 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"></path></svg>
+                    </button>
+                </div>
+                <textarea class="flex-1 bg-transparent p-4 outline-none resize-none text-sm opacity-90" placeholder="Start typing..."></textarea>
+            </div>
+
+            <!-- Calculator App -->
+            <div id="win-calculator" class="app-window hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-96 dark-glass rounded-xl flex flex-col pointer-events-auto window-shadow overflow-hidden">
+                <div class="h-10 flex items-center justify-between px-4">
+                    <span class="text-xs font-medium">Calculator</span>
+                    <button onclick="closeApp('calculator')" class="hover:bg-red-500 p-2">✕</button>
+                </div>
+                <div class="flex-1 p-4 flex flex-col">
+                    <div id="calc-display" class="text-right text-3xl font-light mb-4 h-12 truncate">0</div>
+                    <div class="grid grid-cols-4 gap-1 flex-1">
+                        <button onclick="calcInput('7')" class="bg-black/10 hover:bg-black/20 rounded">7</button>
+                        <button onclick="calcInput('8')" class="bg-black/10 hover:bg-black/20 rounded">8</button>
+                        <button onclick="calcInput('9')" class="bg-black/10 hover:bg-black/20 rounded">9</button>
+                        <button onclick="calcInput('/')" class="bg-black/20 hover:bg-black/30 rounded">÷</button>
+                        <button onclick="calcInput('4')" class="bg-black/10 hover:bg-black/20 rounded">4</button>
+                        <button onclick="calcInput('5')" class="bg-black/10 hover:bg-black/20 rounded">5</button>
+                        <button onclick="calcInput('6')" class="bg-black/10 hover:bg-black/20 rounded">6</button>
+                        <button onclick="calcInput('*')" class="bg-black/20 hover:bg-black/30 rounded">×</button>
+                        <button onclick="calcInput('1')" class="bg-black/10 hover:bg-black/20 rounded">1</button>
+                        <button onclick="calcInput('2')" class="bg-black/10 hover:bg-black/20 rounded">2</button>
+                        <button onclick="calcInput('3')" class="bg-black/10 hover:bg-black/20 rounded">3</button>
+                        <button onclick="calcInput('-')" class="bg-black/20 hover:bg-black/30 rounded">−</button>
+                        <button onclick="calcClear()" class="bg-red-500/20 hover:bg-red-500/30 rounded text-red-400">C</button>
+                        <button onclick="calcInput('0')" class="bg-black/10 hover:bg-black/20 rounded">0</button>
+                        <button onclick="calcResult()" class="bg-blue-600 hover:bg-blue-500 rounded col-span-1 text-white">=</button>
+                        <button onclick="calcInput('+')" class="bg-black/20 hover:bg-black/30 rounded">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Defender Game App -->
+            <div id="win-defender" class="app-window hidden absolute inset-0 md:inset-10 dark-glass md:rounded-xl flex flex-col pointer-events-auto window-shadow overflow-hidden">
+                <div class="h-12 flex items-center justify-between px-4 bg-blue-900/30">
+                    <div class="flex items-center gap-2">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Windows_Security_Icon.svg" class="w-5 h-5">
+                        <span class="text-sm font-semibold text-white">Defender Threat Neutralizer</span>
+                    </div>
+                    <button onclick="closeApp('defender')" class="p-2 text-white">✕</button>
+                </div>
+                <div class="flex-1 relative bg-black/40 overflow-hidden" id="defender-container">
+                    <div id="game-overlay" class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 text-white text-center">
+                        <h2 class="text-2xl font-bold mb-2">Threat Detection Mode</h2>
+                        <p class="text-blue-300 mb-6">Difficulty: NORMAL</p>
+                        <button onclick="startDefenderGame()" class="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-full font-bold">INITIALIZE SCAN</button>
+                        <p class="mt-4 text-xs opacity-50 px-4">Standard enemy speed. Tap threats to neutralize before they compromise the system.</p>
+                    </div>
+                    <canvas id="defender-canvas"></canvas>
+                    <div id="game-stats" class="absolute top-4 left-4 text-xs font-mono hidden text-white">
+                        SCORE: <span id="game-score">0</span><br>
+                        HEALTH: <span id="game-health">100</span>%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Taskbar -->
+        <div class="h-14 glass flex items-center justify-between px-2 z-[100] border-t border-white/20">
+            <!-- Left: Widgets/Theme Toggle -->
+            <div class="flex w-12 sm:w-24">
+                <button onclick="toggleTheme()" id="theme-btn" class="p-2 hover:bg-black/5 rounded transition-colors" title="Toggle Dark/Light Mode">
+                    <svg id="theme-icon" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Center: App Icons -->
+            <div class="flex items-center gap-1 mx-auto">
+                <button onclick="toggleStart()" class="taskbar-icon p-2 hover:bg-black/5 rounded">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Windows_logo_-_2021.svg" class="w-6 h-6" alt="Start">
+                </button>
+                <button onclick="openApp('search')" class="taskbar-icon p-2 hover:bg-black/5 rounded">
+                    <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </button>
+                <div class="w-px h-6 bg-black/10 mx-1"></div>
+                <button onclick="openApp('explorer')" class="taskbar-icon p-2 hover:bg-black/5 rounded">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/48/Folder_Icon.svg" class="w-6 h-6">
+                </button>
+                <button onclick="openApp('edge')" class="taskbar-icon p-2 hover:bg-black/5 rounded">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Microsoft_Edge_logo_%282019%29.svg" class="w-6 h-6">
+                </button>
+                <button onclick="openApp('defender')" class="taskbar-icon p-2 hover:bg-black/5 rounded">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Windows_Security_Icon.svg" class="w-6 h-6">
+                </button>
+            </div>
+
+            <!-- Right: System Tray -->
+            <div class="flex items-center gap-3 px-2">
+                <div class="hidden sm:flex flex-col items-end text-[10px] leading-tight opacity-80">
+                    <div id="current-time">12:00 PM</div>
+                    <div id="current-date">10/24/2023</div>
+                </div>
+                <button class="p-1 hover:bg-black/5 rounded">
+                    <svg class="w-4 h-4 opacity-60" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="fixed bottom-14 left-0 right-0 py-1 text-center pointer-events-none">
+            <span class="text-[10px] text-white/30 font-mono">Built: dark/light mode toggle. Next: Add draggable windows.</span>
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        const state = {
+            startOpen: false,
+            openApps: new Set(),
+            calcValue: '0',
+            gameActive: false,
+            score: 0,
+            health: 100,
+            theme: 'dark'
+        };
+
+        // Theme Management
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            
+            if (body.classList.contains('light-mode')) {
+                body.classList.remove('light-mode');
+                body.classList.add('bg-black', 'text-white');
+                icon.innerHTML = `<path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />`;
+                icon.classList.remove('text-blue-600');
+                icon.classList.add('text-yellow-500');
+            } else {
+                body.classList.add('light-mode');
+                body.classList.remove('bg-black', 'text-white');
+                icon.innerHTML = `<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />`;
+                icon.classList.remove('text-yellow-500');
+                icon.classList.add('text-blue-600');
+            }
+        }
+
+        // Date/Time Update
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('current-date').innerText = now.toLocaleDateString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // App Management
+        function toggleStart() {
+            state.startOpen = !state.startOpen;
+            const menu = document.getElementById('start-menu');
+            if (state.startOpen) {
+                menu.classList.remove('hidden');
+            } else {
+                menu.classList.add('hidden');
+            }
+        }
+
+        function openApp(id) {
+            state.startOpen = false;
+            document.getElementById('start-menu').classList.add('hidden');
+            
+            const win = document.getElementById(`win-${id}`);
+            if (win) {
+                win.classList.remove('hidden');
+                state.openApps.add(id);
+            } else if (id !== 'search') {
+                alert(`${id} app is not installed in this simulator.`);
+            }
+        }
+
+        function closeApp(id) {
+            const win = document.getElementById(`win-${id}`);
+            if (win) {
+                win.classList.add('hidden');
+                state.openApps.delete(id);
+                if (id === 'defender') stopDefenderGame();
+            }
+        }
+
+        // Calculator Logic
+        function calcInput(val) {
+            if (state.calcValue === '0') state.calcValue = val;
+            else state.calcValue += val;
+            updateCalc();
+        }
+        function calcClear() {
+            state.calcValue = '0';
+            updateCalc();
+        }
+        function calcResult() {
+            try {
+                state.calcValue = eval(state.calcValue).toString();
+            } catch {
+                state.calcValue = 'Error';
+            }
+            updateCalc();
+        }
+        function updateCalc() {
+            document.getElementById('calc-display').innerText = state.calcValue;
+        }
+
+        // Defender Game Logic
+        const canvas = document.getElementById('defender-canvas');
+        const ctx = canvas.getContext('2d');
+        let threats = [];
+        let animationFrame;
+
+        function startDefenderGame() {
+            state.gameActive = true;
+            state.score = 0;
+            state.health = 100;
+            threats = [];
+            document.getElementById('game-overlay').classList.add('hidden');
+            document.getElementById('game-stats').classList.remove('hidden');
+            
+            resizeGame();
+            gameLoop();
+            spawnThreat();
+        }
+
+        function stopDefenderGame() {
+            state.gameActive = false;
+            cancelAnimationFrame(animationFrame);
+        }
+
+        function resizeGame() {
+            const container = document.getElementById('defender-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+
+        function spawnThreat() {
+            if (!state.gameActive) return;
+            
+            const size = 40;
+            threats.push({
+                x: Math.random() * (canvas.width - size),
+                y: -size,
+                size: size,
+                speed: 1.5 + (state.score / 2000), 
+                color: '#ef4444'
+            });
+
+            setTimeout(spawnThreat, 1200 - Math.min(state.score / 2, 800));
+        }
+
+        function gameLoop() {
+            if (!state.gameActive) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            threats.forEach((t, i) => {
+                t.y += t.speed;
+                
+                ctx.fillStyle = t.color;
+                ctx.beginPath();
+                ctx.roundRect(t.x, t.y, t.size, t.size, 8);
+                ctx.fill();
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 20px Arial';
+                ctx.fillText('!', t.x + 15, t.y + 28);
+
+                if (t.y > canvas.height) {
+                    state.health -= 10;
+                    threats.splice(i, 1);
+                }
+            });
+
+            document.getElementById('game-score').innerText = state.score;
+            document.getElementById('game-health').innerText = state.health;
+
+            if (state.health <= 0) {
+                gameOver();
+            } else {
+                animationFrame = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function gameOver() {
+            state.gameActive = false;
+            const overlay = document.getElementById('game-overlay');
+            overlay.classList.remove('hidden');
+            overlay.querySelector('h2').innerText = "SYSTEM COMPROMISED";
+            overlay.querySelector('p').innerText = `Final Score: ${state.score}`;
+        }
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const tx = touch.clientX - rect.left;
+            const ty = touch.clientY - rect.top;
+
+            threats.forEach((t, i) => {
+                if (tx >= t.x && tx <= t.x + t.size && ty >= t.y && ty <= t.y + t.size) {
+                    threats.splice(i, 1);
+                    state.score += 100;
+                }
+            });
+        }, { passive: false });
+
+        window.addEventListener('resize', () => {
+            if (state.gameActive) resizeGame();
+        });
+
+        document.getElementById('desktop').addEventListener('click', (e) => {
+            if (state.startOpen && !e.target.closest('#start-menu') && !e.target.closest('button[onclick="toggleStart()"]')) {
+                toggleStart();
+            }
+        });
+    </script>
+</body>
+</html>
