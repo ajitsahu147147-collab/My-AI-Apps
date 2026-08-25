@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Virtual Circuit Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-touch-callout: none; 
+            box-sizing: border-box;
+        }
+        html, body { 
+            overscroll-behavior: none; 
+            touch-action: manipulation; 
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        button, [role="button"] { 
+            -webkit-user-select: none; 
+            user-select: none; 
+            touch-action: manipulation; 
+            cursor: pointer; 
+        }
+        
+        .workspace {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .component {
+            position: absolute;
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            user-select: none;
+            z-index: 10;
+        }
+
+        .pin {
+            width: 16px;
+            height: 16px;
+            background: #475569;
+            border-radius: 50%;
+            border: 2px solid #94a3b8;
+            position: absolute;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .pin:active, .pin.active {
+            transform: scale(1.4);
+            background: #3b82f6;
+            border-color: #60a5fa;
+            box-shadow: 0 0 10px #3b82f6;
+        }
+
+        .pin-label {
+            position: absolute;
+            font-size: 10px;
+            color: #94a3b8;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .wire-path {
+            fill: none;
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: stroke 0.3s;
+        }
+
+        .wire-shadow {
+            fill: none;
+            stroke: rgba(0,0,0,0.3);
+            stroke-width: 6;
+            filter: blur(2px);
+        }
+
+        .status-bar {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 41, 59, 0.9);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            backdrop-filter: blur(4px);
+            border: 1px solid #334155;
+            z-index: 50;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="h-full w-full flex flex-col">
+        <!-- Header -->
+        <header class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center z-50">
+            <div>
+                <h1 class="text-xl font-bold text-blue-400">CircuitLogic</h1>
+                <p class="text-xs text-slate-500">Normal Difficulty: Virtual Wiring</p>
+            </div>
+            <button onclick="resetWires()" class="bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1 rounded text-sm font-medium active:bg-red-500/20">
+                Clear All
+            </button>
+        </header>
+
+        <!-- Main Canvas -->
+        <main id="canvas" class="workspace flex-grow overflow-hidden touch-none relative">
+            <svg id="svg-layer">
+                <g id="shadow-group"></g>
+                <g id="wire-group"></g>
+                <path id="active-wire" class="wire-path" stroke="#3b82f6" stroke-dasharray="8,8" d="" />
+            </svg>
+            
+            <!-- Components will be injected here -->
+            <div id="components-container"></div>
+        </main>
+
+        <!-- Instructions / Status -->
+        <div id="status" class="status-bar text-slate-300">
+            Tap a pin to start wiring
+        </div>
+
+        <!-- Build Note Footer -->
+        <footer class="p-2 bg-slate-900 border-t border-slate-800 text-center z-50">
+            <p class="text-[10px] text-slate-500 uppercase tracking-widest">
+                Built: virtual breadboard with pin-to-pin wiring logic. Next: Add logic simulation for current flow.
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const svgLayer = document.getElementById('svg-layer');
+        const wireGroup = document.getElementById('wire-group');
+        const shadowGroup = document.getElementById('shadow-group');
+        const activeWire = document.getElementById('active-wire');
+        const statusEl = document.getElementById('status');
+        const componentsContainer = document.getElementById('components-container');
+
+        let wires = [];
+        let components = [
+            {
+                id: 'mcu',
+                name: 'Controller',
+                x: 40,
+                y: 60,
+                width: 120,
+                height: 180,
+                pins: [
+                    { id: 'p1', name: '5V', x: 120, y: 30, side: 'right' },
+                    { id: 'p2', name: 'GND', x: 120, y: 70, side: 'right' },
+                    { id: 'p3', name: 'D1', x: 120, y: 110, side: 'right' },
+                    { id: 'p4', name: 'D2', x: 120, y: 150, side: 'right' },
+                ]
+            },
+            {
+                id: 'led',
+                name: 'LED Module',
+                x: 240,
+                y: 80,
+                width: 80,
+                height: 80,
+                pins: [
+                    { id: 'p5', name: 'ANODE', x: 0, y: 25, side: 'left' },
+                    { id: 'p6', name: 'CATHODE', x: 0, y: 55, side: 'left' },
+                ]
+            },
+            {
+                id: 'batt',
+                name: 'Battery',
+                x: 140,
+                y: 300,
+                width: 100,
+                height: 60,
+                pins: [
+                    { id: 'p7', name: '+', x: 100, y: 15, side: 'right' },
+                    { id: 'p8', name: '-', x: 100, y: 45, side: 'right' },
+                ]
+            }
+        ];
+
+        let startPin = null;
+        let mousePos = { x: 0, y: 0 };
+
+        function init() {
+            renderComponents();
+            setupEventListeners();
+            requestAnimationFrame(animate);
+        }
+
+        function renderComponents() {
+            componentsContainer.innerHTML = '';
+            components.forEach(comp => {
+                const el = document.createElement('div');
+                el.className = 'component';
+                el.style.left = comp.x + 'px';
+                el.style.top = comp.y + 'px';
+                el.style.width = comp.width + 'px';
+                el.style.height = comp.height + 'px';
+                el.innerHTML = `<div class="text-[10px] font-bold text-slate-400 mb-2 uppercase">${comp.name}</div>`;
+
+                comp.pins.forEach(pin => {
+                    const pinBtn = document.createElement('button');
+                    pinBtn.className = 'pin';
+                    pinBtn.dataset.pinId = pin.id;
+                    
+                    // Positioning pins
+                    pinBtn.style.left = (pin.x - 8) + 'px';
+                    pinBtn.style.top = (pin.y - 8) + 'px';
+
+                    const label = document.createElement('span');
+                    label.className = 'pin-label';
+                    label.innerText = pin.name;
+                    
+                    if(pin.side === 'right') {
+                        label.style.right = '20px';
+                        label.style.top = '2px';
+                    } else {
+                        label.style.left = '20px';
+                        label.style.top = '2px';
+                    }
+
+                    pinBtn.appendChild(label);
+                    el.appendChild(pinBtn);
+                });
+
+                componentsContainer.appendChild(el);
+            });
+        }
+
+        function setupEventListeners() {
+            // Touch / Click on pins
+            document.addEventListener('pointerdown', (e) => {
+                const pin = e.target.closest('.pin');
+                if (pin) {
+                    handlePinClick(pin.dataset.pinId);
+                } else if (startPin) {
+                    // Cancel if clicked elsewhere
+                    cancelWiring();
+                }
+            });
+
+            document.addEventListener('pointermove', (e) => {
+                mousePos.x = e.clientX;
+                mousePos.y = e.clientY;
+            });
+        }
+
+        function handlePinClick(pinId) {
+            if (!startPin) {
+                startPin = pinId;
+                document.querySelector(`[data-pin-id="${pinId}"]`).classList.add('active');
+                statusEl.innerText = "Connecting from " + getPinData(pinId).pin.name + "... Select target pin";
+            } else {
+                if (startPin === pinId) {
+                    cancelWiring();
+                    return;
+                }
+                
+                // Complete connection
+                wires.push({ from: startPin, to: pinId, color: getRandomColor() });
+                cancelWiring();
+                renderWires();
+            }
+        }
+
+        function cancelWiring() {
+            if (startPin) {
+                document.querySelector(`[data-pin-id="${startPin}"]`).classList.remove('active');
+            }
+            startPin = null;
+            activeWire.setAttribute('d', '');
+            statusEl.innerText = "Tap a pin to start wiring";
+        }
+
+        function getPinPos(pinId) {
+            const el = document.querySelector(`[data-pin-id="${pinId}"]`);
+            if (!el) return { x: 0, y: 0 };
+            const rect = el.getBoundingClientRect();
+            return {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+        }
+
+        function getPinData(pinId) {
+            for (let comp of components) {
+                const pin = comp.pins.find(p => p.id === pinId);
+                if (pin) return { comp, pin };
+            }
+            return null;
+        }
+
+        function renderWires() {
+            wireGroup.innerHTML = '';
+            shadowGroup.innerHTML = '';
+            wires.forEach(wire => {
+                const start = getPinPos(wire.from);
+                const end = getPinPos(wire.to);
+                const pathData = calculateBezier(start.x, start.y, end.x, end.y);
+                
+                const shadow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                shadow.setAttribute("d", pathData);
+                shadow.setAttribute("class", "wire-shadow");
+                shadowGroup.appendChild(shadow);
+
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", pathData);
+                path.setAttribute("class", "wire-path");
+                path.setAttribute("stroke", wire.color);
+                wireGroup.appendChild(path);
+            });
+        }
+
+        function calculateBezier(x1, y1, x2, y2) {
+            const dx = Math.abs(x2 - x1);
+            const offset = Math.max(dx / 2, 40);
+            return `M ${x1} ${y1} C ${x1 + offset} ${y1}, ${x2 - offset} ${y2}, ${x2} ${y2}`;
+        }
+
+        function animate() {
+            if (startPin) {
+                const start = getPinPos(startPin);
+                activeWire.setAttribute('d', calculateBezier(start.x, start.y, mousePos.x, mousePos.y));
+            }
+            requestAnimationFrame(animate);
+        }
+
+        function getRandomColor() {
+            const colors = ['#ef4444', '#22c55e', '#eab308', '#ec4899', '#a855f7', '#06b6d4'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function resetWires() {
+            wires = [];
+            renderWires();
+            cancelWiring();
+        }
+
+        // Handle window resizing
+        window.addEventListener('resize', () => {
+            renderWires();
+        });
+
+        init();
+    </script>
+</body>
+</html>
