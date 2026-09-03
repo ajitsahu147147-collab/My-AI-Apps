@@ -49,7 +49,6 @@
         overscroll-behavior: none;
         touch-action: manipulation;
         font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        /* iOS safe-area insets */
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
         padding-left: env(safe-area-inset-left);
@@ -89,12 +88,7 @@
       #splash-logo div:nth-child(2) { background: #81bc06; border-radius: 2px; }
       #splash-logo div:nth-child(3) { background: #05a6f0; border-radius: 2px; }
       #splash-logo div:nth-child(4) { background: #ffba08; border-radius: 2px; }
-      #splash p {
-        color: rgba(255,255,255,0.6);
-        font-size: 14px;
-        margin: 0;
-        letter-spacing: 0.04em;
-      }
+      
       @keyframes splashPulse {
         0%, 100% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.7; transform: scale(0.95); }
@@ -104,38 +98,49 @@
       .desktop-bg {
         background: url('https://images.unsplash.com/photo-1510519133417-c864bb01f5ad?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
         background-size: cover;
+        transition: background-image 0.5s ease-in-out;
       }
 
       .glass-win10 {
         background: rgba(20, 20, 20, 0.85);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
         border: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .window {
         position: absolute;
-        transition: transform 0.2s cubic-bezier(0.17, 0.67, 0.83, 0.67), opacity 0.2s;
+        transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.2s;
         display: flex;
         flex-direction: column;
-        border-radius: 0px; /* Win10 has sharp corners */
+        border-radius: 0px; 
         overflow: hidden;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-        border: 1px solid #333;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        border: 1px solid #444;
+        animation: winAppear 0.3s ease-out;
+      }
+
+      @keyframes winAppear {
+        from { transform: scale(0.92); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
       }
 
       .window-minimized {
-        transform: scale(0.9) translateY(20px);
+        transform: scale(0.8) translateY(100px);
         opacity: 0;
         pointer-events: none;
       }
 
       .taskbar-icon {
-        transition: background 0.2s;
+        transition: all 0.2s ease;
         border-bottom: 2px solid transparent;
+        position: relative;
+      }
+      .taskbar-icon:hover {
+        background: rgba(255,255,255,0.1);
       }
       .taskbar-icon.active {
-        background: rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.15);
         border-bottom: 2px solid #0078d4;
       }
 
@@ -143,16 +148,28 @@
         bottom: 48px;
         left: 0;
         transform: translateY(120%);
-        transition: transform 0.25s ease-out;
+        transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
         z-index: 1000;
         width: 100%;
-        max-width: 400px;
-        height: 500px;
-        max-height: 80vh;
+        max-width: 480px;
+        height: 600px;
+        max-height: 85vh;
       }
 
       .start-menu.active {
         transform: translateY(0);
+      }
+
+      .start-tile {
+        transition: transform 0.1s, filter 0.2s;
+        cursor: pointer;
+      }
+      .start-tile:hover {
+        filter: brightness(1.1);
+        transform: scale(1.02);
+      }
+      .start-tile:active {
+        transform: scale(0.96);
       }
 
       /* Excel Grid */
@@ -166,116 +183,162 @@
         padding: 2px 4px;
         font-size: 13px;
         outline: none;
+        transition: background 0.1s;
       }
       .excel-cell:focus {
         border: 2px solid #217346;
         z-index: 10;
+        background: white;
       }
 
-      .line-numbers {
-        color: #858585;
-        text-align: right;
-        padding-right: 10px;
-        user-select: none;
+      /* Game Canvas Styling */
+      #game-canvas {
+        background: #000;
+        display: block;
+        margin: auto;
+        touch-action: none;
+      }
+
+      .settings-item {
+        transition: background 0.2s;
+        cursor: pointer;
+      }
+      .settings-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      /* Reveal effect simulation */
+      .reveal-btn {
+        position: relative;
+        overflow: hidden;
+      }
+      .reveal-btn::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at var(--x) var(--y), rgba(255,255,255,0.15) 0%, transparent 80%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
+      .reveal-btn:hover::after {
+        opacity: 1;
       }
     </style>
   </head>
-  <body class="desktop-bg">
+  <body class="desktop-bg" id="body-bg">
     <!-- Loading splash screen -->
     <div id="splash">
       <div id="splash-logo">
         <div></div><div></div><div></div><div></div>
       </div>
-      <p>Windows 10 Web Desktop</p>
+      <p class="text-white/60 text-sm mt-4">Starting Windows</p>
     </div>
 
     <div id="root" class="relative overflow-hidden">
         <!-- Desktop Area -->
         <div id="desktop" class="w-full h-full p-4 flex flex-col flex-wrap content-start gap-4">
-            <!-- Dynamic Icons could go here -->
+            <!-- Icons would appear here if added dynamically -->
         </div>
 
         <!-- Windows Container -->
         <div id="window-layer" class="absolute inset-0 pointer-events-none"></div>
 
         <!-- Start Menu -->
-        <div id="start-menu" class="start-menu fixed glass-win10 p-0 shadow-2xl flex">
+        <div id="start-menu" class="start-menu fixed glass-win10 p-0 shadow-2xl flex border-t border-r border-white/10">
             <!-- Left Sidebar -->
-            <div class="w-12 flex flex-col items-center py-4 gap-6 text-white/70">
+            <div class="w-12 flex flex-col items-center py-4 gap-6 text-white/70 bg-black/40">
+                <button class="hover:text-white transition-colors">☰</button>
                 <div class="mt-auto flex flex-col gap-6">
-                    <button class="hover:text-white">👤</button>
-                    <button class="hover:text-white">⚙️</button>
-                    <button class="hover:text-white">⏻</button>
+                    <button onclick="openApp('settings')" class="hover:text-white transition-colors" title="Settings">⚙️</button>
+                    <button onclick="location.reload()" class="hover:text-white transition-colors" title="Power">⏻</button>
                 </div>
             </div>
             <!-- Main List -->
-            <div class="flex-1 bg-black/20 p-4 overflow-y-auto">
-                <h3 class="text-[10px] font-semibold text-white/50 mb-4 uppercase tracking-widest">Life at a glance</h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="openApp('word')" class="bg-[#2b579a] p-4 text-white text-left text-sm flex flex-col justify-between h-24">
+            <div class="flex-1 bg-black/20 p-4 overflow-y-auto custom-scrollbar">
+                <h3 class="text-[11px] font-semibold text-white/50 mb-4 uppercase tracking-widest">Productivity</h3>
+                <div class="grid grid-cols-2 gap-2 mb-6">
+                    <div onclick="openApp('word')" class="start-tile bg-[#2b579a] p-3 text-white text-left text-xs flex flex-col justify-between h-20">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Microsoft_Office_Word_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Word_%282019%E2%80%93present%29.svg.png" class="w-6 h-6">
                         <span>Word</span>
-                    </button>
-                    <button onclick="openApp('excel')" class="bg-[#217346] p-4 text-white text-left text-sm flex flex-col justify-between h-24">
+                    </div>
+                    <div onclick="openApp('excel')" class="start-tile bg-[#217346] p-3 text-white text-left text-xs flex flex-col justify-between h-20">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png" class="w-6 h-6">
                         <span>Excel</span>
-                    </button>
-                    <button onclick="openApp('vscode')" class="bg-[#007acc] p-4 text-white text-left text-sm flex flex-col justify-between h-24">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Visual_Studio_Code_1.35_icon.svg/512px-Visual_Studio_Code_1.35_icon.svg.png" class="w-6 h-6">
-                        <span>Code</span>
-                    </button>
-                    <button onclick="openApp('notes')" class="bg-[#ffc107] p-4 text-black text-left text-sm flex flex-col justify-between h-24">
-                        <img src="https://cdn-icons-png.flaticon.com/512/1024/1024824.png" class="w-6 h-6">
-                        <span>Notes</span>
-                    </button>
+                    </div>
+                </div>
+                
+                <h3 class="text-[11px] font-semibold text-white/50 mb-4 uppercase tracking-widest">Entertainment</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <div onclick="openApp('snake')" class="start-tile bg-[#0078d4] p-3 text-white text-left text-xs flex flex-col justify-between h-20">
+                        <span class="text-xl">🐍</span>
+                        <span>Win-Snake</span>
+                    </div>
+                    <div onclick="openApp('settings')" class="start-tile bg-gray-600 p-3 text-white text-left text-xs flex flex-col justify-between h-20">
+                        <span class="text-xl">⚙️</span>
+                        <span>Settings</span>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Taskbar -->
-        <div class="fixed bottom-0 left-0 w-full h-12 glass-win10 flex items-center px-0 z-[2000]">
+        <div class="fixed bottom-0 left-0 w-full h-12 glass-win10 flex items-center px-0 z-[2000] border-t border-white/10">
             <button onclick="toggleStartMenu()" class="taskbar-icon h-full px-4 hover:bg-white/10">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#fff"><path d="M0 0h11.2v11.2H0V0zm12.8 0H24v11.2H12.8V0zM0 12.8h11.2V24H0V12.8zm12.8 0H24V24H12.8V12.8z"/></svg>
             </button>
-            <div class="flex-1 flex items-center h-full">
-                <button onclick="openApp('word')" class="taskbar-icon h-full px-3 flex items-center hover:bg-white/10">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Microsoft_Office_Word_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Word_%282019%E2%80%93present%29.svg.png" class="w-6 h-6">
+            
+            <div class="flex items-center h-full px-2 gap-1 overflow-x-auto no-scrollbar">
+                <button onclick="openApp('word')" class="taskbar-icon h-full w-10 flex items-center justify-center">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Microsoft_Office_Word_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Word_%282019%E2%80%93present%29.svg.png" class="w-5 h-5">
                 </button>
-                <button onclick="openApp('excel')" class="taskbar-icon h-full px-3 flex items-center hover:bg-white/10">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png" class="w-6 h-6">
+                <button onclick="openApp('excel')" class="taskbar-icon h-full w-10 flex items-center justify-center">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png" class="w-5 h-5">
                 </button>
-                <button onclick="openApp('vscode')" class="taskbar-icon h-full px-3 flex items-center hover:bg-white/10">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Visual_Studio_Code_1.35_icon.svg/512px-Visual_Studio_Code_1.35_icon.svg.png" class="w-6 h-6">
-                </button>
+                <button onclick="openApp('snake')" class="taskbar-icon h-full w-10 flex items-center justify-center text-lg">🐍</button>
             </div>
-            <div class="flex items-center h-full px-3 text-white text-[10px] border-l border-white/10">
+
+            <div class="ml-auto flex items-center h-full px-3 text-white text-[11px] border-l border-white/10 hover:bg-white/5 transition-colors">
                 <div class="flex flex-col items-end">
                     <span id="taskbar-time">12:00 PM</span>
                     <span id="taskbar-date">10/24/2023</span>
                 </div>
             </div>
+            <div class="w-[3px] h-full bg-transparent hover:bg-white/20 transition-colors border-l border-white/10"></div>
         </div>
     </div>
 
     <!-- App Note Footer -->
     <div class="fixed bottom-14 left-0 w-full text-center pointer-events-none z-[3000]">
-        <span class="bg-black/40 text-white/80 text-[10px] px-3 py-1 rounded-sm">Built: Windows 10 Web Desktop with PWA and Office apps. Next: Taskbar window previews on hover.</span>
+        <span class="bg-black/60 text-white/80 text-[10px] px-3 py-1 rounded-sm backdrop-blur-sm border border-white/5">Built: Animations, Settings, and Snake game. Next: Context menu on desktop.</span>
     </div>
 
     <script>
+      // State
+      let zIndexCounter = 100;
+      let snakeInterval = null;
+
       // Service Worker registration
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js?v=2', { scope: '/' })
+            navigator.serviceWorker.register('/sw.js?v=3', { scope: '/' })
             .then((reg) => console.log('[PWA] Registered'))
             .catch((err) => console.warn('[PWA] Failed', err));
         });
       }
 
-      // App Logic
+      // Time/Date
+      function updateDateTime() {
+          const now = new Date();
+          document.getElementById('taskbar-time').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          document.getElementById('taskbar-date').innerText = now.toLocaleDateString();
+      }
+      setInterval(updateDateTime, 1000);
+      updateDateTime();
+
+      // Desktop Management
       const windowLayer = document.getElementById('window-layer');
       const startMenu = document.getElementById('start-menu');
-      let zIndexCounter = 100;
 
       function toggleStartMenu() {
           startMenu.classList.toggle('active');
@@ -285,21 +348,11 @@
           startMenu.classList.remove('active');
       }
 
-      function updateDateTime() {
-          const now = new Date();
-          const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          const dateStr = now.toLocaleDateString();
-          document.getElementById('taskbar-time').innerText = timeStr;
-          document.getElementById('taskbar-date').innerText = dateStr;
-      }
-      setInterval(updateDateTime, 1000);
-      updateDateTime();
-
       const APP_CONFIG = {
-          word: { title: 'Word', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Microsoft_Office_Word_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Word_%282019%E2%80%93present%29.svg.png' },
-          excel: { title: 'Excel', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png' },
-          vscode: { title: 'Visual Studio Code', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Visual_Studio_Code_1.35_icon.svg/512px-Visual_Studio_Code_1.35_icon.svg.png' },
-          notes: { title: 'Sticky Notes', icon: 'https://cdn-icons-png.flaticon.com/512/1024/1024824.png' }
+          word: { title: 'Word', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Microsoft_Office_Word_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Word_%282019%E2%80%93present%29.svg.png', bg: '#fff' },
+          excel: { title: 'Excel', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png', bg: '#fff' },
+          settings: { title: 'Settings', icon: '⚙️', bg: '#1a1a1a' },
+          snake: { title: 'Win-Snake', icon: '🐍', bg: '#000' }
       };
 
       function openApp(appId) {
@@ -314,46 +367,87 @@
           const config = APP_CONFIG[appId];
           const win = document.createElement('div');
           win.id = `window-${appId}`;
-          win.className = 'window bg-white w-full h-[85vh] sm:w-[80%] sm:h-[70%] top-[5%] sm:left-[10%] pointer-events-auto';
+          win.className = `window w-full h-[85vh] sm:w-[600px] sm:h-[450px] top-[5%] sm:left-[20%] pointer-events-auto`;
+          win.style.backgroundColor = config.bg;
           win.style.zIndex = ++zIndexCounter;
 
+          const iconMarkup = config.icon.length > 5 
+            ? `<img src="${config.icon}" class="w-4 h-4">` 
+            : `<span class="text-xs">${config.icon}</span>`;
+
           win.innerHTML = `
-              <div class="h-8 bg-[#f3f3f3] flex items-center justify-between px-3 border-b border-gray-300 handle">
+              <div class="h-8 bg-[#f3f3f3] flex items-center justify-between px-3 border-b border-gray-300 handle shrink-0 select-none">
                   <div class="flex items-center gap-2">
-                      <img src="${config.icon}" class="w-4 h-4">
+                      ${iconMarkup}
                       <span class="text-[11px] text-gray-700">${config.title}</span>
                   </div>
                   <div class="flex h-full">
-                      <button onclick="minimizeWindow('${appId}')" class="px-3 hover:bg-gray-200 text-gray-800 text-lg">_</button>
-                      <button onclick="closeWindow('${appId}')" class="px-3 hover:bg-red-600 hover:text-white text-gray-800 text-sm">✕</button>
+                      <button onclick="minimizeWindow('${appId}')" class="px-4 hover:bg-gray-200 text-gray-800 text-xs transition-colors">－</button>
+                      <button onclick="closeWindow('${appId}')" class="px-4 hover:bg-red-600 hover:text-white text-gray-800 text-xs transition-colors">✕</button>
                   </div>
               </div>
-              <div class="flex-1 overflow-auto relative bg-white">
+              <div class="flex-1 overflow-auto relative">
                   ${getAppContent(appId)}
               </div>
           `;
 
           windowLayer.appendChild(win);
+          if(appId === 'snake') initSnake();
           focusWindow(appId);
       }
 
       function getAppContent(appId) {
           switch(appId) {
               case 'word':
-                  return `<div class="p-8 max-w-2xl mx-auto shadow-sm my-4 border min-h-[500px] outline-none" contenteditable="true"><h1 class="text-2xl font-serif">Document 1</h1><p class="mt-4">Start typing your document...</p></div>`;
+                  return `<div class="p-8 max-w-2xl mx-auto shadow-sm my-4 border min-h-[500px] outline-none text-black bg-white" contenteditable="true"><h1 class="text-2xl font-serif">Document 1</h1><p class="mt-4">Start typing your document...</p></div>`;
               case 'excel':
                   let rows = '';
                   for(let i=0; i<30; i++) {
                       rows += `<div class="excel-cell bg-gray-50 flex items-center justify-center font-bold text-gray-400 text-[10px]">${i+1}</div>`;
-                      for(let j=0; j<10; j++) rows += `<input class="excel-cell" type="text">`;
+                      for(let j=0; j<10; j++) rows += `<input class="excel-cell text-black" type="text">`;
                   }
-                  return `<div class="excel-grid">${'<div class="excel-cell bg-gray-50"></div>' + 'ABCDEFGHIJ'.split('').map(l => `<div class="excel-cell bg-gray-50 flex items-center justify-center font-bold text-gray-400 text-[10px]">${l}</div>`).join('')}${rows}</div>`;
-              case 'vscode':
-                  return `<div class="bg-[#1e1e1e] text-[#d4d4d4] h-full flex font-mono text-xs"><div class="w-10 bg-[#333] flex flex-col py-4 gap-4 items-center"><span>📄</span><span>🔍</span></div><div class="flex-1 p-4 whitespace-pre outline-none" contenteditable="true">function init() {\n  console.log("Welcome to Windows 10 Web");\n}</div></div>`;
-              case 'notes':
-                  return `<textarea class="w-full h-full p-4 bg-[#fff9c4] border-none outline-none resize-none" placeholder="Take a note..."></textarea>`;
+                  return `<div class="excel-grid text-black">${'<div class="excel-cell bg-gray-50"></div>' + 'ABCDEFGHIJ'.split('').map(l => `<div class="excel-cell bg-gray-50 flex items-center justify-center font-bold text-gray-400 text-[10px]">${l}</div>`).join('')}${rows}</div>`;
+              case 'settings':
+                  return `
+                    <div class="p-6 text-white bg-[#1a1a1a] h-full">
+                        <h2 class="text-xl mb-6">Windows Settings</h2>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="settings-item p-4 border border-white/10 flex items-center gap-4" onclick="changeWallpaper('night')">
+                                <span class="text-2xl">🌃</span>
+                                <div><p class="text-sm font-medium">Night City</p><p class="text-xs text-white/50">Modern urban look</p></div>
+                            </div>
+                            <div class="settings-item p-4 border border-white/10 flex items-center gap-4" onclick="changeWallpaper('mountains')">
+                                <span class="text-2xl">🏔️</span>
+                                <div><p class="text-sm font-medium">Calm Mountains</p><p class="text-xs text-white/50">Nature and serenity</p></div>
+                            </div>
+                            <div class="settings-item p-4 border border-white/10 flex items-center gap-4" onclick="changeWallpaper('abstract')">
+                                <span class="text-2xl">🎨</span>
+                                <div><p class="text-sm font-medium">Abstract Art</p><p class="text-xs text-white/50">Colorful patterns</p></div>
+                            </div>
+                        </div>
+                    </div>`;
+              case 'snake':
+                  return `
+                    <div class="h-full flex flex-col bg-black text-white">
+                        <div class="p-2 flex justify-between text-xs border-b border-white/10">
+                            <span>Score: <span id="snake-score">0</span></span>
+                            <span>Touch screen to move</span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center p-2 relative">
+                            <canvas id="game-canvas" width="300" height="300"></canvas>
+                        </div>
+                    </div>`;
               default: return `<div class="p-4">Content not found.</div>`;
           }
+      }
+
+      function changeWallpaper(type) {
+          const urls = {
+              night: 'https://images.unsplash.com/photo-1510519133417-c864bb01f5ad?q=80&w=2070&auto=format&fit=crop',
+              mountains: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop',
+              abstract: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop'
+          };
+          document.getElementById('body-bg').style.backgroundImage = `url('${urls[type]}')`;
       }
 
       function focusWindow(appId) {
@@ -365,7 +459,8 @@
           const win = document.getElementById(`window-${appId}`);
           if (win) {
               win.classList.add('window-minimized');
-              setTimeout(() => win.remove(), 200);
+              if(appId === 'snake') clearInterval(snakeInterval);
+              setTimeout(() => win.remove(), 250);
           }
       }
 
@@ -374,19 +469,92 @@
           if (win) win.classList.add('window-minimized');
       }
 
+      // Snake Game Implementation
+      function initSnake() {
+        const canvas = document.getElementById('game-canvas');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('snake-score');
+        const grid = 15;
+        let count = 0;
+        let score = 0;
+        
+        let snake = { x: 150, y: 150, dx: grid, dy: 0, cells: [], maxCells: 4 };
+        let apple = { x: 300, y: 300 };
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min)) + min;
+        }
+
+        function loop() {
+            snakeInterval = requestAnimationFrame(loop);
+            if (++count < 6) return; // Standard speed
+            count = 0;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+
+            snake.x += snake.dx;
+            snake.y += snake.dy;
+
+            if (snake.x < 0) snake.x = canvas.width - grid;
+            else if (snake.x >= canvas.width) snake.x = 0;
+            if (snake.y < 0) snake.y = canvas.height - grid;
+            else if (snake.y >= canvas.height) snake.y = 0;
+
+            snake.cells.unshift({x: snake.x, y: snake.y});
+            if (snake.cells.length > snake.maxCells) snake.cells.pop();
+
+            ctx.fillStyle = 'red';
+            ctx.fillRect(apple.x, apple.y, grid-1, grid-1);
+
+            ctx.fillStyle = '#0078d4';
+            snake.cells.forEach(function(cell, index) {
+                ctx.fillRect(cell.x, cell.y, grid-1, grid-1);
+                if (cell.x === apple.x && cell.y === apple.y) {
+                    snake.maxCells++;
+                    score += 10;
+                    scoreEl.innerText = score;
+                    apple.x = getRandomInt(0, 20) * grid;
+                    apple.y = getRandomInt(0, 20) * grid;
+                }
+                for (let i = index + 1; i < snake.cells.length; i++) {
+                    if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+                        snake.x = 150; snake.y = 150; snake.cells = [];
+                        snake.maxCells = 4; snake.dx = grid; snake.dy = 0;
+                        score = 0; scoreEl.innerText = score;
+                    }
+                }
+            });
+        }
+
+        canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const dx = touch.clientX - centerX;
+            const dy = touch.clientY - centerY;
+            
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 0 && snake.dx === 0) { snake.dx = grid; snake.dy = 0; }
+                else if (dx < 0 && snake.dx === 0) { snake.dx = -grid; snake.dy = 0; }
+            } else {
+                if (dy > 0 && snake.dy === 0) { snake.dy = grid; snake.dx = 0; }
+                else if (dy < 0 && snake.dy === 0) { snake.dy = -grid; snake.dx = 0; }
+            }
+        });
+        
+        requestAnimationFrame(loop);
+      }
+
       // Hide splash when app is ready
       window.addEventListener('load', () => {
         setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('windesk-ready'));
-        }, 800);
-      });
-
-      window.addEventListener('windesk-ready', () => {
-        const splash = document.getElementById('splash');
-        if (splash) {
-          splash.classList.add('hidden');
-          setTimeout(() => splash.remove(), 500);
-        }
+          const splash = document.getElementById('splash');
+          if (splash) {
+            splash.classList.add('hidden');
+            setTimeout(() => splash.remove(), 500);
+          }
+        }, 1200);
       });
 
       // Simple drag logic (for top handle)
@@ -408,8 +576,11 @@
               let t = me.touches[0];
               win.style.left = (t.clientX - startX) + 'px';
               win.style.top = (t.clientY - startY) + 'px';
-              win.style.width = '320px'; // Resizing for easier mobile drag
-              win.style.height = '480px';
+              // Mobile resize optimization
+              if (window.innerWidth < 640) {
+                win.style.width = '300px';
+                win.style.height = '400px';
+              }
           }
           function end() {
               document.removeEventListener('touchmove', move);
@@ -418,9 +589,17 @@
           document.addEventListener('touchmove', move);
           document.addEventListener('touchend', end);
       });
+
+      // Mouse reveal effect tracker
+      document.addEventListener('mousemove', e => {
+        document.querySelectorAll('.reveal-btn').forEach(btn => {
+            const rect = btn.getBoundingClientRect();
+            btn.style.setProperty('--x', `${e.clientX - rect.left}px`);
+            btn.style.setProperty('--y', `${e.clientY - rect.top}px`);
+        });
+      });
     </script>
   </body>
 </html>
-</html>
 
-Built: Windows 10 Web Desktop with PWA and Office apps. Next: Taskbar window previews on hover.
+Built: Animations, PC Settings, and Snake offline game. Next: Context menu on desktop.
