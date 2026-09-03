@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- Viewport: prevent scaling, allow fullscreen -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+
+    <title>Windows 10 Web Desktop</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Theme color for browser chrome -->
+    <meta name="theme-color" content="#0078d4" />
+
+    <!-- iOS / Safari PWA support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="WinDesk" />
+    <link rel="apple-touch-icon" href="/icon-512.svg" />
+
+    <!-- Microsoft / Edge PWA tiles -->
+    <meta name="msapplication-TileColor" content="#0078d4" />
+    <meta name="msapplication-TileImage" content="/icon-192.svg" />
+
+    <!-- SEO / Open Graph -->
+    <meta name="description" content="A Windows 10 inspired web desktop. Works offline as a PWA." />
+    <meta property="og:title" content="Windows 10 Web Desktop" />
+    <meta property="og:description" content="Full-screen Windows 10 desktop experience in your browser." />
+    <meta property="og:image" content="/opengraph.jpg" />
+    <meta property="og:type" content="website" />
+
+    <!-- App icon -->
+    <link rel="icon" type="image/svg+xml" href="/icon-192.svg" />
+
+    <!-- Preconnect for Unsplash wallpapers -->
+    <link rel="preconnect" href="https://images.unsplash.com" />
+
+    <!-- Splash screen color while loading -->
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #0a0a14;
+        overflow: hidden;
+        /* iOS safe-area insets for notch/home indicator */
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+      }
+      #root {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh; /* dynamic viewport height for mobile */
+      }
+      /* Loading splash */
+      #splash {
+        position: fixed;
+        inset: 0;
+        background: #0a0a14;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 20px;
+        z-index: 9999;
+        transition: opacity 0.4s ease;
+      }
+      #splash.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #splash-logo {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        width: 64px;
+        height: 64px;
+        animation: splashPulse 1.2s ease-in-out infinite;
+      }
+      #splash-logo div:nth-child(1) { background: #f35325; border-radius: 3px; }
+      #splash-logo div:nth-child(2) { background: #81bc06; border-radius: 3px; }
+      #splash-logo div:nth-child(3) { background: #05a6f0; border-radius: 3px; }
+      #splash-logo div:nth-child(4) { background: #ffba08; border-radius: 3px; }
+      #splash p {
+        color: rgba(255,255,255,0.6);
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 14px;
+        margin: 0;
+        letter-spacing: 0.04em;
+      }
+      @keyframes splashPulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.7; transform: scale(0.95); }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading splash screen -->
+    <div id="splash">
+      <div id="splash-logo">
+        <div></div><div></div><div></div><div></div>
+      </div>
+      <p>Windows 10 Web Desktop</p>
+    </div>
+
+    <div id="root"></div>
+
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Service Worker registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (refreshing) return;
+          refreshing = true;
+          window.location.reload();
+        });
+
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js?v=2', { scope: '/' })
+            .then((reg) => {
+              console.log('[PWA] Service Worker registered, scope:', reg.scope);
+
+              // Check for SW update
+              reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                if (newWorker) {
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                          newWorker.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                  });
+                }
+              });
+            })
+            .catch((err) => console.warn('[PWA] Service Worker registration failed:', err));
+        });
+      }
+
+      // Hide splash when React mounts (signals via custom event)
+      window.addEventListener('windesk-ready', () => {
+        const splash = document.getElementById('splash');
+        if (splash) {
+          splash.classList.add('hidden');
+          setTimeout(() => splash.remove(), 500);
+        }
+      });
+
+      // Fallback: hide splash after 3s even if event never fires
+      setTimeout(() => {
+        const splash = document.getElementById('splash');
+        if (splash) {
+          splash.classList.add('hidden');
+          setTimeout(() => splash.remove(), 500);
+        }
+      }, 3000);
+    </script>
+  </body>
+</html>
