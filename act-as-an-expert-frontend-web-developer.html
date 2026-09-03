@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Ajit Gym | Unleash Your Potential</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        
+        * { 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-touch-callout: none;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        html, body { 
+            overscroll-behavior: none; 
+            touch-action: manipulation;
+            background-color: #0a0a0a;
+            color: #ffffff;
+        }
+
+        button, a, [role="button"] { 
+            -webkit-user-select: none; 
+            user-select: none; 
+            touch-action: manipulation; 
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        input, textarea { 
+            -webkit-user-select: text; 
+            user-select: text; 
+            font-size: 16px; 
+        }
+
+        .neon-border {
+            border: 1px solid rgba(190, 242, 100, 0.3);
+        }
+
+        .neon-shadow:hover {
+            box-shadow: 0 0 20px rgba(190, 242, 100, 0.2);
+        }
+
+        .glass-nav {
+            backdrop-filter: blur(12px);
+            background-color: rgba(10, 10, 10, 0.8);
+        }
+
+        .hero-gradient {
+            background: linear-gradient(to bottom, rgba(10, 10, 10, 0.4), #0a0a0a), 
+                        url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .mobile-menu-active {
+            transform: translateX(0) !important;
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-nav border-b border-zinc-800">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="text-2xl font-black tracking-tighter text-lime-400">
+                AJIT<span class="text-white">GYM</span>
+            </div>
+            
+            <!-- Desktop Nav -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#home" class="hover:text-lime-400 font-medium">Home</a>
+                <a href="#features" class="hover:text-lime-400 font-medium">Features</a>
+                <a href="#plans" class="hover:text-lime-400 font-medium">Plans</a>
+                <a href="#contact" class="hover:text-lime-400 font-medium">Contact</a>
+                <button class="bg-lime-400 text-black px-6 py-2.5 rounded-full font-bold hover:scale-105 active:scale-95">
+                    Join Now
+                </button>
+            </div>
+
+            <!-- Mobile Toggle -->
+            <button id="menuBtn" class="md:hidden text-2xl p-2" aria-label="Toggle Menu">
+                <i class="fa-solid fa-bars-staggered"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Side Menu -->
+    <div id="sideMenu" class="fixed inset-0 z-[60] bg-black translate-x-full transition-transform duration-300 md:hidden">
+        <div class="flex flex-col h-full p-8">
+            <div class="flex justify-between items-center mb-12">
+                <div class="text-2xl font-black text-lime-400">AJITGYM</div>
+                <button id="closeBtn" class="text-3xl p-2"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="flex flex-col space-y-8 text-2xl font-bold">
+                <a href="#home" class="menu-link">Home</a>
+                <a href="#features" class="menu-link">Features</a>
+                <a href="#timings" class="menu-link">Timings</a>
+                <a href="#plans" class="menu-link">Plans</a>
+                <a href="#contact" class="menu-link">Contact</a>
+            </div>
+            <div class="mt-auto">
+                <button class="w-full bg-lime-400 text-black py-4 rounded-xl font-black text-lg">
+                    BOOK A FREE TRIAL
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-gradient min-h-screen flex items-center pt-20">
+        <div class="max-w-7xl mx-auto px-6 w-full">
+            <div class="max-w-2xl">
+                <span class="text-lime-400 font-bold tracking-widest uppercase mb-4 block">Transformation Starts Here</span>
+                <h1 class="text-5xl md:text-7xl font-black mb-6 leading-tight">
+                    UNLEASH YOUR <br> POTENTIAL AT <br> <span class="text-lime-400">AJIT GYM</span>
+                </h1>
+                <p class="text-zinc-400 text-lg md:text-xl mb-10 max-w-lg">
+                    Premium equipment, expert trainers, and a community built to push you past your limits. 
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button class="bg-lime-400 text-black px-8 py-4 rounded-xl font-bold text-lg hover:bg-lime-300 active:scale-95">
+                        Book Free Trial
+                    </button>
+                    <button class="border border-white text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white hover:text-black active:scale-95">
+                        View Plans
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="py-24 bg-zinc-950">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-black mb-4 uppercase">Elite Amenities</h2>
+                <div class="h-1.5 w-20 bg-lime-400 mx-auto"></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Feature 1 -->
+                <div class="bg-zinc-900 p-8 rounded-2xl neon-border neon-shadow">
+                    <div class="w-14 h-14 bg-lime-400/10 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-dumbbell text-2xl text-lime-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Imported Machines</h3>
+                    <p class="text-zinc-400">World-class strength and cardio equipment from top global brands.</p>
+                </div>
+                <!-- Feature 2 -->
+                <div class="bg-zinc-900 p-8 rounded-2xl neon-border neon-shadow">
+                    <div class="w-14 h-14 bg-lime-400/10 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-user-ninja text-2xl text-lime-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Certified Trainers</h3>
+                    <p class="text-zinc-400">Expert guidance to help you reach your goals safely and efficiently.</p>
+                </div>
+                <!-- Feature 3 -->
+                <div class="bg-zinc-900 p-8 rounded-2xl neon-border neon-shadow">
+                    <div class="w-14 h-14 bg-lime-400/10 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-shower text-2xl text-lime-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">AC & Shower</h3>
+                    <p class="text-zinc-400">Fully air-conditioned floor with luxury changing rooms and showers.</p>
+                </div>
+                <!-- Feature 4 -->
+                <div class="bg-zinc-900 p-8 rounded-2xl neon-border neon-shadow">
+                    <div class="w-14 h-14 bg-lime-400/10 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-apple-whole text-2xl text-lime-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Diet Guidance</h3>
+                    <p class="text-zinc-400">Customized nutrition plans designed for your body type and goals.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timings -->
+    <section id="timings" class="py-24 bg-black">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="bg-zinc-900 rounded-3xl overflow-hidden flex flex-col md:flex-row">
+                <div class="md:w-1/2 p-10 md:p-16">
+                    <h2 class="text-4xl font-black mb-8 uppercase italic">Gym <span class="text-lime-400">Timings</span></h2>
+                    <div class="space-y-6">
+                        <div class="flex justify-between items-center border-b border-zinc-800 pb-4">
+                            <span class="text-lg font-semibold">Morning Batch</span>
+                            <span class="text-lime-400 font-black">05:00 AM - 10:00 AM</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-zinc-800 pb-4">
+                            <span class="text-lg font-semibold">Evening Batch</span>
+                            <span class="text-lime-400 font-black">04:00 PM - 10:00 PM</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-zinc-800 pb-4">
+                            <span class="text-lg font-semibold">Ladies Special</span>
+                            <span class="text-lime-400 font-black">10:30 AM - 12:30 PM</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-semibold">Sunday</span>
+                            <span class="text-red-500 font-black">CLOSED</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:w-1/2 h-64 md:h-auto bg-[url('https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=1375&auto=format&fit=crop')] bg-cover bg-center">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="plans" class="py-24 bg-zinc-950">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-5xl font-black mb-16 uppercase">Membership Plans</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Basic -->
+                <div class="bg-zinc-900 p-10 rounded-3xl border border-zinc-800 flex flex-col">
+                    <h3 class="text-xl font-bold mb-4 uppercase tracking-wider">Monthly</h3>
+                    <div class="text-5xl font-black mb-8">₹1,500<span class="text-sm text-zinc-500 font-normal">/mo</span></div>
+                    <ul class="text-left space-y-4 mb-10 text-zinc-400 flex-grow">
+                        <li><i class="fa-solid fa-check text-lime-400 mr-2"></i> Access to all Gym area</li>
+                        <li><i class="fa-solid fa-check text-lime-400 mr-2"></i> Free Locker facility</li>
+                        <li><i class="fa-solid fa-check text-lime-400 mr-2"></i> General Training</li>
+                    </ul>
+                    <button class="w-full py-4 border border-lime-400 text-lime-400 rounded-xl font-bold hover:bg-lime-400 hover:text-black">Choose Plan</button>
+                </div>
+
+                <!-- Popular -->
+                <div class="bg-zinc-900 p-10 rounded-3xl border-2 border-lime-400 relative transform md:-translate-y-4 flex flex-col">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-lime-400 text-black px-4 py-1 rounded-full text-sm font-bold uppercase tracking-tighter">Most Popular</div>
+                    <h3 class="text-xl font-bold mb-4 uppercase tracking-wider">3 Months</h3>
+                    <div class="text-5xl font-black mb-8">₹4,000<span class="text-sm text-zinc-500 font-normal">/qr</span></div>
+                    <ul class="text-left space-y-4 mb-10 text-zinc-400 flex-grow">
+                        <li><i class="fa-solid fa-check text-lime-400 mr-2"></i> Everything in Monthly</li>
+                        <li><i class="fa-solid fa-check text-lime-400 mr-2"></i> 1 Session PT</li>
+                        <li><i class="fa-solid fa-check text-lime-400 mr-2"></i> Personalized Diet Plan</li>
+                    </ul>
+                    <button class="w-full py-4 bg-lime-400 text-black rounded-xl font-bold shadow-lg shadow-lime-400/20">Choose Plan</button>
+                </div>
+
+                <!-- Annual -->
+                <div class="bg-zinc-900 p-10 rounded-3xl border border-zinc-800 flex flex-col">
+                    <h3 class="text-xl font-bold mb-4 uppercase tracking-wider">Annual</h3>
+                    <div class="text-5xl font-black mb-8">₹12,000<span class="text-sm text-zinc-500 font-normal">/yr</span></div>
+                    <ul class="text-left space-y-4 mb-10 text-zinc-400 flex-grow">
+                        <li><i class="fa-solid fa-check text-lime-400 mr-2"></i> Unlimited Access</li>
+                        <li><i class="fa-solid fa-check text-lime-400 mr-2"></i> 4 Sessions PT</li>
+                        <li><i class="fa-solid fa-check text-lime-400 mr-2"></i> Free Supplement Kit</li>
+                        <li><i class="fa-solid fa-check text-lime-400 mr-2"></i> Steam Bath access</li>
+                    </ul>
+                    <button class="w-full py-4 border border-lime-400 text-lime-400 rounded-xl font-bold hover:bg-lime-400 hover:text-black">Choose Plan</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="py-24 bg-black overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl font-black mb-12 text-center">TRANSFORMATION STORIES</h2>
+            <div class="flex overflow-x-auto gap-6 no-scrollbar pb-8">
+                <!-- Card 1 -->
+                <div class="min-w-[300px] md:min-w-[400px] bg-zinc-900 p-8 rounded-2xl">
+                    <div class="flex text-lime-400 mb-4">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-zinc-300 italic mb-6">"Best gym in the locality! The equipment is brand new and trainers actually care about your form."</p>
+                    <div class="font-bold">- Rahul Sharma</div>
+                </div>
+                <!-- Card 2 -->
+                <div class="min-w-[300px] md:min-w-[400px] bg-zinc-900 p-8 rounded-2xl">
+                    <div class="flex text-lime-400 mb-4">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-zinc-300 italic mb-6">"Love the separate ladies batch. Very comfortable environment and great ventilation."</p>
+                    <div class="font-bold">- Priya Das</div>
+                </div>
+                <!-- Card 3 -->
+                <div class="min-w-[300px] md:min-w-[400px] bg-zinc-900 p-8 rounded-2xl">
+                    <div class="flex text-lime-400 mb-4">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-zinc-300 italic mb-6">"Lost 10kg in 3 months following their diet plan. Definitely worth every penny."</p>
+                    <div class="font-bold">- Amit Singh</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Location & Footer -->
+    <footer id="contact" class="bg-zinc-950 pt-24 pb-12 border-t border-zinc-900">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+                <div>
+                    <h2 class="text-4xl font-black mb-8 text-lime-400">LOCATE US</h2>
+                    <div class="bg-zinc-900 h-64 w-full rounded-2xl flex items-center justify-center text-zinc-600 overflow-hidden relative grayscale">
+                        <!-- Placeholder for Map -->
+                        <img src="https://images.unsplash.com/photo-1524666041070-9d87656c25bb?q=80&w=1000&auto=format&fit=crop" class="absolute w-full h-full object-cover opacity-30" alt="Map">
+                        <div class="relative text-white font-bold p-4 bg-black/50 rounded text-center">
+                            Ajit Gym Complex, Near Market Square<br>Sector 15, New City, 400708
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h2 class="text-4xl font-black mb-8 text-white uppercase">Contact info</h2>
+                    <div class="space-y-6">
+                        <div class="flex items-start">
+                            <i class="fa-solid fa-location-dot text-lime-400 mt-1 mr-4 text-xl"></i>
+                            <p class="text-zinc-400">123 Fitness Ave, Gym Colony, Near City Center, India</p>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fa-solid fa-phone text-lime-400 mr-4 text-xl"></i>
+                            <p class="text-zinc-400">+91 93376 02009</p>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fa-solid fa-envelope text-lime-400 mr-4 text-xl"></i>
+                            <p class="text-zinc-400">hello@ajitgym.com</p>
+                        </div>
+                        <div class="flex space-x-4 pt-4">
+                            <a href="#" class="w-12 h-12 bg-zinc-900 rounded-full flex items-center justify-center hover:bg-lime-400 hover:text-black"><i class="fa-brands fa-instagram text-xl"></i></a>
+                            <a href="#" class="w-12 h-12 bg-zinc-900 rounded-full flex items-center justify-center hover:bg-lime-400 hover:text-black"><i class="fa-brands fa-facebook text-xl"></i></a>
+                            <a href="#" class="w-12 h-12 bg-zinc-900 rounded-full flex items-center justify-center hover:bg-lime-400 hover:text-black"><i class="fa-brands fa-x-twitter text-xl"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pt-12 border-t border-zinc-900 text-center text-zinc-500 text-sm">
+                <p>&copy; 2024 AJIT GYM. All Rights Reserved. Built for high performance.</p>
+                <p class="mt-8 text-zinc-700">Built: Professional gym website. Next: Hook up lead form to email API.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- WhatsApp Sticky -->
+    <a href="https://wa.me/9337602009" target="_blank" class="fixed bottom-6 right-6 w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white text-3xl shadow-2xl z-50 animate-bounce hover:animate-none active:scale-90" aria-label="Contact on WhatsApp">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <script>
+        // Mobile Menu Logic
+        const menuBtn = document.getElementById('menuBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const sideMenu = document.getElementById('sideMenu');
+        const menuLinks = document.querySelectorAll('.menu-link');
+
+        function toggleMenu() {
+            sideMenu.classList.toggle('mobile-menu-active');
+            document.body.style.overflow = sideMenu.classList.contains('mobile-menu-active') ? 'hidden' : '';
+        }
+
+        menuBtn.addEventListener('click', toggleMenu);
+        closeBtn.addEventListener('click', toggleMenu);
+
+        menuLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                sideMenu.classList.remove('mobile-menu-active');
+                document.body.style.overflow = '';
+            });
+        });
+
+        // Touch Feedback (Visual)
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => {
+            btn.addEventListener('touchstart', () => {
+                btn.style.opacity = '0.7';
+            });
+            btn.addEventListener('touchend', () => {
+                btn.style.opacity = '1';
+            });
+        });
+
+        // Intersection Observer for Animations
+        const observerOptions = { threshold: 0.1 };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-10');
+                }
+            });
+        }, observerOptions);
+
+        // Simple reveal animation setup
+        document.querySelectorAll('#features > div > div, #plans > div > div').forEach(el => {
+            el.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
