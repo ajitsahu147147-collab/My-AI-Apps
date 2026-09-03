@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Win11 Mobile Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; box-sizing: border-box; }
+        html, body { 
+            overscroll-behavior: none; 
+            touch-action: manipulation; 
+            height: 100%; 
+            width: 100%; 
+            margin: 0; 
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        button, a, [role="button"] { -webkit-user-select: none; user-select: none; touch-action: manipulation; cursor: pointer; }
+        input, textarea { -webkit-user-select: text; user-select: text; font-size: 16px; }
+        
+        .desktop-bg {
+            background: url('https://images.unsplash.com/photo-1620121692029-d088224ddc74?q=80&w=2064&auto=format&fit=crop') no-repeat center center;
+            background-size: cover;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .glass-dark {
+            background: rgba(30, 30, 30, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .window {
+            position: absolute;
+            transition: transform 0.2s cubic-bezier(0.17, 0.67, 0.83, 0.67), opacity 0.2s;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .window-minimized {
+            transform: scale(0.8) translateY(100vh);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .taskbar-icon {
+            transition: transform 0.2s;
+        }
+        .taskbar-icon:active {
+            transform: scale(0.8);
+        }
+
+        .start-menu {
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%) translateY(120%);
+            transition: transform 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            z-index: 1000;
+        }
+
+        .start-menu.active {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Excel-like Grid */
+        .excel-grid {
+            display: grid;
+            grid-template-columns: 40px repeat(10, 100px);
+            grid-template-rows: repeat(20, 30px);
+        }
+        .excel-cell {
+            border: 0.5px solid #e2e8f0;
+            padding: 2px 4px;
+            font-size: 13px;
+            outline: none;
+        }
+        .excel-cell:focus {
+            border: 2px solid #217346;
+            z-index: 10;
+        }
+
+        .line-numbers {
+            color: #858585;
+            text-align: right;
+            padding-right: 10px;
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="desktop-bg relative">
+
+    <!-- Desktop Area -->
+    <div id="desktop" class="w-full h-full p-4 flex flex-col flex-wrap content-start gap-4">
+        <!-- Icons are dynamically injected here if needed, but we use taskbar mainly for mobile -->
+    </div>
+
+    <!-- Windows Container -->
+    <div id="window-layer" class="absolute inset-0 pointer-events-none"></div>
+
+    <!-- Start Menu -->
+    <div id="start-menu" class="start-menu fixed w-[95%] max-w-[500px] h-[500px] glass rounded-xl p-6 shadow-2xl flex flex-col">
+        <input type="text" placeholder="Search for apps, settings, and documents" class="w-full p-2 rounded-full border border-gray-300 bg-white/50 text-sm mb-6 outline-none focus:ring-2 ring-blue-400">
+        
+        <div class="flex-1 overflow-y-auto">
+            <h3 class="text-xs font-semibold text-gray-600 mb-4 px-2 uppercase">Pinned</h3>
+            <div class="grid grid-cols-4 gap-4">
+                <button onclick="openApp('word')" class="flex flex-col items-center gap-1">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Microsoft_Office_Word_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Word_%282019%E2%80%93present%29.svg.png" class="w-10 h-10" alt="Word">
+                    <span class="text-xs">Word</span>
+                </button>
+                <button onclick="openApp('excel')" class="flex flex-col items-center gap-1">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png" class="w-10 h-10" alt="Excel">
+                    <span class="text-xs">Excel</span>
+                </button>
+                <button onclick="openApp('vscode')" class="flex flex-col items-center gap-1">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Visual_Studio_Code_1.35_icon.svg/512px-Visual_Studio_Code_1.35_icon.svg.png" class="w-10 h-10" alt="VS Code">
+                    <span class="text-xs">VS Code</span>
+                </button>
+                <button onclick="openApp('notes')" class="flex flex-col items-center gap-1">
+                    <img src="https://cdn-icons-png.flaticon.com/512/1024/1024824.png" class="w-10 h-10" alt="Notes">
+                    <span class="text-xs">Notes</span>
+                </button>
+                <button onclick="openApp('store')" class="flex flex-col items-center gap-1">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Windows_logo_-_2012.svg/1024px-Windows_logo_-_2012.svg.png" class="w-10 h-10" alt="Store">
+                    <span class="text-xs">Store</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-auto pt-4 border-t border-gray-300 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">U</div>
+                <span class="text-sm font-medium">User</span>
+            </div>
+            <button onclick="toggleStartMenu()" class="p-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div class="fixed bottom-0 left-0 w-full h-12 glass flex items-center justify-center gap-1 px-2 z-[2000]">
+        <button onclick="toggleStartMenu()" class="taskbar-icon p-1.5 rounded-md hover:bg-white/30">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Windows_logo_-_2012.svg/1024px-Windows_logo_-_2012.svg.png" class="w-6 h-6" alt="Start">
+        </button>
+        <div class="w-[1px] h-6 bg-gray-400/30 mx-1"></div>
+        <button onclick="openApp('word')" class="taskbar-icon p-1.5 rounded-md hover:bg-white/30">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Microsoft_Office_Word_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Word_%282019%E2%80%93present%29.svg.png" class="w-6 h-6" alt="Word">
+        </button>
+        <button onclick="openApp('excel')" class="taskbar-icon p-1.5 rounded-md hover:bg-white/30">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png" class="w-6 h-6" alt="Excel">
+        </button>
+        <button onclick="openApp('vscode')" class="taskbar-icon p-1.5 rounded-md hover:bg-white/30">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Visual_Studio_Code_1.35_icon.svg/512px-Visual_Studio_Code_1.35_icon.svg.png" class="w-6 h-6" alt="VS Code">
+        </button>
+        <button onclick="openApp('notes')" class="taskbar-icon p-1.5 rounded-md hover:bg-white/30">
+            <img src="https://cdn-icons-png.flaticon.com/512/1024/1024824.png" class="w-6 h-6" alt="Notes">
+        </button>
+        
+        <!-- Right side info -->
+        <div class="absolute right-4 hidden sm:flex items-center gap-3 text-xs text-gray-800">
+            <div class="flex flex-col items-end">
+                <span id="taskbar-time">12:00 PM</span>
+                <span id="taskbar-date">10/24/2023</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Note Footer -->
+    <div class="fixed bottom-14 left-0 w-full text-center pointer-events-none">
+        <span class="bg-black/20 text-white text-[10px] px-2 py-1 rounded-full">Built: Win11 Simulator with Excel, Word & VS Code. Next: Add multi-tasking window snapping.</span>
+    </div>
+
+    <script>
+        const windowLayer = document.getElementById('window-layer');
+        const startMenu = document.getElementById('start-menu');
+        let activeWindows = [];
+        let zIndexCounter = 100;
+
+        function toggleStartMenu() {
+            startMenu.classList.toggle('active');
+        }
+
+        function closeStartMenu() {
+            startMenu.classList.remove('active');
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString();
+            document.getElementById('taskbar-time').innerText = timeStr;
+            document.getElementById('taskbar-date').innerText = dateStr;
+        }
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        const APP_CONFIG = {
+            word: { title: 'Microsoft Word', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Microsoft_Office_Word_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Word_%282019%E2%80%93present%29.svg.png', color: '#2b579a' },
+            excel: { title: 'Microsoft Excel', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png', color: '#217346' },
+            vscode: { title: 'Visual Studio Code', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Visual_Studio_Code_1.35_icon.svg/512px-Visual_Studio_Code_1.35_icon.svg.png', color: '#007acc' },
+            notes: { title: 'Sticky Notes', icon: 'https://cdn-icons-png.flaticon.com/512/1024/1024824.png', color: '#ffc107' },
+            store: { title: 'Microsoft Store', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Windows_logo_-_2012.svg/1024px-Windows_logo_-_2012.svg.png', color: '#0078d4' }
+        };
+
+        function openApp(appId) {
+            closeStartMenu();
+            
+            // Check if already open
+            const existing = document.getElementById(`window-${appId}`);
+            if (existing) {
+                existing.classList.remove('window-minimized');
+                focusWindow(appId);
+                return;
+            }
+
+            const config = APP_CONFIG[appId];
+            const win = document.createElement('div');
+            win.id = `window-${appId}`;
+            win.className = 'window glass w-full h-[80vh] sm:w-[80%] sm:h-[70%] top-[5%] sm:left-[10%] pointer-events-auto';
+            win.style.zIndex = ++zIndexCounter;
+
+            win.innerHTML = `
+                <div class="h-10 bg-white/80 flex items-center justify-between px-3 border-b border-gray-200 handle">
+                    <div class="flex items-center gap-2">
+                        <img src="${config.icon}" class="w-4 h-4">
+                        <span class="text-xs font-semibold text-gray-700">${config.title}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="minimizeWindow('${appId}')" class="p-1 hover:bg-gray-200 rounded text-gray-600">
+                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path></svg>
+                        </button>
+                        <button onclick="closeWindow('${appId}')" class="p-1 hover:bg-red-500 hover:text-white rounded text-gray-600">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex-1 bg-white overflow-auto relative">
+                    ${getAppContent(appId)}
+                </div>
+            `;
+
+            windowLayer.appendChild(win);
+            activeWindows.push(appId);
+            
+            // Basic drag logic for desktop (tap/drag handle)
+            const handle = win.querySelector('.handle');
+            let isDragging = false;
+            let offset = { x: 0, y: 0 };
+
+            handle.addEventListener('touchstart', (e) => {
+                focusWindow(appId);
+                isDragging = true;
+                const touch = e.touches[0];
+                offset.x = touch.clientX - win.offsetLeft;
+                offset.y = touch.clientY - win.offsetTop;
+            });
+
+            window.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                const touch = e.touches[0];
+                win.style.left = (touch.clientX - offset.x) + 'px';
+                win.style.top = (touch.clientY - offset.y) + 'px';
+                win.style.width = '350px'; // Shrink on drag for mobile feel
+                win.style.height = '500px';
+            });
+
+            window.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+        }
+
+        function getAppContent(appId) {
+            switch(appId) {
+                case 'word':
+                    return `
+                        <div class="p-4 h-full flex flex-col">
+                            <div class="flex gap-2 border-b pb-2 mb-2 overflow-x-auto">
+                                <button class="px-2 py-1 text-xs bg-gray-100 rounded">B</button>
+                                <button class="px-2 py-1 text-xs bg-gray-100 rounded italic">I</button>
+                                <button class="px-2 py-1 text-xs bg-gray-100 rounded underline">U</button>
+                                <select class="text-xs border rounded p-1"><option>Calibri</option><option>Arial</option></select>
+                            </div>
+                            <div contenteditable="true" class="flex-1 outline-none text-sm leading-relaxed p-2" style="min-height: 200px;">
+                                <h1 class="text-xl font-bold">Welcome to Microsoft Word</h1>
+                                <p class="mt-2 text-gray-700">This is a fully functional text area for your documents. Start typing here...</p>
+                            </div>
+                        </div>
+                    `;
+                case 'excel':
+                    let rows = '';
+                    for(let i=0; i<30; i++) {
+                        rows += `<div class="excel-cell bg-gray-100 flex items-center justify-center font-bold text-gray-500">${i+1}</div>`;
+                        for(let j=0; j<10; j++) {
+                            rows += `<input class="excel-cell" type="text" value="">`;
+                        }
+                    }
+                    return `
+                        <div class="h-full flex flex-col">
+                            <div class="bg-[#217346] text-white text-xs p-1 px-4">File Home Insert Page Layout Formulas</div>
+                            <div class="bg-gray-50 p-1 border-b text-xs flex items-center gap-2">
+                                <div class="bg-white border px-2 py-0.5 w-16">A1</div>
+                                <div class="flex-1 bg-white border px-2 py-0.5">fx</div>
+                            </div>
+                            <div class="flex-1 overflow-auto">
+                                <div class="excel-grid">
+                                    <div class="excel-cell bg-gray-100"></div>
+                                    ${'ABCDEFGHIJ'.split('').map(l => `<div class="excel-cell bg-gray-100 flex items-center justify-center font-bold text-gray-500">${l}</div>`).join('')}
+                                    ${rows}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                case 'vscode':
+                    return `
+                        <div class="flex h-full bg-[#1e1e1e] text-[#d4d4d4] font-mono text-sm">
+                            <div class="w-10 bg-[#333333] flex flex-col items-center py-4 gap-4">
+                                <div class="w-6 h-6 text-gray-400">📄</div>
+                                <div class="w-6 h-6 text-gray-400">🔍</div>
+                                <div class="w-6 h-6 text-gray-400">🍴</div>
+                            </div>
+                            <div class="flex-1 flex flex-col">
+                                <div class="h-8 bg-[#252526] flex items-center px-4 text-xs gap-4">
+                                    <span class="border-b border-blue-400 h-full flex items-center px-2">index.js</span>
+                                    <span class="text-gray-500">style.css</span>
+                                </div>
+                                <div class="flex-1 p-4 overflow-auto flex">
+                                    <div class="line-numbers">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8</div>
+                                    <div contenteditable="true" class="outline-none flex-1 whitespace-pre">
+<span class="text-blue-400">function</span> <span class="text-yellow-300">helloWorld</span>() {
+    <span class="text-orange-400">console</span>.<span class="text-yellow-300">log</span>(<span class="text-green-400">"Hello from Win11 Sim!"</span>);
+    <span class="text-blue-400">return</span> <span class="text-purple-400">true</span>;
+}
+
+<span class="text-yellow-300">helloWorld</span>();</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                case 'notes':
+                    return `
+                        <div class="p-4 h-full bg-[#fff9c4] flex flex-col">
+                            <textarea class="w-full h-full bg-transparent resize-none outline-none border-none text-gray-800" placeholder="Take a note..."></textarea>
+                        </div>
+                    `;
+                case 'store':
+                    return `
+                        <div class="p-6 h-full bg-gray-50">
+                            <h2 class="text-2xl font-bold mb-6">Top Free Apps</h2>
+                            <div class="grid grid-cols-2 gap-4">
+                                ${['Netflix', 'Spotify', 'WhatsApp', 'Instagram', 'TikTok', 'Roblox'].map(app => `
+                                    <div class="bg-white p-4 rounded-lg shadow-sm border flex items-center gap-4">
+                                        <div class="w-12 h-12 bg-blue-100 rounded-md flex items-center justify-center font-bold text-blue-600">${app[0]}</div>
+                                        <div>
+                                            <div class="text-sm font-semibold">${app}</div>
+                                            <button class="mt-1 text-[10px] bg-blue-600 text-white px-3 py-1 rounded-full">Get</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                default:
+                    return `<div class="p-4">App Content Not Found</div>`;
+            }
+        }
+
+        function focusWindow(appId) {
+            const win = document.getElementById(`window-${appId}`);
+            if (win) {
+                zIndexCounter++;
+                win.style.zIndex = zIndexCounter;
+            }
+        }
+
+        function closeWindow(appId) {
+            const win = document.getElementById(`window-${appId}`);
+            if (win) {
+                win.classList.add('window-minimized');
+                setTimeout(() => {
+                    win.remove();
+                    activeWindows = activeWindows.filter(id => id !== appId);
+                }, 200);
+            }
+        }
+
+        function minimizeWindow(appId) {
+            const win = document.getElementById(`window-${appId}`);
+            if (win) {
+                win.classList.add('window-minimized');
+            }
+        }
+
+        // Handle click outside to close start menu
+        document.addEventListener('touchstart', (e) => {
+            if (!startMenu.contains(e.target) && !e.target.closest('.taskbar-icon')) {
+                closeStartMenu();
+            }
+        });
+
+        // Initialize
+        window.onload = () => {
+            // Add a welcome pop up or just start empty
+            setTimeout(() => {
+                openApp('word');
+            }, 500);
+        };
+    </script>
+</body>
+</html>
+</html>
