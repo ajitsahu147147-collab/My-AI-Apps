@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Urban Survivor: Open World</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-touch-callout: none; 
+            box-sizing: border-box;
+            user-select: none;
+        }
+        html, body { 
+            overscroll-behavior: none; 
+            touch-action: none; 
+            margin: 0; 
+            padding: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden;
+            background: #0f172a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        canvas { 
+            display: block; 
+            touch-action: none;
+            background: #1e293b;
+        }
+        .joystick-container {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255,255,255,0.2);
+            z-index: 20;
+        }
+        .joystick-knob {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            transition: transform 0.05s linear;
+        }
+        .action-btn {
+            position: absolute;
+            bottom: 60px;
+            right: 40px;
+            width: 80px;
+            height: 80px;
+            background: rgba(239, 68, 68, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            z-index: 20;
+            border: none;
+        }
+        .action-btn:active {
+            transform: scale(0.9);
+            background: rgba(239, 68, 68, 1);
+        }
+        .ui-overlay {
+            pointer-events: none;
+        }
+        .hud-bar {
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .hud-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        button, [role="button"] { cursor: pointer; touch-action: manipulation; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center text-white">
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-900 px-6 text-center">
+        <h1 class="text-5xl font-black mb-2 tracking-tighter italic text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-400">URBAN SURVIVOR</h1>
+        <p class="text-slate-400 mb-8 uppercase tracking-widest text-sm">Mobile Open World Lite</p>
+        
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 w-full max-w-xs mb-8">
+            <h3 class="font-bold text-orange-400 mb-2">NORMAL DIFFICULTY</h3>
+            <ul class="text-xs text-slate-300 space-y-1 text-left">
+                <li>• Moderate enemy movement speed</li>
+                <li>• Balanced health regeneration</li>
+                <li>• Standard AI aggression</li>
+            </ul>
+        </div>
+
+        <button id="start-btn" class="bg-white text-slate-900 font-bold px-12 py-4 rounded-full text-xl shadow-xl active:scale-95 transition-transform uppercase tracking-wider">
+            Enter World
+        </button>
+    </div>
+
+    <!-- Game HUD -->
+    <div id="game-ui" class="hidden absolute inset-0 z-30 ui-overlay flex flex-col p-6">
+        <div class="flex justify-between items-start">
+            <div class="w-40 pointer-events-auto">
+                <div class="flex justify-between text-[10px] font-bold mb-1 uppercase tracking-wide">
+                    <span>Health</span>
+                    <span id="health-val">100%</span>
+                </div>
+                <div class="hud-bar">
+                    <div id="health-fill" class="hud-fill bg-green-500 w-full"></div>
+                </div>
+                <div class="mt-4 flex gap-4 text-xs font-mono">
+                    <div class="bg-slate-800/80 px-2 py-1 rounded border border-slate-600">
+                        SCORE: <span id="score-val" class="text-orange-400">0</span>
+                    </div>
+                    <div class="bg-slate-800/80 px-2 py-1 rounded border border-slate-600 text-red-400">
+                        KILLS: <span id="kill-val">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-black/40 p-2 rounded-lg border border-white/10 backdrop-blur-sm">
+                <div class="w-24 h-24 relative overflow-hidden bg-slate-900/50 rounded" id="mini-map">
+                    <!-- Map indicators will be drawn here -->
+                    <div id="mm-player" class="absolute w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Controls -->
+    <div id="controls" class="hidden">
+        <div class="joystick-container" id="joy-container">
+            <div class="joystick-knob" id="joy-knob"></div>
+        </div>
+        <button class="action-btn" id="fire-btn">
+            <svg viewBox="0 0 24 24" class="w-10 h-10 fill-white" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2Z"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Death Screen -->
+    <div id="death-screen" class="hidden absolute inset-0 z-[60] flex flex-col items-center justify-center bg-red-950/90 backdrop-blur px-6 text-center">
+        <h2 class="text-6xl font-black mb-2 italic">WASTED</h2>
+        <p class="text-red-200 mb-8" id="final-stats"></p>
+        <button id="respawn-btn" class="bg-white text-red-900 font-bold px-10 py-3 rounded-full uppercase tracking-wider">
+            Respawn
+        </button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="fixed bottom-2 w-full flex justify-center z-50 pointer-events-none">
+        <p class="text-[10px] text-slate-500 opacity-60 bg-black/20 px-2 py-0.5 rounded">
+            Built: 2D Open World Engine. Next: Add car driving mechanics.
+        </p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startScreen = document.getElementById('start-screen');
+        const gameUI = document.getElementById('game-ui');
+        const controls = document.getElementById('controls');
+        const deathScreen = document.getElementById('death-screen');
+        
+        // Game State
+        let gameActive = false;
+        let score = 0;
+        let kills = 0;
+        const MAP_SIZE = 2500;
+        const player = {
+            x: MAP_SIZE / 2,
+            y: MAP_SIZE / 2,
+            radius: 20,
+            color: '#60a5fa',
+            speed: 4,
+            health: 100,
+            angle: 0,
+            bullets: []
+        };
+
+        let enemies = [];
+        let particles = [];
+        let items = [];
+        const joystick = { active: false, x: 0, y: 0, startX: 0, startY: 0, moveX: 0, moveY: 0 };
+        
+        // Resize
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Controls Logic
+        const joyKnob = document.getElementById('joy-knob');
+        const joyContainer = document.getElementById('joy-container');
+
+        joyContainer.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            joystick.active = true;
+            joystick.startX = touch.clientX;
+            joystick.startY = touch.clientY;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!joystick.active) return;
+            const touch = Array.from(e.touches).find(t => t.identifier === e.targetTouches[0]?.identifier);
+            if (!touch) return;
+
+            const dx = touch.clientX - joystick.startX;
+            const dy = touch.clientY - joystick.startY;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const maxDist = 50;
+            
+            const limitedDist = Math.min(dist, maxDist);
+            const angle = Math.atan2(dy, dx);
+            
+            joystick.moveX = Math.cos(angle) * (limitedDist / maxDist);
+            joystick.moveY = Math.sin(angle) * (limitedDist / maxDist);
+            
+            joyKnob.style.transform = `translate(${Math.cos(angle) * limitedDist}px, ${Math.sin(angle) * limitedDist}px)`;
+        });
+
+        window.addEventListener('touchend', () => {
+            joystick.active = false;
+            joystick.moveX = 0;
+            joystick.moveY = 0;
+            joyKnob.style.transform = `translate(0px, 0px)`;
+        });
+
+        // Shooting
+        const fireBtn = document.getElementById('fire-btn');
+        fireBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            shoot();
+        });
+
+        function shoot() {
+            if (!gameActive) return;
+            const angle = joystick.active ? Math.atan2(joystick.moveY, joystick.moveX) : player.angle;
+            player.bullets.push({
+                x: player.x,
+                y: player.y,
+                vx: Math.cos(angle) * 10,
+                vy: Math.sin(angle) * 10,
+                life: 60
+            });
+        }
+
+        // Initialize Entities
+        function spawnEnemy() {
+            if (enemies.length > 8) return;
+            const dist = 600;
+            const ang = Math.random() * Math.PI * 2;
+            enemies.push({
+                x: player.x + Math.cos(ang) * dist,
+                y: player.y + Math.sin(ang) * dist,
+                radius: 18,
+                health: 50,
+                speed: 2.2, // Normal difficulty speed
+                shootTimer: 0
+            });
+        }
+
+        function createExplosion(x, y, color) {
+            for(let i=0; i<8; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random()-0.5)*8,
+                    vy: (Math.random()-0.5)*8,
+                    life: 30,
+                    color
+                });
+            }
+        }
+
+        // Game Loop
+        function update() {
+            if (!gameActive) return;
+
+            // Player Move
+            player.x += joystick.moveX * player.speed;
+            player.y += joystick.moveY * player.speed;
+            if (joystick.active) player.angle = Math.atan2(joystick.moveY, joystick.moveX);
+
+            // Boundaries
+            player.x = Math.max(0, Math.min(MAP_SIZE, player.x));
+            player.y = Math.max(0, Math.min(MAP_SIZE, player.y));
+
+            // Bullets
+            player.bullets.forEach((b, i) => {
+                b.x += b.vx;
+                b.y += b.vy;
+                b.life--;
+                if (b.life <= 0) player.bullets.splice(i, 1);
+            });
+
+            // Enemies
+            enemies.forEach((en, i) => {
+                const dx = player.x - en.x;
+                const dy = player.y - en.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                // Chase
+                if (dist < 500) {
+                    en.x += (dx/dist) * en.speed;
+                    en.y += (dy/dist) * en.speed;
+                }
+
+                // Enemy Shoot (Normal Difficulty: slower fire rate)
+                en.shootTimer++;
+                if (en.shootTimer > 90 && dist < 400) {
+                    const ang = Math.atan2(dy, dx);
+                    player.bullets.push({
+                        x: en.x,
+                        y: en.y,
+                        vx: Math.cos(ang) * 6,
+                        vy: Math.sin(ang) * 6,
+                        life: 100,
+                        enemy: true
+                    });
+                    en.shootTimer = 0;
+                }
+
+                // Collision with player bullets
+                player.bullets.forEach((b, bi) => {
+                    if (!b.enemy) {
+                        const bdx = b.x - en.x;
+                        const bdy = b.y - en.y;
+                        if (Math.sqrt(bdx*bdx + bdy*bdy) < en.radius) {
+                            en.health -= 20;
+                            player.bullets.splice(bi, 1);
+                            if (en.health <= 0) {
+                                createExplosion(en.x, en.y, '#ef4444');
+                                enemies.splice(i, 1);
+                                kills++;
+                                score += 100;
+                                if (Math.random() > 0.7) items.push({x: en.x, y: en.y, type: 'health'});
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Player Hit
+            player.bullets.forEach((b, bi) => {
+                if (b.enemy) {
+                    const bdx = b.x - player.x;
+                    const bdy = b.y - player.y;
+                    if (Math.sqrt(bdx*bdx + bdy*bdy) < player.radius) {
+                        player.health -= 10;
+                        player.bullets.splice(bi, 1);
+                        if (player.health <= 0) endGame();
+                    }
+                }
+            });
+
+            // Items
+            items.forEach((item, i) => {
+                const idx = item.x - player.x;
+                const idy = item.y - player.y;
+                if (Math.sqrt(idx*idx + idy*idy) < player.radius + 10) {
+                    player.health = Math.min(100, player.health + 30);
+                    items.splice(i, 1);
+                }
+            });
+
+            // Particles
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.life--;
+                if (p.life <= 0) particles.splice(i, 1);
+            });
+
+            // Update UI
+            document.getElementById('health-fill').style.width = player.health + '%';
+            document.getElementById('health-val').innerText = Math.max(0, Math.floor(player.health)) + '%';
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('kill-val').innerText = kills;
+
+            // Mini Map UI
+            const mmPlayer = document.getElementById('mm-player');
+            mmPlayer.style.left = (player.x / MAP_SIZE * 100) + '%';
+            mmPlayer.style.top = (player.y / MAP_SIZE * 100) + '%';
+
+            if (Math.random() < 0.02) spawnEnemy();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const camX = canvas.width/2 - player.x;
+            const camY = canvas.height/2 - player.y;
+
+            ctx.save();
+            ctx.translate(camX, camY);
+
+            // Grid Map
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 2;
+            for(let i=0; i<=MAP_SIZE; i+=200) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, MAP_SIZE); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(MAP_SIZE, i); ctx.stroke();
+            }
+
+            // Items
+            items.forEach(it => {
+                ctx.fillStyle = '#22c55e';
+                ctx.fillRect(it.x-8, it.y-8, 16, 16);
+            });
+
+            // Bullets
+            player.bullets.forEach(b => {
+                ctx.fillStyle = b.enemy ? '#f87171' : '#fbbf24';
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, 4, 0, Math.PI*2);
+                ctx.fill();
+            });
+
+            // Enemies
+            enemies.forEach(en => {
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(en.x, en.y, en.radius, 0, Math.PI*2);
+                ctx.fill();
+                // Health bar for enemy
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(en.x-15, en.y-25, 30, 4);
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(en.x-15, en.y-25, (en.health/50)*30, 4);
+            });
+
+            // Particles
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life / 30;
+                ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            // Player
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(player.angle);
+            ctx.fillStyle = player.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, player.radius, 0, Math.PI*2);
+            ctx.fill();
+            // Directional pointer
+            ctx.fillStyle = 'white';
+            ctx.fillRect(10, -2, 15, 4);
+            ctx.restore();
+
+            ctx.restore();
+
+            if (gameActive) requestAnimationFrame(() => { update(); draw(); });
+        }
+
+        function startGame() {
+            gameActive = true;
+            player.health = 100;
+            score = 0;
+            kills = 0;
+            enemies = [];
+            items = [];
+            player.x = MAP_SIZE / 2;
+            player.y = MAP_SIZE / 2;
+            startScreen.classList.add('hidden');
+            deathScreen.classList.add('hidden');
+            gameUI.classList.remove('hidden');
+            controls.classList.remove('hidden');
+            draw();
+        }
+
+        function endGame() {
+            gameActive = false;
+            deathScreen.classList.remove('hidden');
+            document.getElementById('final-stats').innerText = `Kills: ${kills} | Score: ${score}`;
+        }
+
+        document.getElementById('start-btn').addEventListener('click', startGame);
+        document.getElementById('respawn-btn').addEventListener('click', startGame);
+
+    </script>
+</body>
+</html></html>
