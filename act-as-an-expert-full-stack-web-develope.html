@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Anim3D - Precise Sculpt</title>
+    <title>Anim3D - Mobile Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+        * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; box-sizing: border-box; }
         html, body { 
             overscroll-behavior: none; 
             touch-action: none; 
@@ -20,149 +20,177 @@
             background: #0f172a;
             color: white;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
         }
-        canvas { display: block; touch-action: none; margin: auto; }
-        .glass { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .active-tool { background-color: #3b82f6 !important; transform: scale(1.05); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        #viewport-container {
-            position: relative;
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100dvh;
+            z-index: 0;
+        }
+
+        .ui-overlay {
+            position: fixed;
+            z-index: 10;
+            pointer-events: none;
             width: 100%;
             height: 100%;
             display: flex;
+            flex-direction: column;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        .ui-overlay > * { pointer-events: auto; }
+
+        .glass-panel { 
+            background: rgba(30, 41, 59, 0.7); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+        }
+
+        .tool-active { 
+            background-color: #3b82f6 !important; 
+            color: white !important;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Vertical Slider Styling */
+        input[type=range].vertical-slider {
+            writing-mode: bt-lr; /* IE */
+            -webkit-appearance: slider-vertical; /* WebKit */
+            width: 8px;
+            height: 120px;
+            padding: 0 5px;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .frame-node {
+            min-width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            font-weight: bold;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .frame-node.active {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
         }
 
         .dimension-label {
             position: absolute;
             pointer-events: none;
-            background: rgba(0,0,0,0.6);
+            background: rgba(15, 23, 42, 0.8);
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 10px;
-            color: #fbbf24;
+            color: #3b82f6;
             white-space: nowrap;
             z-index: 5;
-        }
-
-        .precision-panel {
-            max-height: 60vh;
-            overflow-y: auto;
+            border: 1px solid rgba(59, 130, 246, 0.3);
         }
     </style>
 </head>
-<body class="fixed inset-0 overflow-hidden flex flex-col">
+<body>
 
-    <!-- Top Toolbar -->
-    <header class="glass absolute top-0 w-full z-20 p-3 flex justify-between items-center safe-top">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                <i data-lucide="ruler" class="w-5 h-5 text-white"></i>
-            </div>
-            <div>
-                <h1 class="font-bold text-sm tracking-tight leading-none">Anim3D Precision</h1>
-                <span id="coordDisplay" class="text-[10px] text-slate-400">0.0, 0.0, 0.0</span>
-            </div>
-        </div>
-        <div class="flex gap-2">
-            <select id="aspectRatio" onchange="updateViewport()" class="bg-slate-800 text-[10px] px-2 py-1 rounded border border-slate-700">
-                <option value="fill">Fill Screen</option>
-                <option value="16:9">16:9</option>
-                <option value="1:1">1:1</option>
-                <option value="4:3">4:3</option>
-            </select>
-            <button onclick="toggleSettings()" class="p-2 bg-slate-800 rounded-full">
-                <i data-lucide="settings" class="w-4 h-4 text-slate-300"></i>
-            </button>
-        </div>
-    </header>
+    <div id="canvas-container"></div>
+    <div id="label-container" class="fixed inset-0 pointer-events-none z-[5]"></div>
 
-    <!-- Measurement Labels Overlay -->
-    <div id="labelContainer" class="absolute inset-0 pointer-events-none z-10"></div>
-
-    <!-- Precision Sidebar -->
-    <aside id="precisionSidebar" class="absolute left-4 top-20 z-20 flex flex-col gap-3 w-12 hover:w-48 group transition-all duration-300">
-        <div class="glass p-2 rounded-2xl flex flex-col gap-3 overflow-hidden">
-            <!-- Stroke Weight -->
-            <div class="flex flex-col gap-1 px-1">
-                <div class="flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span class="text-[10px] uppercase font-bold text-slate-400">Weight</span>
-                    <span id="weightVal" class="text-[10px] text-blue-400">2.0</span>
-                </div>
-                <input type="range" id="strokeWeight" min="0.1" max="5.0" step="0.1" value="0.2" oninput="updateBrushSettings()" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
-            </div>
-
-            <div class="h-px bg-slate-700 mx-1"></div>
-
-            <!-- View Toggles -->
-            <div class="grid grid-cols-1 group-hover:grid-cols-2 gap-2 transition-all">
-                <button onclick="setCameraView('perspective')" class="view-btn p-2 bg-slate-800 rounded-lg active-tool" title="Perspective">
-                    <i data-lucide="box" class="w-5 h-5"></i>
-                </button>
-                <button onclick="setCameraView('top')" class="view-btn p-2 bg-slate-800 rounded-lg" title="Top View">
-                    <i data-lucide="layout-template" class="w-5 h-5"></i>
-                </button>
-                <button onclick="setCameraView('front')" class="view-btn p-2 bg-slate-800 rounded-lg" title="Front View">
-                    <i data-lucide="monitor" class="w-5 h-5"></i>
-                </button>
-                <button onclick="setCameraView('iso')" class="view-btn p-2 bg-slate-800 rounded-lg" title="Isometric">
-                    <i data-lucide="layers" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <div class="h-px bg-slate-700 mx-1"></div>
-
-            <!-- Snapping & Units -->
-            <button id="snapBtn" onclick="toggleSnap()" class="p-2 bg-slate-800 rounded-lg flex items-center gap-3">
-                <i data-lucide="magnet" class="w-5 h-5 text-slate-400"></i>
-                <span class="text-xs hidden group-hover:inline">Snap to Grid</span>
-            </button>
-            
-            <button id="unitBtn" onclick="toggleUnits()" class="p-2 bg-slate-800 rounded-lg flex items-center gap-3">
-                <i data-lucide="milestone" class="w-5 h-5 text-slate-400"></i>
-                <span id="unitText" class="text-xs hidden group-hover:inline">Metric (m)</span>
-            </button>
-        </div>
-
-        <div class="glass p-2 rounded-2xl flex flex-col gap-2">
-            <button id="drawBtn" onclick="setMode('draw')" class="p-2 bg-slate-800 rounded-lg active-tool">
-                <i data-lucide="pencil" class="w-5 h-5"></i>
-            </button>
-            <button id="orbitBtn" onclick="setMode('orbit')" class="p-2 bg-slate-800 rounded-lg">
-                <i data-lucide="move" class="w-5 h-5"></i>
-            </button>
-            <button onclick="clearFrame()" class="p-2 bg-slate-800 rounded-lg text-red-400">
-                <i data-lucide="trash-2" class="w-5 h-5"></i>
-            </button>
-        </div>
-    </aside>
-
-    <!-- Canvas -->
-    <main id="viewport-container" class="bg-slate-900">
-        <div id="viewport"></div>
-    </main>
-
-    <!-- Footer Controls -->
-    <footer class="glass absolute bottom-0 w-full z-20 safe-bottom">
-        <div class="px-4 py-2 flex items-center gap-4">
+    <div class="ui-overlay">
+        <!-- Top Bar -->
+        <header class="flex justify-between items-center p-4">
             <div class="flex items-center gap-3">
-                <button onclick="togglePlay()" id="playBtn" class="w-10 h-10 bg-white text-slate-900 rounded-full flex items-center justify-center">
-                    <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <i data-lucide="box" class="w-6 h-6 text-white"></i>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight">Anim3D</h1>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="undo()" class="w-10 h-10 glass-panel rounded-full flex items-center justify-center opacity-60 hover:opacity-100">
+                    <i data-lucide="undo-2" class="w-5 h-5"></i>
+                </button>
+                <button onclick="toggleFullscreen()" class="w-10 h-10 glass-panel rounded-full flex items-center justify-center bg-blue-600/20 text-blue-400">
+                    <i data-lucide="maximize" class="w-5 h-5"></i>
                 </button>
             </div>
-            <div id="timeline" class="flex-grow flex gap-2 overflow-x-auto no-scrollbar py-1"></div>
-            <button onclick="addFrame()" class="w-8 h-8 bg-slate-800 rounded flex items-center justify-center border border-dashed border-slate-600">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-            </button>
+        </header>
+
+        <!-- Main Body Area -->
+        <div class="flex-grow flex items-center px-4 relative">
+            <!-- Left Toolbar -->
+            <aside class="glass-panel w-16 py-6 rounded-[2rem] flex flex-col items-center gap-6 shadow-2xl">
+                <!-- Color Indicator -->
+                <div class="w-8 h-8 bg-blue-500 rounded-lg shadow-inner"></div>
+                
+                <!-- Brush Size Slider -->
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-px h-4 bg-slate-600"></div>
+                    <input type="range" id="brushSize" min="0.05" max="1.5" step="0.01" value="0.2" class="vertical-slider accent-blue-500" oninput="updateBrushSettings()">
+                    <div class="w-px h-4 bg-slate-600"></div>
+                </div>
+
+                <!-- Drawing Tools -->
+                <button id="drawBtn" onclick="setMode('draw')" class="w-10 h-10 rounded-xl flex items-center justify-center transition-all tool-active">
+                    <i data-lucide="pencil" class="w-5 h-5"></i>
+                </button>
+                <button id="orbitBtn" onclick="setMode('orbit')" class="w-10 h-10 rounded-xl flex items-center justify-center transition-all text-slate-400">
+                    <i data-lucide="move-3d" class="w-5 h-5"></i>
+                </button>
+
+                <div class="w-8 h-px bg-slate-700/50"></div>
+
+                <button onclick="toggleGrid()" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400">
+                    <i data-lucide="grid-3x3" class="w-5 h-5"></i>
+                </button>
+            </aside>
         </div>
-        
-        <div class="px-4 py-1 text-[10px] text-center text-slate-500 border-t border-white/5">
-            Built: Precise dimensions, scaling, and orthographic views. Next: Parametric shape primitives.
-        </div>
-    </footer>
+
+        <!-- Bottom Timeline Area -->
+        <footer class="p-6">
+            <div class="glass-panel p-4 rounded-[2.5rem] flex items-center gap-4 shadow-2xl">
+                <!-- Play Control -->
+                <button onclick="togglePlay()" id="playBtn" class="w-14 h-14 bg-white text-slate-900 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform">
+                    <i data-lucide="play" class="w-7 h-7 fill-current translate-x-0.5"></i>
+                </button>
+
+                <!-- FPS selector -->
+                <div class="flex flex-col items-start px-2">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">FPS</span>
+                    <select onchange="state.fps = parseInt(this.value)" class="bg-transparent text-sm font-bold outline-none cursor-pointer">
+                        <option value="12" class="bg-slate-800">12 ▾</option>
+                        <option value="24" class="bg-slate-800">24 ▾</option>
+                        <option value="30" class="bg-slate-800">30 ▾</option>
+                    </select>
+                </div>
+
+                <div class="w-px h-10 bg-slate-700/50 mx-2"></div>
+
+                <!-- Horizontal Timeline -->
+                <div id="timeline" class="flex-grow flex gap-3 overflow-x-auto no-scrollbar py-2">
+                    <!-- Frames injected here -->
+                </div>
+
+                <!-- Add Frame -->
+                <button onclick="addFrame()" class="w-14 h-14 border-2 border-dashed border-slate-600 rounded-2xl flex items-center justify-center text-slate-500 hover:border-blue-500 hover:text-blue-500 transition-colors">
+                    <i data-lucide="plus" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Status Note -->
+    <div class="fixed bottom-1 w-full text-center pointer-events-none z-20">
+        <p class="text-[9px] text-slate-500 font-medium">Built: 3D Frame-by-frame sketching engine. Next: Vertex manipulation and audio sync.</p>
+    </div>
 
     <script>
         const state = {
@@ -171,16 +199,11 @@
             currentFrame: 0,
             isPlaying: false,
             fps: 12,
-            gridSize: 1.0,
-            snapEnabled: false,
-            unitSystem: 'metric', // 'metric' or 'pixels'
             brushSize: 0.2,
-            aspectRatio: 'fill',
-            cameraType: 'perspective',
-            pressureEnabled: true
+            gridVisible: true
         };
 
-        let scene, camera, orthoCamera, activeCamera, renderer, controls, gridHelper;
+        let scene, camera, renderer, controls, gridHelper;
         let currentStroke = null;
         let raycaster = new THREE.Raycaster();
         let mouse = new THREE.Vector2();
@@ -192,35 +215,30 @@
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0f172a);
 
-            const aspect = window.innerWidth / window.innerHeight;
-            camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
-            camera.position.set(5, 5, 8);
+            const container = document.getElementById('canvas-container');
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(5, 5, 10);
 
-            const d = 10;
-            orthoCamera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 0.1, 1000);
-            orthoCamera.position.set(0, 10, 0);
-            orthoCamera.lookAt(0,0,0);
-            
-            activeCamera = camera;
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            document.getElementById('viewport').appendChild(renderer.domElement);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
 
             const ambient = new THREE.AmbientLight(0xffffff, 0.8);
             scene.add(ambient);
-            const directional = new THREE.DirectionalLight(0xffffff, 0.6);
+            const directional = new THREE.DirectionalLight(0xffffff, 0.5);
             directional.position.set(10, 20, 10);
             scene.add(directional);
 
-            controls = new THREE.OrbitControls(activeCamera, renderer.domElement);
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
             controls.enabled = false;
 
-            updateGrid();
+            gridHelper = new THREE.GridHelper(50, 50, 0x1e293b, 0x1e293b);
+            scene.add(gridHelper);
             
-            window.addEventListener('resize', updateViewport);
+            window.addEventListener('resize', onWindowResize);
             renderer.domElement.addEventListener('pointerdown', onDown);
             renderer.domElement.addEventListener('pointermove', onMove);
             renderer.domElement.addEventListener('pointerup', onUp);
@@ -229,106 +247,40 @@
             animate();
         }
 
-        function updateGrid() {
-            if (gridHelper) scene.remove(gridHelper);
-            gridHelper = new THREE.GridHelper(40, 40 / state.gridSize, 0x334155, 0x1e293b);
-            scene.add(gridHelper);
-        }
-
-        function toggleSnap() {
-            state.snapEnabled = !state.snapEnabled;
-            document.getElementById('snapBtn').classList.toggle('active-tool', state.snapEnabled);
-        }
-
-        function toggleUnits() {
-            state.unitSystem = state.unitSystem === 'metric' ? 'pixels' : 'metric';
-            document.getElementById('unitText').innerText = state.unitSystem === 'metric' ? 'Metric (m)' : 'Pixels (px)';
-        }
-
-        function setCameraView(view) {
-            state.cameraType = view;
-            const aspect = renderer.domElement.width / renderer.domElement.height;
-            const d = 10;
-
-            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active-tool'));
-            
-            if (view === 'perspective') {
-                activeCamera = camera;
-                controls.object = camera;
-            } else {
-                activeCamera = orthoCamera;
-                controls.object = orthoCamera;
-                
-                if (view === 'top') orthoCamera.position.set(0, d, 0);
-                if (view === 'front') orthoCamera.position.set(0, 0, d);
-                if (view === 'side') orthoCamera.position.set(d, 0, 0);
-                if (view === 'iso') orthoCamera.position.set(d, d, d);
-                
-                orthoCamera.lookAt(0, 0, 0);
-            }
-            activeCamera.updateProjectionMatrix();
-            controls.reset();
-        }
-
-        function updateViewport() {
-            const container = document.getElementById('viewport-container');
-            const style = getComputedStyle(container);
-            const containerW = parseInt(style.width);
-            const containerH = parseInt(style.height);
-            
-            state.aspectRatio = document.getElementById('aspectRatio').value;
-            
-            let w = containerW, h = containerH;
-            if (state.aspectRatio === '16:9') h = w / (16/9);
-            if (state.aspectRatio === '1:1') w = h = Math.min(containerW, containerH);
-            if (state.aspectRatio === '4:3') h = w / (4/3);
-
-            if (h > containerH) {
-                h = containerH;
-                if (state.aspectRatio === '16:9') w = h * (16/9);
-                if (state.aspectRatio === '4:3') w = h * (4/3);
-            }
-
-            renderer.setSize(w, h);
-            const aspect = w / h;
-            camera.aspect = aspect;
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
 
-            const d = 10;
-            orthoCamera.left = -d * aspect;
-            orthoCamera.right = d * aspect;
-            orthoCamera.top = d;
-            orthoCamera.bottom = -d;
-            orthoCamera.updateProjectionMatrix();
+        function setMode(mode) {
+            state.mode = mode;
+            controls.enabled = (mode === 'orbit');
+            document.getElementById('drawBtn').classList.toggle('tool-active', mode === 'draw');
+            document.getElementById('drawBtn').classList.toggle('text-slate-400', mode !== 'draw');
+            document.getElementById('orbitBtn').classList.toggle('tool-active', mode === 'orbit');
+            document.getElementById('orbitBtn').classList.toggle('text-slate-400', mode !== 'orbit');
         }
 
         function onDown(e) {
             if (state.mode !== 'draw') return;
             updateMousePos(e);
             
-            raycaster.setFromCamera(mouse, activeCamera);
-            // Dynamic plane based on camera view
+            raycaster.setFromCamera(mouse, camera);
             const normal = new THREE.Vector3();
-            activeCamera.getWorldDirection(normal);
+            camera.getWorldDirection(normal);
             drawingPlane.setFromNormalAndCoplanarPoint(normal.negate(), new THREE.Vector3(0,0,0));
 
             if (raycaster.ray.intersectPlane(drawingPlane, intersectionPoint)) {
-                if (state.snapEnabled) snapVector(intersectionPoint);
                 startStroke(intersectionPoint.clone(), e.pressure || 0.5);
             }
         }
 
         function onMove(e) {
             updateMousePos(e);
-            raycaster.setFromCamera(mouse, activeCamera);
-            
-            if (raycaster.ray.intersectPlane(drawingPlane, intersectionPoint)) {
-                if (state.snapEnabled) snapVector(intersectionPoint);
-                
-                document.getElementById('coordDisplay').innerText = 
-                    `${intersectionPoint.x.toFixed(2)}, ${intersectionPoint.y.toFixed(2)}, ${intersectionPoint.z.toFixed(2)}`;
-
-                if (state.mode === 'draw' && currentStroke) {
+            if (state.mode === 'draw' && currentStroke) {
+                raycaster.setFromCamera(mouse, camera);
+                if (raycaster.ray.intersectPlane(drawingPlane, intersectionPoint)) {
                     addPoint(intersectionPoint.clone(), e.pressure || 0.5);
                 }
             }
@@ -338,119 +290,59 @@
             if (currentStroke) {
                 state.frames[state.currentFrame].push(currentStroke);
                 currentStroke = null;
-                document.getElementById('labelContainer').innerHTML = '';
+                document.getElementById('label-container').innerHTML = '';
             }
         }
 
         function updateMousePos(e) {
-            const rect = renderer.domElement.getBoundingClientRect();
-            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-        }
-
-        function snapVector(v) {
-            v.x = Math.round(v.x / state.gridSize) * state.gridSize;
-            v.y = Math.round(v.y / state.gridSize) * state.gridSize;
-            v.z = Math.round(v.z / state.gridSize) * state.gridSize;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
         }
 
         function startStroke(pt, pressure) {
-            const color = '#3b82f6'; // Fixed or from UI
-            const radius = state.brushSize * (0.2 + pressure);
             currentStroke = {
                 points: [pt],
-                pressures: [pressure],
                 mesh: null,
-                color: color
+                color: '#3b82f6'
             };
             lastPoint.copy(pt);
         }
 
         function addPoint(pt, pressure) {
-            const dist = pt.distanceTo(lastPoint);
-            if (dist < 0.05) return;
-
+            if (pt.distanceTo(lastPoint) < 0.1) return;
             currentStroke.points.push(pt);
-            currentStroke.pressures.push(pressure);
             lastPoint.copy(pt);
 
             if (currentStroke.mesh) scene.remove(currentStroke.mesh);
             
             if (currentStroke.points.length > 1) {
                 const curve = new THREE.CatmullRomCurve3(currentStroke.points);
-                // Simplify: uniform radius for the tube, or varied if using custom geometry
-                const avgPressure = currentStroke.pressures.reduce((a,b)=>a+b, 0) / currentStroke.pressures.length;
-                const geo = new THREE.TubeGeometry(curve, currentStroke.points.length * 3, state.brushSize * (0.5 + avgPressure), 8, false);
-                const mat = new THREE.MeshStandardMaterial({ color: currentStroke.color, roughness: 0.4 });
+                const geo = new THREE.TubeGeometry(curve, currentStroke.points.length * 2, state.brushSize, 8, false);
+                const mat = new THREE.MeshStandardMaterial({ color: currentStroke.color, roughness: 0.3, metalness: 0.2 });
                 currentStroke.mesh = new THREE.Mesh(geo, mat);
                 scene.add(currentStroke.mesh);
-                
-                updateMeasureLabel(pt, dist);
             }
-        }
-
-        function updateMeasureLabel(pos, distance) {
-            const container = document.getElementById('labelContainer');
-            container.innerHTML = '';
-            
-            const vector = pos.clone().project(activeCamera);
-            const x = (vector.x * 0.5 + 0.5) * renderer.domElement.width;
-            const y = (-vector.y * 0.5 + 0.5) * renderer.domElement.height;
-            
-            const label = document.createElement('div');
-            label.className = 'dimension-label';
-            label.style.left = `${x}px`;
-            label.style.top = `${y}px`;
-            
-            let val = distance;
-            let unit = 'm';
-            if (state.unitSystem === 'pixels') {
-                val = distance * 100;
-                unit = 'px';
-            }
-            
-            label.innerText = `${val.toFixed(2)}${unit}`;
-            container.appendChild(label);
-        }
-
-        function setMode(mode) {
-            state.mode = mode;
-            controls.enabled = (mode === 'orbit');
-            document.getElementById('drawBtn').classList.toggle('active-tool', mode === 'draw');
-            document.getElementById('orbitBtn').classList.toggle('active-tool', mode === 'orbit');
-        }
-
-        function updateBrushSettings() {
-            state.brushSize = parseFloat(document.getElementById('strokeWeight').value);
-            document.getElementById('weightVal').innerText = state.brushSize.toFixed(1);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            if (controls.enabled) controls.update();
-            renderer.render(scene, activeCamera);
-        }
-
-        function clearFrame() {
-            state.frames[state.currentFrame].forEach(s => scene.remove(s.mesh));
-            state.frames[state.currentFrame] = [];
         }
 
         function addFrame() {
             state.frames.push([]);
-            state.currentFrame = state.frames.length - 1;
-            renderTimeline();
-            refreshScene();
+            selectFrame(state.frames.length - 1);
         }
 
         function selectFrame(idx) {
             state.currentFrame = idx;
-            renderTimeline();
             refreshScene();
+            renderTimeline();
         }
 
         function refreshScene() {
-            scene.children = scene.children.filter(c => c.isLight || c === gridHelper);
+            // Remove current meshes
+            scene.children = scene.children.filter(c => {
+                const isStroke = c.type === 'Mesh' && !c.isLight;
+                if(isStroke) scene.remove(c);
+                return !isStroke;
+            });
+            // Add frames
             state.frames[state.currentFrame].forEach(s => scene.add(s.mesh));
         }
 
@@ -458,30 +350,61 @@
             const container = document.getElementById('timeline');
             container.innerHTML = '';
             state.frames.forEach((f, i) => {
-                const b = document.createElement('button');
-                b.className = `w-10 h-10 shrink-0 rounded flex items-center justify-center text-[10px] font-bold ${i === state.currentFrame ? 'bg-blue-600' : 'bg-slate-800'}`;
-                b.innerText = i + 1;
-                b.onclick = () => selectFrame(i);
-                container.appendChild(b);
+                const div = document.createElement('div');
+                div.className = `frame-node glass-panel ${i === state.currentFrame ? 'active' : 'opacity-40'}`;
+                div.innerText = i + 1;
+                div.onclick = () => selectFrame(i);
+                container.appendChild(div);
             });
+            // Scroll to end
+            container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
         }
 
-        let loop;
         function togglePlay() {
             state.isPlaying = !state.isPlaying;
             const btn = document.getElementById('playBtn');
             if (state.isPlaying) {
-                btn.innerHTML = '<i data-lucide="pause" class="w-5 h-5 fill-current"></i>';
-                loop = setInterval(() => {
+                btn.innerHTML = '<i data-lucide="pause" class="w-7 h-7 fill-current"></i>';
+                state.playInterval = setInterval(() => {
                     state.currentFrame = (state.currentFrame + 1) % state.frames.length;
-                    renderTimeline();
                     refreshScene();
+                    renderTimeline();
                 }, 1000 / state.fps);
             } else {
-                btn.innerHTML = '<i data-lucide="play" class="w-5 h-5 fill-current"></i>';
-                clearInterval(loop);
+                btn.innerHTML = '<i data-lucide="play" class="w-7 h-7 fill-current translate-x-0.5"></i>';
+                clearInterval(state.playInterval);
             }
             lucide.createIcons();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e => console.log(e));
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function toggleGrid() {
+            state.gridVisible = !state.gridVisible;
+            gridHelper.visible = state.gridVisible;
+        }
+
+        function updateBrushSettings() {
+            state.brushSize = parseFloat(document.getElementById('brushSize').value);
+        }
+
+        function undo() {
+            if (state.frames[state.currentFrame].length > 0) {
+                const stroke = state.frames[state.currentFrame].pop();
+                scene.remove(stroke.mesh);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls.enabled) controls.update();
+            renderer.render(scene, camera);
         }
 
         init();
@@ -490,5 +413,5 @@
 </body>
 </html>
 <!-- 
-Built: Precise dimensions, scaling, and orthographic views. Next: Parametric shape primitives.
+Built: 3D Frame-by-frame sketching engine. Next: Vertex manipulation and audio sync.
 --></html>
