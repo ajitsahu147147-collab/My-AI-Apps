@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Anim3D - Mobile 3D Sketcher</title>
+    <title>Anim3D - Precise Sculpt</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -21,390 +21,474 @@
             color: white;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        canvas { display: block; touch-action: none; }
-        button, [role="button"] { -webkit-user-select: none; user-select: none; touch-action: manipulation; cursor: pointer; }
+        canvas { display: block; touch-action: none; margin: auto; }
+        .glass { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .active-tool { background-color: #3b82f6 !important; transform: scale(1.05); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .frame-card { min-width: 60px; height: 60px; transition: all 0.2s; }
-        .active-frame { border: 2px solid #3b82f6; transform: scale(1.05); }
+        
+        #viewport-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .dimension-label {
+            position: absolute;
+            pointer-events: none;
+            background: rgba(0,0,0,0.6);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #fbbf24;
+            white-space: nowrap;
+            z-index: 5;
+        }
+
+        .precision-panel {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body class="fixed inset-0 overflow-hidden flex flex-col">
 
     <!-- Top Toolbar -->
-    <header class="glass absolute top-0 w-full z-10 p-4 flex justify-between items-center safe-top">
+    <header class="glass absolute top-0 w-full z-20 p-3 flex justify-between items-center safe-top">
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                <i data-lucide="box" class="w-5 h-5"></i>
+                <i data-lucide="ruler" class="w-5 h-5 text-white"></i>
             </div>
-            <h1 class="font-bold text-lg tracking-tight">Anim3D</h1>
+            <div>
+                <h1 class="font-bold text-sm tracking-tight leading-none">Anim3D Precision</h1>
+                <span id="coordDisplay" class="text-[10px] text-slate-400">0.0, 0.0, 0.0</span>
+            </div>
         </div>
         <div class="flex gap-2">
-            <button onclick="undo()" class="p-2 bg-slate-800 rounded-full hover:bg-slate-700 active:scale-90 transition-transform">
-                <i data-lucide="undo-2" class="w-5 h-5 text-slate-300"></i>
-            </button>
-            <button onclick="exportProject()" class="p-2 bg-blue-600 rounded-full hover:bg-blue-500 active:scale-90 transition-transform">
-                <i data-lucide="download" class="w-5 h-5"></i>
+            <select id="aspectRatio" onchange="updateViewport()" class="bg-slate-800 text-[10px] px-2 py-1 rounded border border-slate-700">
+                <option value="fill">Fill Screen</option>
+                <option value="16:9">16:9</option>
+                <option value="1:1">1:1</option>
+                <option value="4:3">4:3</option>
+            </select>
+            <button onclick="toggleSettings()" class="p-2 bg-slate-800 rounded-full">
+                <i data-lucide="settings" class="w-4 h-4 text-slate-300"></i>
             </button>
         </div>
     </header>
 
-    <!-- Side Tools -->
-    <aside class="absolute left-4 top-24 z-10 flex flex-col gap-4">
-        <div class="glass p-2 rounded-2xl flex flex-col gap-4">
-            <!-- Brush Color -->
-            <input type="color" id="brushColor" value="#3b82f6" class="w-10 h-10 rounded-full border-none bg-transparent cursor-pointer">
-            
-            <!-- Brush Size -->
-            <div class="flex flex-col items-center gap-2 py-2">
-                <i data-lucide="tally-1" class="w-4 h-4 text-slate-400"></i>
-                <input type="range" id="brushSize" min="0.05" max="1.5" step="0.05" value="0.2" class="h-24 w-1 -webkit-appearance-none bg-slate-700 rounded-full outline-none vertical-range" style="appearance: slider-vertical;">
+    <!-- Measurement Labels Overlay -->
+    <div id="labelContainer" class="absolute inset-0 pointer-events-none z-10"></div>
+
+    <!-- Precision Sidebar -->
+    <aside id="precisionSidebar" class="absolute left-4 top-20 z-20 flex flex-col gap-3 w-12 hover:w-48 group transition-all duration-300">
+        <div class="glass p-2 rounded-2xl flex flex-col gap-3 overflow-hidden">
+            <!-- Stroke Weight -->
+            <div class="flex flex-col gap-1 px-1">
+                <div class="flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span class="text-[10px] uppercase font-bold text-slate-400">Weight</span>
+                    <span id="weightVal" class="text-[10px] text-blue-400">2.0</span>
+                </div>
+                <input type="range" id="strokeWeight" min="0.1" max="5.0" step="0.1" value="0.2" oninput="updateBrushSettings()" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
             </div>
 
-            <!-- Drawing Mode -->
-            <button id="drawBtn" onclick="setMode('draw')" class="p-3 bg-blue-600 rounded-xl shadow-lg transition-colors">
-                <i data-lucide="pencil" class="w-6 h-6"></i>
+            <div class="h-px bg-slate-700 mx-1"></div>
+
+            <!-- View Toggles -->
+            <div class="grid grid-cols-1 group-hover:grid-cols-2 gap-2 transition-all">
+                <button onclick="setCameraView('perspective')" class="view-btn p-2 bg-slate-800 rounded-lg active-tool" title="Perspective">
+                    <i data-lucide="box" class="w-5 h-5"></i>
+                </button>
+                <button onclick="setCameraView('top')" class="view-btn p-2 bg-slate-800 rounded-lg" title="Top View">
+                    <i data-lucide="layout-template" class="w-5 h-5"></i>
+                </button>
+                <button onclick="setCameraView('front')" class="view-btn p-2 bg-slate-800 rounded-lg" title="Front View">
+                    <i data-lucide="monitor" class="w-5 h-5"></i>
+                </button>
+                <button onclick="setCameraView('iso')" class="view-btn p-2 bg-slate-800 rounded-lg" title="Isometric">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="h-px bg-slate-700 mx-1"></div>
+
+            <!-- Snapping & Units -->
+            <button id="snapBtn" onclick="toggleSnap()" class="p-2 bg-slate-800 rounded-lg flex items-center gap-3">
+                <i data-lucide="magnet" class="w-5 h-5 text-slate-400"></i>
+                <span class="text-xs hidden group-hover:inline">Snap to Grid</span>
             </button>
-            <button id="orbitBtn" onclick="setMode('orbit')" class="p-3 bg-slate-800 rounded-xl transition-colors">
-                <i data-lucide="move" class="w-6 h-6"></i>
+            
+            <button id="unitBtn" onclick="toggleUnits()" class="p-2 bg-slate-800 rounded-lg flex items-center gap-3">
+                <i data-lucide="milestone" class="w-5 h-5 text-slate-400"></i>
+                <span id="unitText" class="text-xs hidden group-hover:inline">Metric (m)</span>
             </button>
         </div>
 
         <div class="glass p-2 rounded-2xl flex flex-col gap-2">
-            <button onclick="toggleGrid()" class="p-3 bg-slate-800 rounded-xl">
-                <i data-lucide="grid-3x3" class="w-6 h-6"></i>
+            <button id="drawBtn" onclick="setMode('draw')" class="p-2 bg-slate-800 rounded-lg active-tool">
+                <i data-lucide="pencil" class="w-5 h-5"></i>
             </button>
-            <button onclick="clearFrame()" class="p-3 bg-slate-800 rounded-xl text-red-400">
-                <i data-lucide="trash-2" class="w-6 h-6"></i>
+            <button id="orbitBtn" onclick="setMode('orbit')" class="p-2 bg-slate-800 rounded-lg">
+                <i data-lucide="move" class="w-5 h-5"></i>
+            </button>
+            <button onclick="clearFrame()" class="p-2 bg-slate-800 rounded-lg text-red-400">
+                <i data-lucide="trash-2" class="w-5 h-5"></i>
             </button>
         </div>
     </aside>
 
-    <!-- Canvas Container -->
-    <main id="viewport" class="flex-grow w-full h-full bg-slate-900"></main>
+    <!-- Canvas -->
+    <main id="viewport-container" class="bg-slate-900">
+        <div id="viewport"></div>
+    </main>
 
-    <!-- Bottom Timeline -->
-    <footer class="glass absolute bottom-0 w-full z-10 safe-bottom">
+    <!-- Footer Controls -->
+    <footer class="glass absolute bottom-0 w-full z-20 safe-bottom">
         <div class="px-4 py-2 flex items-center gap-4">
-            <!-- Playback Controls -->
-            <div class="flex items-center gap-3 border-r border-slate-700 pr-4">
-                <button onclick="togglePlay()" id="playBtn" class="w-12 h-12 bg-white text-slate-900 rounded-full flex items-center justify-center active:scale-95 transition-transform">
-                    <i data-lucide="play" class="w-6 h-6 fill-current"></i>
+            <div class="flex items-center gap-3">
+                <button onclick="togglePlay()" id="playBtn" class="w-10 h-10 bg-white text-slate-900 rounded-full flex items-center justify-center">
+                    <i data-lucide="play" class="w-5 h-5 fill-current"></i>
                 </button>
-                <div class="flex flex-col">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">FPS</span>
-                    <select id="fpsSelect" onchange="updateFPS(this.value)" class="bg-transparent text-sm font-bold text-white outline-none">
-                        <option value="6">6</option>
-                        <option value="12" selected>12</option>
-                        <option value="24">24</option>
-                        <option value="60">60</option>
-                    </select>
-                </div>
             </div>
-
-            <!-- Frames Scroll -->
-            <div id="timeline" class="flex-grow flex gap-2 overflow-x-auto no-scrollbar py-2 items-center">
-                <!-- Frame items will be injected here -->
-            </div>
-
-            <!-- Add Frame -->
-            <button onclick="addFrame()" class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center shrink-0 border border-dashed border-slate-600 hover:bg-slate-700">
-                <i data-lucide="plus" class="w-6 h-6 text-slate-400"></i>
+            <div id="timeline" class="flex-grow flex gap-2 overflow-x-auto no-scrollbar py-1"></div>
+            <button onclick="addFrame()" class="w-8 h-8 bg-slate-800 rounded flex items-center justify-center border border-dashed border-slate-600">
+                <i data-lucide="plus" class="w-4 h-4"></i>
             </button>
         </div>
         
         <div class="px-4 py-1 text-[10px] text-center text-slate-500 border-t border-white/5">
-            Built: 3D Frame-by-frame sketching engine. Next: Vertex manipulation and audio sync.
+            Built: Precise dimensions, scaling, and orthographic views. Next: Parametric shape primitives.
         </div>
     </footer>
 
     <script>
-        // --- State Management ---
         const state = {
-            mode: 'draw', // 'draw' or 'orbit'
-            frames: [[]], // Array of frames, each containing stroke data
+            mode: 'draw',
+            frames: [[]],
             currentFrame: 0,
             isPlaying: false,
-            brushColor: '#3b82f6',
-            brushSize: 0.2,
             fps: 12,
-            gridVisible: true,
-            onionSkin: true,
-            undoStack: []
+            gridSize: 1.0,
+            snapEnabled: false,
+            unitSystem: 'metric', // 'metric' or 'pixels'
+            brushSize: 0.2,
+            aspectRatio: 'fill',
+            cameraType: 'perspective',
+            pressureEnabled: true
         };
 
-        // --- Three.js Setup ---
-        let scene, camera, renderer, controls, gridHelper;
+        let scene, camera, orthoCamera, activeCamera, renderer, controls, gridHelper;
         let currentStroke = null;
         let raycaster = new THREE.Raycaster();
         let mouse = new THREE.Vector2();
-        let drawingPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+        let drawingPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
         let intersectionPoint = new THREE.Vector3();
+        let lastPoint = new THREE.Vector3();
 
-        function initThree() {
+        function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0f172a);
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(5, 5, 10);
+            const aspect = window.innerWidth / window.innerHeight;
+            camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
+            camera.position.set(5, 5, 8);
+
+            const d = 10;
+            orthoCamera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 0.1, 1000);
+            orthoCamera.position.set(0, 10, 0);
+            orthoCamera.lookAt(0,0,0);
+            
+            activeCamera = camera;
 
             renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setPixelRatio(window.devicePixelRatio);
             document.getElementById('viewport').appendChild(renderer.domElement);
 
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(10, 20, 10);
-            scene.add(directionalLight);
+            const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambient);
+            const directional = new THREE.DirectionalLight(0xffffff, 0.6);
+            directional.position.set(10, 20, 10);
+            scene.add(directional);
 
-            // Controls
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls = new THREE.OrbitControls(activeCamera, renderer.domElement);
             controls.enableDamping = true;
-            controls.enabled = false; // Start in draw mode
+            controls.enabled = false;
 
-            // Grid
-            gridHelper = new THREE.GridHelper(20, 20, 0x334155, 0x1e293b);
-            scene.add(gridHelper);
+            updateGrid();
+            
+            window.addEventListener('resize', updateViewport);
+            renderer.domElement.addEventListener('pointerdown', onDown);
+            renderer.domElement.addEventListener('pointermove', onMove);
+            renderer.domElement.addEventListener('pointerup', onUp);
 
-            // Event Listeners
-            window.addEventListener('resize', onWindowResize);
-            renderer.domElement.addEventListener('pointerdown', onPointerDown);
-            renderer.domElement.addEventListener('pointermove', onPointerMove);
-            renderer.domElement.addEventListener('pointerup', onPointerUp);
-
-            animate();
             renderTimeline();
+            animate();
         }
 
-        // --- Drawing Logic ---
-        function onPointerDown(e) {
-            if (state.mode !== 'draw' || state.isPlaying) return;
+        function updateGrid() {
+            if (gridHelper) scene.remove(gridHelper);
+            gridHelper = new THREE.GridHelper(40, 40 / state.gridSize, 0x334155, 0x1e293b);
+            scene.add(gridHelper);
+        }
 
-            updateMouseCoords(e);
+        function toggleSnap() {
+            state.snapEnabled = !state.snapEnabled;
+            document.getElementById('snapBtn').classList.toggle('active-tool', state.snapEnabled);
+        }
+
+        function toggleUnits() {
+            state.unitSystem = state.unitSystem === 'metric' ? 'pixels' : 'metric';
+            document.getElementById('unitText').innerText = state.unitSystem === 'metric' ? 'Metric (m)' : 'Pixels (px)';
+        }
+
+        function setCameraView(view) {
+            state.cameraType = view;
+            const aspect = renderer.domElement.width / renderer.domElement.height;
+            const d = 10;
+
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active-tool'));
             
-            // Set drawing plane to face camera at current intersection or center
-            const cameraDir = new THREE.Vector3();
-            camera.getWorldDirection(cameraDir);
-            drawingPlane.setFromNormalAndCoplanarPoint(cameraDir.negate(), new THREE.Vector3(0,0,0));
+            if (view === 'perspective') {
+                activeCamera = camera;
+                controls.object = camera;
+            } else {
+                activeCamera = orthoCamera;
+                controls.object = orthoCamera;
+                
+                if (view === 'top') orthoCamera.position.set(0, d, 0);
+                if (view === 'front') orthoCamera.position.set(0, 0, d);
+                if (view === 'side') orthoCamera.position.set(d, 0, 0);
+                if (view === 'iso') orthoCamera.position.set(d, d, d);
+                
+                orthoCamera.lookAt(0, 0, 0);
+            }
+            activeCamera.updateProjectionMatrix();
+            controls.reset();
+        }
 
-            raycaster.setFromCamera(mouse, camera);
+        function updateViewport() {
+            const container = document.getElementById('viewport-container');
+            const style = getComputedStyle(container);
+            const containerW = parseInt(style.width);
+            const containerH = parseInt(style.height);
+            
+            state.aspectRatio = document.getElementById('aspectRatio').value;
+            
+            let w = containerW, h = containerH;
+            if (state.aspectRatio === '16:9') h = w / (16/9);
+            if (state.aspectRatio === '1:1') w = h = Math.min(containerW, containerH);
+            if (state.aspectRatio === '4:3') h = w / (4/3);
+
+            if (h > containerH) {
+                h = containerH;
+                if (state.aspectRatio === '16:9') w = h * (16/9);
+                if (state.aspectRatio === '4:3') w = h * (4/3);
+            }
+
+            renderer.setSize(w, h);
+            const aspect = w / h;
+            camera.aspect = aspect;
+            camera.updateProjectionMatrix();
+
+            const d = 10;
+            orthoCamera.left = -d * aspect;
+            orthoCamera.right = d * aspect;
+            orthoCamera.top = d;
+            orthoCamera.bottom = -d;
+            orthoCamera.updateProjectionMatrix();
+        }
+
+        function onDown(e) {
+            if (state.mode !== 'draw') return;
+            updateMousePos(e);
+            
+            raycaster.setFromCamera(mouse, activeCamera);
+            // Dynamic plane based on camera view
+            const normal = new THREE.Vector3();
+            activeCamera.getWorldDirection(normal);
+            drawingPlane.setFromNormalAndCoplanarPoint(normal.negate(), new THREE.Vector3(0,0,0));
+
             if (raycaster.ray.intersectPlane(drawingPlane, intersectionPoint)) {
-                startNewStroke(intersectionPoint.clone());
+                if (state.snapEnabled) snapVector(intersectionPoint);
+                startStroke(intersectionPoint.clone(), e.pressure || 0.5);
             }
         }
 
-        function onPointerMove(e) {
-            if (state.mode !== 'draw' || !currentStroke) return;
-
-            updateMouseCoords(e);
-            raycaster.setFromCamera(mouse, camera);
+        function onMove(e) {
+            updateMousePos(e);
+            raycaster.setFromCamera(mouse, activeCamera);
             
             if (raycaster.ray.intersectPlane(drawingPlane, intersectionPoint)) {
-                addPointToStroke(intersectionPoint.clone());
+                if (state.snapEnabled) snapVector(intersectionPoint);
+                
+                document.getElementById('coordDisplay').innerText = 
+                    `${intersectionPoint.x.toFixed(2)}, ${intersectionPoint.y.toFixed(2)}, ${intersectionPoint.z.toFixed(2)}`;
+
+                if (state.mode === 'draw' && currentStroke) {
+                    addPoint(intersectionPoint.clone(), e.pressure || 0.5);
+                }
             }
         }
 
-        function onPointerUp() {
+        function onUp() {
             if (currentStroke) {
                 state.frames[state.currentFrame].push(currentStroke);
                 currentStroke = null;
-                renderScene();
+                document.getElementById('labelContainer').innerHTML = '';
             }
         }
 
-        function updateMouseCoords(e) {
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        function updateMousePos(e) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         }
 
-        function startNewStroke(point) {
-            const material = new THREE.MeshStandardMaterial({ 
-                color: document.getElementById('brushColor').value,
-                roughness: 0.3,
-                metalness: 0.2
-            });
-            
+        function snapVector(v) {
+            v.x = Math.round(v.x / state.gridSize) * state.gridSize;
+            v.y = Math.round(v.y / state.gridSize) * state.gridSize;
+            v.z = Math.round(v.z / state.gridSize) * state.gridSize;
+        }
+
+        function startStroke(pt, pressure) {
+            const color = '#3b82f6'; // Fixed or from UI
+            const radius = state.brushSize * (0.2 + pressure);
             currentStroke = {
-                points: [point],
+                points: [pt],
+                pressures: [pressure],
                 mesh: null,
-                color: material.color.clone(),
-                size: parseFloat(document.getElementById('brushSize').value)
+                color: color
             };
+            lastPoint.copy(pt);
         }
 
-        function addPointToStroke(point) {
-            if (!currentStroke) return;
-            
-            // Optimization: Only add point if it's far enough from last
-            const lastPoint = currentStroke.points[currentStroke.points.length - 1];
-            if (point.distanceTo(lastPoint) < 0.05) return;
+        function addPoint(pt, pressure) {
+            const dist = pt.distanceTo(lastPoint);
+            if (dist < 0.05) return;
 
-            currentStroke.points.push(point);
-            
-            // Update Mesh
+            currentStroke.points.push(pt);
+            currentStroke.pressures.push(pressure);
+            lastPoint.copy(pt);
+
             if (currentStroke.mesh) scene.remove(currentStroke.mesh);
             
             if (currentStroke.points.length > 1) {
                 const curve = new THREE.CatmullRomCurve3(currentStroke.points);
-                const geometry = new THREE.TubeGeometry(curve, currentStroke.points.length * 2, currentStroke.size, 8, false);
-                const material = new THREE.MeshStandardMaterial({ color: currentStroke.color });
-                currentStroke.mesh = new THREE.Mesh(geometry, material);
+                // Simplify: uniform radius for the tube, or varied if using custom geometry
+                const avgPressure = currentStroke.pressures.reduce((a,b)=>a+b, 0) / currentStroke.pressures.length;
+                const geo = new THREE.TubeGeometry(curve, currentStroke.points.length * 3, state.brushSize * (0.5 + avgPressure), 8, false);
+                const mat = new THREE.MeshStandardMaterial({ color: currentStroke.color, roughness: 0.4 });
+                currentStroke.mesh = new THREE.Mesh(geo, mat);
                 scene.add(currentStroke.mesh);
+                
+                updateMeasureLabel(pt, dist);
             }
         }
 
-        // --- Rendering & Animation ---
-        function renderScene() {
-            // Clear current scene objects (except grid/lights)
-            scene.children.forEach(child => {
-                if (child.isMesh && !child.isHelper) {
-                    scene.remove(child);
-                }
-            });
-            scene.add(gridHelper); // Keep grid
-
-            // Draw Onion Skin (Previous Frame)
-            if (state.onionSkin && state.currentFrame > 0 && !state.isPlaying) {
-                const prevFrame = state.frames[state.currentFrame - 1];
-                prevFrame.forEach(stroke => {
-                    const ghost = stroke.mesh.clone();
-                    ghost.material = stroke.mesh.material.clone();
-                    ghost.material.transparent = true;
-                    ghost.material.opacity = 0.2;
-                    scene.add(ghost);
-                });
+        function updateMeasureLabel(pos, distance) {
+            const container = document.getElementById('labelContainer');
+            container.innerHTML = '';
+            
+            const vector = pos.clone().project(activeCamera);
+            const x = (vector.x * 0.5 + 0.5) * renderer.domElement.width;
+            const y = (-vector.y * 0.5 + 0.5) * renderer.domElement.height;
+            
+            const label = document.createElement('div');
+            label.className = 'dimension-label';
+            label.style.left = `${x}px`;
+            label.style.top = `${y}px`;
+            
+            let val = distance;
+            let unit = 'm';
+            if (state.unitSystem === 'pixels') {
+                val = distance * 100;
+                unit = 'px';
             }
+            
+            label.innerText = `${val.toFixed(2)}${unit}`;
+            container.appendChild(label);
+        }
 
-            // Draw Current Frame
-            state.frames[state.currentFrame].forEach(stroke => {
-                scene.add(stroke.mesh);
-            });
+        function setMode(mode) {
+            state.mode = mode;
+            controls.enabled = (mode === 'orbit');
+            document.getElementById('drawBtn').classList.toggle('active-tool', mode === 'draw');
+            document.getElementById('orbitBtn').classList.toggle('active-tool', mode === 'orbit');
+        }
+
+        function updateBrushSettings() {
+            state.brushSize = parseFloat(document.getElementById('strokeWeight').value);
+            document.getElementById('weightVal').innerText = state.brushSize.toFixed(1);
         }
 
         function animate() {
             requestAnimationFrame(animate);
             if (controls.enabled) controls.update();
-            renderer.render(scene, camera);
+            renderer.render(scene, activeCamera);
         }
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        // --- UI & Timeline Actions ---
-        function setMode(mode) {
-            state.mode = mode;
-            controls.enabled = (mode === 'orbit');
-            
-            document.getElementById('drawBtn').className = mode === 'draw' ? 'p-3 bg-blue-600 rounded-xl shadow-lg' : 'p-3 bg-slate-800 rounded-xl';
-            document.getElementById('orbitBtn').className = mode === 'orbit' ? 'p-3 bg-blue-600 rounded-xl shadow-lg' : 'p-3 bg-slate-800 rounded-xl';
+        function clearFrame() {
+            state.frames[state.currentFrame].forEach(s => scene.remove(s.mesh));
+            state.frames[state.currentFrame] = [];
         }
 
         function addFrame() {
             state.frames.push([]);
             state.currentFrame = state.frames.length - 1;
             renderTimeline();
-            renderScene();
+            refreshScene();
         }
 
-        function selectFrame(index) {
-            state.currentFrame = index;
+        function selectFrame(idx) {
+            state.currentFrame = idx;
             renderTimeline();
-            renderScene();
+            refreshScene();
+        }
+
+        function refreshScene() {
+            scene.children = scene.children.filter(c => c.isLight || c === gridHelper);
+            state.frames[state.currentFrame].forEach(s => scene.add(s.mesh));
         }
 
         function renderTimeline() {
             const container = document.getElementById('timeline');
             container.innerHTML = '';
-            state.frames.forEach((frame, idx) => {
-                const btn = document.createElement('button');
-                btn.className = `frame-card rounded-lg flex items-center justify-center bg-slate-800 shrink-0 text-xs font-bold ${state.currentFrame === idx ? 'active-frame' : 'border border-white/5'}`;
-                btn.innerHTML = idx + 1;
-                btn.onclick = () => selectFrame(idx);
-                container.appendChild(btn);
+            state.frames.forEach((f, i) => {
+                const b = document.createElement('button');
+                b.className = `w-10 h-10 shrink-0 rounded flex items-center justify-center text-[10px] font-bold ${i === state.currentFrame ? 'bg-blue-600' : 'bg-slate-800'}`;
+                b.innerText = i + 1;
+                b.onclick = () => selectFrame(i);
+                container.appendChild(b);
             });
         }
 
-        let playbackInterval = null;
+        let loop;
         function togglePlay() {
             state.isPlaying = !state.isPlaying;
             const btn = document.getElementById('playBtn');
-            
             if (state.isPlaying) {
-                btn.innerHTML = '<i data-lucide="pause" class="w-6 h-6 fill-current"></i>';
-                lucide.createIcons();
-                playbackInterval = setInterval(() => {
+                btn.innerHTML = '<i data-lucide="pause" class="w-5 h-5 fill-current"></i>';
+                loop = setInterval(() => {
                     state.currentFrame = (state.currentFrame + 1) % state.frames.length;
                     renderTimeline();
-                    renderScene();
+                    refreshScene();
                 }, 1000 / state.fps);
             } else {
-                btn.innerHTML = '<i data-lucide="play" class="w-6 h-6 fill-current"></i>';
-                lucide.createIcons();
-                clearInterval(playbackInterval);
+                btn.innerHTML = '<i data-lucide="play" class="w-5 h-5 fill-current"></i>';
+                clearInterval(loop);
             }
+            lucide.createIcons();
         }
 
-        function updateFPS(val) {
-            state.fps = parseInt(val);
-            if (state.isPlaying) {
-                togglePlay(); // Restart with new speed
-                togglePlay();
-            }
-        }
-
-        function toggleGrid() {
-            state.gridVisible = !state.gridVisible;
-            gridHelper.visible = state.gridVisible;
-        }
-
-        function clearFrame() {
-            if(confirm("Clear this frame?")) {
-                state.frames[state.currentFrame] = [];
-                renderScene();
-            }
-        }
-
-        function undo() {
-            if (state.frames[state.currentFrame].length > 0) {
-                state.frames[state.currentFrame].pop();
-                renderScene();
-            }
-        }
-
-        function exportProject() {
-            const data = state.frames.map(frame => 
-                frame.map(stroke => ({
-                    points: stroke.points,
-                    color: stroke.color,
-                    size: stroke.size
-                }))
-            );
-            const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'anim3d-project.json';
-            a.click();
-        }
-
-        // Initialize Lucide icons
+        init();
         lucide.createIcons();
-        // Initialize App
-        initThree();
     </script>
 </body>
 </html>
 <!-- 
-Instructions:
-- Use one finger to draw when in Pencil mode.
-- Switch to Orbit mode (move icon) to rotate/zoom the viewport with touch gestures.
-- Add frames to create a sequence.
-- Press Play to see the animation loop.
--->
+Built: Precise dimensions, scaling, and orthographic views. Next: Parametric shape primitives.
+--></html>
