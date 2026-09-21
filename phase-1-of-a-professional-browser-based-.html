@@ -29,7 +29,7 @@
             --danger: #FF4757;
             --warning: #FFB86C;
             --success: #50FA7B;
-            --timeline-height: 200px;
+            --timeline-height: 180px;
         }
 
         * {
@@ -57,20 +57,15 @@
             -webkit-user-select: text;
         }
 
-        /* SCROLLBARS */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: var(--bg-primary); }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        .sf-panel {
-            background: var(--panel);
-            border: 1px solid var(--border);
-        }
+        .sf-panel { background: var(--panel); border: 1px solid var(--border); }
 
         .sf-btn {
-            height: 40px;
-            min-width: 40px;
+            height: 36px;
+            min-width: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -80,20 +75,18 @@
             color: var(--text-secondary);
         }
         .sf-btn:hover:not(:disabled) { background: var(--border); color: var(--text-primary); }
-        .sf-btn:active:not(:disabled) { transform: scale(0.96); }
         .sf-btn.active { background: var(--accent); color: white; }
         .sf-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
         .sf-accent-btn { background: var(--accent); color: white; border: none; }
-        .sf-accent-btn:hover { background: #6b72f5; color: white; }
-
+        
         .dropdown-menu {
             display: none;
             position: absolute;
             background: var(--panel);
             border: 1px solid var(--border);
             border-radius: 8px;
-            min-width: 200px;
+            min-width: 180px;
             z-index: 1000;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             padding: 4px;
@@ -103,8 +96,8 @@
         .menu-btn {
             width: 100%;
             text-align: left;
-            padding: 8px 12px;
-            font-size: 12px;
+            padding: 6px 10px;
+            font-size: 11px;
             border-radius: 4px;
             display: flex;
             align-items: center;
@@ -113,75 +106,40 @@
         }
         .menu-btn:hover { background: var(--border); color: var(--text-primary); }
 
-        .sf-sidebar { width: 56px; flex-shrink: 0; }
-        .sf-inspector { width: 300px; flex-shrink: 0; }
-
-        @media (max-width: 768px) {
-            .sf-sidebar {
-                width: 100%;
-                height: 56px;
-                position: fixed;
-                bottom: var(--timeline-height);
-                left: 0;
-                z-index: 50;
-                flex-direction: row !important;
-                justify-content: space-around;
-                padding: 0;
-            }
-            .sf-inspector {
-                position: fixed;
-                right: -300px;
-                top: 56px;
-                bottom: calc(56px + var(--timeline-height));
-                transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 100;
-            }
-            .sf-inspector.open { right: 0; }
-        }
+        .sf-sidebar { width: 48px; flex-shrink: 0; border-right: 1px solid var(--border); }
+        .sf-inspector { width: 280px; flex-shrink: 0; border-left: 1px solid var(--border); }
 
         #viewport-container {
             flex-grow: 1;
             position: relative;
-            background: #05070a;
+            background: #000;
             touch-action: none;
+            overflow: hidden;
         }
 
         .mode-selector {
             position: absolute;
-            top: 16px;
+            top: 12px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             background: rgba(14, 19, 29, 0.9);
             border: 1px solid var(--border);
-            padding: 4px;
-            border-radius: 8px;
-            backdrop-filter: blur(12px);
+            padding: 3px;
+            border-radius: 6px;
+            backdrop-filter: blur(10px);
             z-index: 40;
         }
 
         .mode-btn {
-            padding: 4px 12px;
+            padding: 3px 10px;
             border-radius: 4px;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
             color: var(--text-secondary);
-            transition: 0.2s;
         }
         .mode-btn.active { background: var(--accent); color: white; }
-
-        .sf-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            z-index: 2000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(6px);
-        }
-        .sf-modal.open { display: flex; }
 
         #timeline-panel {
             height: var(--timeline-height);
@@ -189,700 +147,280 @@
             border-top: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            transition: height 0.3s;
         }
 
         .timeline-header {
-            height: 36px;
+            height: 32px;
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            padding: 0 12px;
-            gap: 12px;
+            padding: 0 8px;
+            gap: 8px;
+            font-size: 10px;
         }
 
-        .timeline-content { flex-grow: 1; display: flex; overflow: hidden; }
-        .timeline-tracks { width: 180px; border-right: 1px solid var(--border); overflow-y: auto; background: var(--bg-primary); }
-        .timeline-grid-container { flex-grow: 1; overflow: auto; position: relative; background: var(--bg-primary); }
+        .timeline-content { flex-grow: 1; display: flex; overflow: hidden; position: relative; }
+        .timeline-tracks { width: 150px; border-right: 1px solid var(--border); background: var(--bg-primary); }
+        .timeline-grid { flex-grow: 1; overflow-x: auto; background: var(--bg-primary); position: relative; }
 
         .playhead {
             position: absolute;
             top: 0; bottom: 0;
-            width: 2px;
+            width: 1px;
             background: var(--danger);
             z-index: 20;
             pointer-events: none;
         }
-        .playhead-handle {
-            position: absolute;
-            top: 0; left: -7px;
-            width: 14px; height: 14px;
-            background: var(--danger);
-            border-radius: 0 0 4px 4px;
-            cursor: ew-resize;
-            pointer-events: auto;
-        }
 
-        .track-row {
-            height: 30px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            padding: 0 10px;
-            font-size: 11px;
-            color: var(--text-secondary);
-            white-space: nowrap;
-        }
+        .app-footer { background: var(--bg-primary); border-top: 1px solid var(--border); height: 24px; }
 
-        .keyframe {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            background: var(--accent);
-            transform: rotate(45deg);
-            cursor: pointer;
-            border: 2px solid var(--bg-primary);
-            top: 9px;
-            z-index: 10;
+        @media (max-width: 768px) {
+            .sf-inspector { display: none; }
+            .sf-sidebar { 
+                position: absolute; 
+                bottom: calc(var(--timeline-height) + 12px); 
+                left: 12px;
+                height: auto;
+                background: rgba(21, 28, 41, 0.8);
+                backdrop-filter: blur(8px);
+                border-radius: 8px;
+                border: 1px solid var(--border);
+                width: 44px;
+                padding: 4px 0;
+            }
         }
-        .keyframe:hover { background: white; }
-
-        .material-swatch {
-            width: 100%; aspect-ratio: 1;
-            border-radius: 6px;
-            border: 2px solid var(--border);
-            cursor: pointer;
-            background-size: cover;
-        }
-        .material-swatch.active { border-color: var(--accent); }
-
-        .tooltip { position: relative; }
-        .tooltip:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 120%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--panel);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            white-space: nowrap;
-            border: 1px solid var(--border);
-            z-index: 100;
-        }
-
-        .loading-screen { background: var(--bg-primary); z-index: 5000; }
-        
-        /* Layout Fixes */
-        .top-menu-bar { background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
-        .app-footer { background: var(--bg-primary); border-top: 1px solid var(--border); height: 28px; }
     </style>
 </head>
 <body>
 
     <!-- LOADING / WELCOME SCREEN -->
-    <div id="welcome-screen" class="fixed inset-0 loading-screen flex flex-col items-center justify-center p-8 text-center">
-        <div class="mb-10 animate-pulse">
-            <h1 class="text-5xl font-extrabold tracking-tighter mb-2">SHAPE<span class="text-[#7C83FF]">FORGE</span></h1>
-            <p class="text-[var(--text-secondary)] text-lg uppercase tracking-[0.2em] font-light">3D Studio Professional</p>
+    <div id="welcome-screen" class="fixed inset-0 z-[9999] bg-[var(--bg-primary)] flex flex-col items-center justify-center p-8 text-center">
+        <div class="mb-10">
+            <h1 class="text-4xl font-black tracking-tighter mb-1 italic">SHAPE<span class="text-[var(--accent)]">FORGE</span> 3D</h1>
+            <p class="text-[var(--text-secondary)] text-[10px] uppercase tracking-[0.4em]">Professional Studio</p>
         </div>
-        <div class="space-y-4 w-full max-w-sm">
-            <button onclick="window.app.start()" class="w-full h-14 sf-accent-btn rounded-xl font-bold text-lg shadow-2xl shadow-[#7C83FF]/20">Enter Workspace</button>
-            <div class="flex gap-2">
-                <button onclick="document.getElementById('project-import-input').click()" class="flex-1 h-12 sf-panel hover:bg-[var(--border)] font-semibold text-sm rounded-xl">Open Project</button>
-                <button onclick="alert('Demo scene logic coming soon.')" class="flex-1 h-12 sf-panel hover:bg-[var(--border)] font-semibold text-sm rounded-xl">New File</button>
-            </div>
-        </div>
-        <div class="mt-20 text-[10px] text-[var(--text-secondary)] uppercase tracking-widest opacity-50">
-            Powered by WebGL 2.0 & Three.js • Phase 9 Release
-        </div>
-    </div>
-
-    <!-- MODAL SYSTEM -->
-    <div id="modal-confirm" class="sf-modal">
-        <div class="sf-panel p-8 rounded-2xl max-w-md w-full mx-4 shadow-2xl">
-            <h3 class="text-xl font-bold mb-3" id="modal-title">Confirm Action</h3>
-            <p class="text-[var(--text-secondary)] mb-8" id="modal-body">Are you sure you want to proceed? Any unsaved changes may be lost.</p>
-            <div class="flex gap-3">
-                <button id="modal-btn-secondary" class="flex-1 h-12 bg-[var(--border)] rounded-xl font-bold">Cancel</button>
-                <button id="modal-btn-primary" class="flex-1 h-12 sf-accent-btn rounded-xl font-bold">Confirm</button>
-            </div>
-        </div>
+        <button onclick="window.app.start()" class="px-10 h-12 sf-accent-btn rounded-lg font-bold text-sm shadow-xl shadow-[var(--accent)]/20">Launch Workspace</button>
     </div>
 
     <!-- MAIN INTERFACE -->
     <div id="app-container" class="hidden h-full w-full flex flex-col overflow-hidden">
         
-        <!-- TOP BAR / MENUS -->
-        <header class="top-menu-bar h-12 flex items-center justify-between px-4 z-[1000]">
-            <div class="flex items-center gap-6">
+        <!-- TOP MENU BAR -->
+        <header class="h-10 bg-[var(--bg-secondary)] border-b border-[var(--border)] flex items-center justify-between px-3 z-50">
+            <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 bg-[var(--accent)] rounded flex items-center justify-center">
-                        <i data-lucide="box" class="w-4 h-4 text-white"></i>
+                    <div class="w-5 h-5 bg-[var(--accent)] rounded-sm flex items-center justify-center">
+                        <i data-lucide="box" class="w-3.5 h-3.5 text-white"></i>
                     </div>
-                    <span class="font-bold text-sm tracking-tight hidden md:block">ShapeForge <span class="text-[var(--text-secondary)]">3D</span></span>
+                    <span class="font-bold text-[11px] tracking-tight">ShapeForge 3D</span>
                 </div>
-
-                <!-- DESKTOP MENU HIERARCHY -->
                 <nav class="hidden md:flex items-center gap-1">
-                    <div class="relative menu-item">
-                        <button class="px-3 py-1 text-xs font-medium hover:bg-[var(--border)] rounded">File</button>
-                        <div class="dropdown-menu top-full left-0">
-                            <button onclick="window.app.project.newProject()" class="menu-btn"><span>New Project</span><span class="opacity-30">Ctrl+N</span></button>
-                            <button onclick="document.getElementById('project-import-input').click()" class="menu-btn"><span>Open...</span><span class="opacity-30">Ctrl+O</span></button>
-                            <div class="h-px bg-[var(--border)] my-1"></div>
-                            <button onclick="window.app.project.save()" class="menu-btn"><span>Save</span><span class="opacity-30">Ctrl+S</span></button>
-                            <button onclick="window.app.project.saveAs()" class="menu-btn"><span>Save As...</span></button>
-                            <div class="h-px bg-[var(--border)] my-1"></div>
-                            <div class="relative group/sub">
-                                <button class="menu-btn"><span>Import</span><i data-lucide="chevron-right" class="w-3"></i></button>
-                                <div class="hidden group-hover/sub:block absolute left-full top-0 ml-1 dropdown-menu">
-                                    <button class="menu-btn">GLB / GLTF</button>
-                                    <button class="menu-btn">OBJ</button>
-                                    <button class="menu-btn">STL</button>
-                                </div>
-                            </div>
-                            <div class="relative group/sub">
-                                <button class="menu-btn"><span>Export</span><i data-lucide="chevron-right" class="w-3"></i></button>
-                                <div class="hidden group-hover/sub:block absolute left-full top-0 ml-1 dropdown-menu">
-                                    <button onclick="window.app.project.exportGLTF()" class="menu-btn">GLB / GLTF</button>
-                                    <button class="menu-btn">OBJ (Coming Soon)</button>
-                                    <button class="menu-btn">PNG Snapshot</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="relative menu-item">
-                        <button class="px-3 py-1 text-xs font-medium hover:bg-[var(--border)] rounded">Edit</button>
-                        <div class="dropdown-menu top-full left-0">
-                            <button onclick="window.app.history.undo()" class="menu-btn"><span>Undo</span><span class="opacity-30">Ctrl+Z</span></button>
-                            <button onclick="window.app.history.redo()" class="menu-btn"><span>Redo</span><span class="opacity-30">Ctrl+Y</span></button>
-                            <div class="h-px bg-[var(--border)] my-1"></div>
-                            <button onclick="window.app.duplicateSelected()" class="menu-btn"><span>Duplicate</span><span class="opacity-30">Ctrl+D</span></button>
-                            <button onclick="window.app.deleteSelected()" class="menu-btn text-[var(--danger)]">Delete</button>
-                        </div>
-                    </div>
-
-                    <div class="relative menu-item">
-                        <button class="px-3 py-1 text-xs font-medium hover:bg-[var(--border)] rounded">View</button>
-                        <div class="dropdown-menu top-full left-0">
-                            <button onclick="window.app.setView('perspective')" class="menu-btn">Perspective</button>
-                            <button onclick="window.app.setView('orthographic')" class="menu-btn">Orthographic</button>
-                            <div class="h-px bg-[var(--border)] my-1"></div>
-                            <button onclick="window.app.setView('top')" class="menu-btn">Top View</button>
-                            <button onclick="window.app.setView('front')" class="menu-btn">Front View</button>
-                            <button onclick="window.app.setView('right')" class="menu-btn">Right View</button>
-                            <div class="h-px bg-[var(--border)] my-1"></div>
-                            <button onclick="window.app.frameSelected()" class="menu-btn">Frame Selected</button>
-                        </div>
-                    </div>
-
-                    <div class="relative menu-item">
-                        <button class="px-3 py-1 text-xs font-medium hover:bg-[var(--border)] rounded">Create</button>
-                        <div class="dropdown-menu top-full left-0">
-                            <button onclick="window.app.addObject('box')" class="menu-btn">Cube</button>
-                            <button onclick="window.app.addObject('sphere')" class="menu-btn">Sphere</button>
-                            <button onclick="window.app.addObject('cylinder')" class="menu-btn">Cylinder</button>
-                            <button onclick="window.app.addObject('torus')" class="menu-btn">Torus</button>
-                            <button onclick="window.app.addObject('plane')" class="menu-btn">Plane</button>
-                            <div class="h-px bg-[var(--border)] my-1"></div>
-                            <button onclick="window.app.addLight('point')" class="menu-btn">Point Light</button>
-                        </div>
-                    </div>
+                    <div class="relative menu-item"><button class="px-2 py-1 text-[10px] hover:bg-[var(--border)] rounded">File</button></div>
+                    <div class="relative menu-item"><button class="px-2 py-1 text-[10px] hover:bg-[var(--border)] rounded">Edit</button></div>
+                    <div class="relative menu-item"><button class="px-2 py-1 text-[10px] hover:bg-[var(--border)] rounded">View</button></div>
+                    <div class="relative menu-item"><button class="px-2 py-1 text-[10px] hover:bg-[var(--border)] rounded">Create</button></div>
                 </nav>
             </div>
-
-            <!-- STATUS & SESSION -->
-            <div class="flex items-center gap-4">
-                <div class="hidden lg:flex items-center gap-3 bg-[var(--bg-primary)] px-3 py-1 rounded-full border border-[var(--border)]">
-                    <span id="project-name-display" class="text-[10px] font-bold uppercase tracking-widest truncate max-w-[150px]">Untitled Project</span>
-                    <span id="save-status" class="flex items-center gap-1.5 text-[9px] text-[var(--text-secondary)] font-medium">
-                        <span class="w-1.5 h-1.5 rounded-full bg-[var(--success)]"></span> Syncing
-                    </span>
-                </div>
-
-                <div class="flex items-center gap-1 border-l border-[var(--border)] pl-4">
-                    <button class="sf-btn w-8 h-8 tooltip" data-tooltip="Undo" onclick="window.app.history.undo()"><i data-lucide="undo-2" class="w-4"></i></button>
-                    <button class="sf-btn w-8 h-8 tooltip" data-tooltip="Redo" onclick="window.app.history.redo()"><i data-lucide="redo-2" class="w-4"></i></button>
-                    <button class="sf-btn w-8 h-8 md:hidden" onclick="window.app.ui.toggleInspector()"><i data-lucide="layers" class="w-4"></i></button>
-                </div>
+            <div class="flex items-center gap-2">
+                <button class="sf-btn w-7 h-7" title="Undo"><i data-lucide="undo-2" class="w-3.5"></i></button>
+                <button class="sf-btn w-7 h-7" title="Redo"><i data-lucide="redo-2" class="w-3.5"></i></button>
+                <button class="sf-btn w-7 h-7" title="Layers"><i data-lucide="layers" class="w-3.5"></i></button>
             </div>
         </header>
 
-        <!-- MAIN VIEWPORT + SIDEBARS -->
         <div class="flex-grow flex overflow-hidden">
-            
-            <!-- LEFT TOOLBAR -->
-            <aside class="sf-sidebar sf-panel flex flex-col items-center py-4 gap-2 z-40">
-                <button id="tool-select" class="sf-btn active tooltip" data-tooltip="Select (Q)" onclick="window.app.setTool('select')"><i data-lucide="mouse-pointer-2" class="w-5"></i></button>
-                <button id="tool-translate" class="sf-btn tooltip" data-tooltip="Move (W)" onclick="window.app.setTool('translate')"><i data-lucide="move" class="w-5"></i></button>
-                <button id="tool-rotate" class="sf-btn tooltip" data-tooltip="Rotate (E)" onclick="window.app.setTool('rotate')"><i data-lucide="rotate-cw" class="w-5"></i></button>
-                <button id="tool-scale" class="sf-btn tooltip" data-tooltip="Scale (R)" onclick="window.app.setTool('scale')"><i data-lucide="maximize" class="w-5"></i></button>
-                
-                <div class="w-8 h-px bg-[var(--border)] my-3"></div>
-                
-                <button id="tool-extrude" class="sf-btn tooltip" data-tooltip="Modeling Tools" onclick="window.app.meshEditor.prepareExtrude()"><i data-lucide="hammer" class="w-5"></i></button>
-                <button class="sf-btn tooltip text-[var(--danger)] mt-auto" data-tooltip="Delete (Del)" onclick="window.app.deleteSelected()"><i data-lucide="trash-2" class="w-5"></i></button>
+            <!-- SIDEBAR -->
+            <aside class="sf-sidebar flex flex-col items-center py-3 gap-3 z-40">
+                <button id="tool-select" class="sf-btn active" onclick="window.app.setTool('select')"><i data-lucide="mouse-pointer-2" class="w-4"></i></button>
+                <button id="tool-translate" class="sf-btn" onclick="window.app.setTool('translate')"><i data-lucide="move" class="w-4"></i></button>
+                <button id="tool-rotate" class="sf-btn" onclick="window.app.setTool('rotate')"><i data-lucide="rotate-cw" class="w-4"></i></button>
+                <button id="tool-scale" class="sf-btn" onclick="window.app.setTool('scale')"><i data-lucide="maximize" class="w-4"></i></button>
+                <div class="w-6 h-[1px] bg-[var(--border)] my-1"></div>
+                <button class="sf-btn"><i data-lucide="hammer" class="w-4"></i></button>
+                <button class="sf-btn mt-auto text-[var(--danger)]" onclick="window.app.deleteSelected()"><i data-lucide="trash-2" class="w-4"></i></button>
             </aside>
 
-            <!-- CENTER VIEWPORT -->
+            <!-- VIEWPORT -->
             <main id="viewport-container">
                 <div class="mode-selector">
-                    <button onclick="window.app.meshEditor.setMode('object')" class="mode-btn active" id="mode-object">Object</button>
-                    <button onclick="window.app.meshEditor.setMode('vertex')" class="mode-btn" id="mode-vertex">Vertex</button>
-                    <button onclick="window.app.meshEditor.setMode('edge')" class="mode-btn" id="mode-edge">Edge</button>
-                    <button onclick="window.app.meshEditor.setMode('face')" class="mode-btn" id="mode-face">Face</button>
-                </div>
-
-                <div id="modeling-overlay" class="absolute bottom-6 left-1/2 -translate-x-1/2 sf-panel p-4 rounded-xl hidden z-50 min-w-[200px] shadow-2xl">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-[10px] font-bold uppercase tracking-widest">Mesh Operation</span>
-                        <button onclick="window.app.meshEditor.cancelOperation()"><i data-lucide="x" class="w-4 h-4"></i></button>
-                    </div>
-                    <div class="space-y-4">
-                        <input id="tool-amount" type="range" min="-2" max="2" step="0.01" value="0.5" class="w-full accent-[var(--accent)]">
-                        <button onclick="window.app.meshEditor.applyOperation()" class="w-full py-2 sf-accent-btn rounded font-bold text-[10px] uppercase">Apply Extrude</button>
-                    </div>
+                    <button class="mode-btn active" id="mode-object">Object</button>
+                    <button class="mode-btn" id="mode-vertex">Vertex</button>
+                    <button class="mode-btn" id="mode-edge">Edge</button>
+                    <button class="mode-btn" id="mode-face">Face</button>
                 </div>
             </main>
 
-            <!-- RIGHT INSPECTOR -->
-            <aside id="inspector-panel" class="sf-inspector sf-panel flex flex-col z-40">
-                <div class="flex border-b border-[var(--border)] shrink-0 bg-[var(--bg-secondary)]">
-                    <button onclick="window.app.ui.setTab('scene')" id="tab-scene" class="flex-1 py-3 text-[10px] font-bold uppercase tracking-wider tab-btn border-b-2 border-[var(--accent)]">Hierarchy</button>
-                    <button onclick="window.app.ui.setTab('props')" id="tab-props" class="flex-1 py-3 text-[10px] font-bold uppercase tracking-wider tab-btn text-[var(--text-secondary)]">Properties</button>
-                    <button onclick="window.app.ui.setTab('materials')" id="tab-materials" class="flex-1 py-3 text-[10px] font-bold uppercase tracking-wider tab-btn text-[var(--text-secondary)]">Materials</button>
+            <!-- INSPECTOR -->
+            <aside class="sf-inspector flex flex-col bg-[var(--bg-secondary)]">
+                <div class="flex border-b border-[var(--border)] shrink-0">
+                    <button class="flex-1 py-2 text-[9px] font-bold uppercase tracking-widest border-b-2 border-[var(--accent)]">Hierarchy</button>
+                    <button class="flex-1 py-2 text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Properties</button>
+                    <button class="flex-1 py-2 text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Materials</button>
                 </div>
-                
-                <div id="panel-scene" class="p-4 overflow-y-auto flex-grow bg-[var(--bg-primary)]">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-[10px] font-bold uppercase text-[var(--text-secondary)]">Scene Graph</span>
-                        <i data-lucide="search" class="w-3 opacity-30"></i>
+                <div class="p-3">
+                    <div class="flex items-center justify-between text-[9px] font-bold text-[var(--text-secondary)] uppercase mb-3">
+                        <span>Scene Graph</span>
+                        <i data-lucide="search" class="w-3"></i>
                     </div>
-                    <ul id="scene-tree" class="space-y-1"></ul>
-                </div>
-
-                <div id="panel-props" class="p-5 overflow-y-auto flex-grow hidden">
-                    <div id="prop-empty" class="h-full flex flex-col items-center justify-center opacity-20 text-center">
-                        <i data-lucide="box" class="w-12 h-12 mb-2"></i>
-                        <p class="text-xs">Select an object to edit properties</p>
-                    </div>
-                    <div id="prop-controls" class="space-y-6 hidden">
-                        <div>
-                            <label class="text-[10px] text-[var(--text-secondary)] uppercase font-bold block mb-2">Identification</label>
-                            <input id="prop-name" type="text" class="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg p-2.5 text-sm text-white focus:border-[var(--accent)] outline-none">
-                        </div>
-                        <div class="space-y-4 border-t border-[var(--border)] pt-4">
-                            <label class="text-[10px] text-[var(--text-secondary)] uppercase font-bold block">Transform</label>
-                            <div class="grid grid-cols-3 gap-2">
-                                <div class="bg-[var(--bg-primary)] p-2 rounded border border-[var(--border)]">
-                                    <span class="text-[8px] block opacity-50">POS X</span>
-                                    <input type="number" step="0.1" class="w-full bg-transparent text-xs outline-none" value="0">
-                                </div>
-                                <div class="bg-[var(--bg-primary)] p-2 rounded border border-[var(--border)]">
-                                    <span class="text-[8px] block opacity-50">POS Y</span>
-                                    <input type="number" step="0.1" class="w-full bg-transparent text-xs outline-none" value="0">
-                                </div>
-                                <div class="bg-[var(--bg-primary)] p-2 rounded border border-[var(--border)]">
-                                    <span class="text-[8px] block opacity-50">POS Z</span>
-                                    <input type="number" step="0.1" class="w-full bg-transparent text-xs outline-none" value="0">
-                                </div>
-                            </div>
-                            <button onclick="window.app.resetTransform()" class="w-full py-2 bg-[var(--bg-secondary)] border border-[var(--border)] text-[10px] font-bold rounded-lg hover:bg-[var(--border)]">Reset All Transforms</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="panel-materials" class="flex flex-col flex-grow hidden">
-                    <div class="p-4 border-b border-[var(--border)]">
-                        <div id="material-grid" class="grid grid-cols-4 gap-2"></div>
-                    </div>
-                    <div id="material-inspector" class="p-5 overflow-y-auto flex-grow hidden bg-[var(--bg-primary)]">
-                        <div class="space-y-5">
-                            <div>
-                                <label class="text-[10px] text-[var(--text-secondary)] uppercase font-bold block mb-2">Surface Color</label>
-                                <input id="mat-color" type="color" class="w-full h-10 bg-transparent border-none p-0 cursor-pointer">
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-[10px] mb-2 font-bold uppercase">
-                                    <span>Metalness</span>
-                                    <span id="val-metal" class="text-[var(--accent)]">0.0</span>
-                                </div>
-                                <input id="mat-metal" type="range" min="0" max="1" step="0.01" class="w-full accent-[var(--accent)]">
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-[10px] mb-2 font-bold uppercase">
-                                    <span>Roughness</span>
-                                    <span id="val-rough" class="text-[var(--accent)]">0.5</span>
-                                </div>
-                                <input id="mat-rough" type="range" min="0" max="1" step="0.01" class="w-full accent-[var(--accent)]">
-                            </div>
-                        </div>
-                    </div>
+                    <ul id="scene-tree" class="space-y-1">
+                        <!-- Populated by JS -->
+                    </ul>
                 </div>
             </aside>
         </div>
 
-        <!-- TIMELINE PANEL -->
+        <!-- TIMELINE -->
         <div id="timeline-panel">
-            <div class="timeline-header bg-[var(--panel)]">
+            <div class="timeline-header">
                 <div class="flex items-center gap-1">
-                    <button onclick="window.app.animation.prevFrame()" class="sf-btn w-8 h-8"><i data-lucide="skip-back" class="w-3"></i></button>
-                    <button id="anim-play-btn" onclick="window.app.animation.togglePlay()" class="sf-btn w-10 h-10 active"><i data-lucide="play" class="w-4"></i></button>
-                    <button onclick="window.app.animation.stop()" class="sf-btn w-8 h-8"><i data-lucide="square" class="w-3"></i></button>
-                    <button onclick="window.app.animation.nextFrame()" class="sf-btn w-8 h-8"><i data-lucide="skip-forward" class="w-3"></i></button>
+                    <button class="sf-btn w-6 h-6"><i data-lucide="skip-back" class="w-3"></i></button>
+                    <button class="sf-btn w-7 h-7 active"><i data-lucide="play" class="w-3"></i></button>
+                    <button class="sf-btn w-6 h-6"><i data-lucide="square" class="w-3"></i></button>
+                    <button class="sf-btn w-6 h-6"><i data-lucide="skip-forward" class="w-3"></i></button>
                 </div>
-                
-                <div class="h-4 w-px bg-[var(--border)] mx-2"></div>
-                
-                <div class="flex items-center gap-4">
-                    <button onclick="window.app.animation.addKeyframe()" class="h-8 px-3 bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded text-[10px] font-bold flex items-center gap-2 hover:bg-[var(--accent)]/20 text-[var(--accent)]">
-                        <i data-lucide="key" class="w-3"></i> Keyframe
-                    </button>
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" id="auto-key-toggle" class="accent-[var(--accent)] w-3 h-3">
-                        <span class="text-[9px] uppercase font-bold text-[var(--text-secondary)] group-hover:text-white transition">Auto Key</span>
-                    </label>
+                <div class="w-px h-3 bg-[var(--border)] mx-1"></div>
+                <button class="h-6 px-2 bg-[var(--accent)]/10 border border-[var(--accent)]/40 rounded flex items-center gap-1.5 text-[9px] font-bold text-[var(--accent)]">
+                    <i data-lucide="key" class="w-3"></i> Keyframe
+                </button>
+                <div class="flex items-center gap-2 text-[9px] font-bold text-[var(--text-secondary)] ml-2">
+                    <input type="checkbox" checked class="accent-[var(--accent)]"> AUTO KEY
                 </div>
-
                 <div class="flex-grow"></div>
-
-                <div class="flex items-center gap-6 text-[10px] font-mono tracking-tighter">
-                    <div class="flex items-center gap-2">
-                        <span class="opacity-40">FPS</span>
-                        <select id="anim-fps" class="bg-transparent text-white outline-none font-bold">
-                            <option value="24">24</option>
-                            <option value="30" selected>30</option>
-                            <option value="60">60</option>
-                        </select>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="opacity-40">SEC</span>
-                        <input id="anim-duration" type="number" value="5" class="w-8 bg-transparent text-white text-right outline-none font-bold">
-                    </div>
-                    <div class="flex items-center gap-2 px-3 py-1 bg-[var(--bg-primary)] rounded border border-[var(--border)]">
-                        <span class="opacity-40">FRAME</span>
-                        <input id="current-frame-input" type="number" value="0" class="w-10 bg-transparent text-[var(--accent)] text-right outline-none font-bold">
+                <div class="flex items-center gap-4 text-[9px] font-mono">
+                    <div class="flex items-center gap-1.5"><span class="opacity-40">FPS</span> <span class="text-white">30</span></div>
+                    <div class="flex items-center gap-1.5"><span class="opacity-40">SEC</span> <span class="text-white">5</span></div>
+                    <div class="bg-[var(--bg-primary)] px-2 py-0.5 rounded border border-[var(--border)] flex items-center gap-2">
+                        <span class="opacity-40 uppercase">Frame</span> <span class="text-[var(--accent)] font-bold">0</span>
                     </div>
                 </div>
             </div>
-
             <div class="timeline-content">
-                <div class="timeline-tracks" id="track-labels"></div>
-                <div class="timeline-grid-container" id="timeline-scrubber-area">
-                    <div class="timeline-grid relative h-full bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[length:20px_100%]" id="timeline-grid">
-                        <div id="playhead" class="playhead">
-                            <div class="playhead-handle"></div>
-                        </div>
-                        <div id="keyframe-container" class="absolute inset-0 pointer-events-none"></div>
-                    </div>
+                <div class="timeline-tracks"></div>
+                <div class="timeline-grid">
+                    <div class="playhead" style="left: 40px;"></div>
+                    <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(to right, var(--border) 1px, transparent 1px); background-size: 20px 100%;"></div>
                 </div>
             </div>
         </div>
 
         <!-- FOOTER -->
-        <footer class="app-footer flex items-center justify-between px-4 text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
-            <div class="flex items-center gap-6">
-                <div class="flex gap-4">
-                    <span id="poly-count">Polygons: 0</span>
-                    <span id="vert-count">Vertices: 0</span>
-                </div>
-                <span id="diff-mode-status" class="text-[var(--success)] opacity-80">Mode: Smart Normal</span>
+        <footer class="app-footer flex items-center justify-between px-3 text-[8px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
+            <div class="flex gap-4">
+                <span id="poly-count">Polygons: 12</span>
+                <span id="vert-count">Vertices: 24</span>
+                <span class="text-[var(--success)]">Mode: Smart Normal</span>
             </div>
-            <div id="footer-note" class="italic opacity-50">
-                Built: Design System, Menu Hierarchy, and Release Polish. Next: Final user testing and production build.
+            <div id="footer-note">
+                Built: UI Layout & Renderer Link. Next: Core transformation logic.
             </div>
         </footer>
     </div>
-
-    <input type="file" id="project-import-input" class="hidden" accept=".shapeforge">
 
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { TransformControls } from 'three/addons/controls/TransformControls.js';
-        import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
-
-        // --- COMMAND PATTERN ---
-        class Command { execute() {} undo() {} }
-
-        class TransformCommand extends Command {
-            constructor(object, oldT, newT) {
-                super();
-                this.id = object.userData.id;
-                this.old = oldT; this.new = newT;
-            }
-            execute() { this.apply(this.new); }
-            undo() { this.apply(this.old); }
-            apply(t) {
-                const obj = window.app.objects.get(this.id);
-                if (obj) {
-                    obj.position.copy(t.position);
-                    obj.rotation.copy(t.rotation);
-                    obj.scale.copy(t.scale);
-                    window.app.ui.updateInspector();
-                }
-            }
-        }
-
-        class HistoryManager {
-            constructor(app) {
-                this.app = app;
-                this.undoStack = [];
-                this.redoStack = [];
-            }
-            execute(cmd) {
-                cmd.execute();
-                this.undoStack.push(cmd);
-                this.redoStack = [];
-                if (this.undoStack.length > 50) this.undoStack.shift();
-                this.app.project.setDirty();
-            }
-            undo() {
-                if (this.undoStack.length === 0) return;
-                const cmd = this.undoStack.pop();
-                cmd.undo();
-                this.redoStack.push(cmd);
-                this.app.project.setDirty();
-            }
-            redo() {
-                if (this.redoStack.length === 0) return;
-                const cmd = this.redoStack.pop();
-                cmd.execute();
-                this.undoStack.push(cmd);
-                this.app.project.setDirty();
-            }
-        }
-
-        class AnimationManager {
-            constructor(app) {
-                this.app = app;
-                this.playing = false;
-                this.currentTime = 0;
-                this.duration = 5;
-                this.fps = 30;
-                this.clips = new Map();
-                this.setupUI();
-            }
-            setupUI() {
-                const area = document.getElementById('timeline-scrubber-area');
-                let scrubbing = false;
-                area.onpointerdown = (e) => { scrubbing = true; this.handleScrub(e); };
-                window.onpointermove = (e) => { if (scrubbing) this.handleScrub(e); };
-                window.onpointerup = () => scrubbing = false;
-                document.getElementById('anim-duration').onchange = (e) => {
-                    this.duration = parseFloat(e.target.value);
-                    this.updateTimelineSize();
-                };
-            }
-            handleScrub(e) {
-                const rect = document.getElementById('timeline-grid').getBoundingClientRect();
-                const x = Math.max(0, e.clientX - rect.left);
-                const frame = Math.round(x / 20);
-                this.currentTime = Math.min(this.duration, frame / this.fps);
-                this.syncUI();
-            }
-            syncUI() {
-                const frame = Math.round(this.currentTime * this.fps);
-                document.getElementById('playhead').style.left = (frame * 20) + 'px';
-                document.getElementById('current-frame-input').value = frame;
-                this.evaluate(this.currentTime);
-            }
-            updateTimelineSize() {
-                document.getElementById('timeline-grid').style.width = (this.duration * this.fps * 20) + 'px';
-            }
-            togglePlay() {
-                this.playing = !this.playing;
-                document.getElementById('anim-play-btn').innerHTML = this.playing ? 
-                    '<i data-lucide="pause" class="w-4"></i>' : '<i data-lucide="play" class="w-4"></i>';
-                lucide.createIcons();
-            }
-            stop() { this.playing = false; this.currentTime = 0; this.syncUI(); }
-            update(delta) {
-                if (!this.playing) return;
-                this.currentTime += delta;
-                if (this.currentTime > this.duration) this.currentTime = 0;
-                this.syncUI();
-            }
-            addKeyframe(obj = this.app.selected) {
-                if (!obj) return;
-                const frame = Math.round(this.currentTime * this.fps);
-                if (!this.clips.has(obj.userData.id)) this.clips.set(obj.userData.id, []);
-                this.clips.get(obj.userData.id).push({
-                    frame,
-                    time: this.currentTime,
-                    position: obj.position.clone(),
-                    rotation: obj.rotation.clone(),
-                    scale: obj.scale.clone()
-                });
-                this.renderKeys();
-            }
-            renderKeys() {
-                const container = document.getElementById('keyframe-container');
-                container.innerHTML = '';
-                this.clips.forEach((keyframes) => {
-                    keyframes.forEach(kf => {
-                        const div = document.createElement('div');
-                        div.className = 'keyframe';
-                        div.style.left = (kf.frame * 20) + 'px';
-                        container.appendChild(div);
-                    });
-                });
-            }
-            evaluate(time) {
-                this.clips.forEach((keyframes, objId) => {
-                    const obj = this.app.objects.get(objId);
-                    if (!obj || keyframes.length < 1) return;
-                    keyframes.sort((a,b) => a.time - b.time);
-                    // Simple stepped evaluation for now
-                    const kf = keyframes.find(k => k.time >= time) || keyframes[keyframes.length-1];
-                    obj.position.copy(kf.position);
-                    obj.rotation.copy(kf.rotation);
-                    obj.scale.copy(kf.scale);
-                });
-            }
-        }
 
         class ShapeForgeApp {
             constructor() {
                 this.container = document.getElementById('viewport-container');
-                this.scene = new THREE.Scene();
-                this.scene.background = new THREE.Color(0x05070a);
-                
-                this.camera = new THREE.PerspectiveCamera(70, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
-                this.camera.position.set(8, 8, 8);
-                
-                this.renderer = new THREE.WebGLRenderer({ antialias: true });
-                this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
-                this.renderer.setPixelRatio(window.devicePixelRatio);
-                this.container.appendChild(this.renderer.domElement);
-
                 this.objects = new Map();
                 this.selected = null;
-                this.clock = new THREE.Clock();
                 
-                this.history = new HistoryManager(this);
-                this.animation = new AnimationManager(this);
-                this.meshEditor = {
-                    mode: 'object',
-                    setMode(m) { 
-                        this.mode = m; 
-                        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                        document.getElementById('mode-' + m).classList.add('active');
-                    },
-                    prepareExtrude() { document.getElementById('modeling-overlay').classList.remove('hidden'); },
-                    cancelOperation() { document.getElementById('modeling-overlay').classList.add('hidden'); },
-                    applyOperation() { this.cancelOperation(); }
-                };
-
+                this.initEngine();
                 this.setupLights();
                 this.setupControls();
-                this.setupUI();
                 this.animate();
-            }
 
-            setupLights() {
-                this.scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-                const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-                dirLight.position.set(10, 20, 10);
-                this.scene.add(dirLight);
-                const grid = new THREE.GridHelper(30, 30, 0x273149, 0x151C29);
-                this.scene.add(grid);
-            }
-
-            setupControls() {
-                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-                this.controls.enableDamping = true;
-                
-                this.transform = new TransformControls(this.camera, this.renderer.domElement);
-                this.scene.add(this.transform);
-
-                this.transform.addEventListener('dragging-changed', (e) => {
-                    this.controls.enabled = !e.value;
-                    if (!e.value && this.selected) {
-                        this.project.setDirty();
-                    }
-                });
-
-                this.container.addEventListener('pointerdown', (e) => {
-                    if (this.transform.dragging) return;
-                    const rect = this.container.getBoundingClientRect();
-                    const mouse = new THREE.Vector2(
-                        ((e.clientX - rect.left) / this.container.clientWidth) * 2 - 1,
-                        -((e.clientY - rect.top) / this.container.clientHeight) * 2 + 1
-                    );
-                    const raycaster = new THREE.Raycaster();
-                    raycaster.setFromCamera(mouse, this.camera);
-                    const intersects = raycaster.intersectObjects(Array.from(this.objects.values()));
-                    this.selectObject(intersects.length > 0 ? intersects[0].object : null);
-                });
-            }
-
-            setupUI() {
-                window.addEventListener('resize', () => {
-                    this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
-                    this.camera.updateProjectionMatrix();
-                    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
-                });
+                window.addEventListener('resize', () => this.onWindowResize());
                 lucide.createIcons();
             }
 
+            initEngine() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x05070a);
+                
+                this.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+                this.camera.position.set(5, 5, 5);
+                this.camera.lookAt(0, 0, 0);
+
+                this.renderer = new THREE.WebGLRenderer({ 
+                    antialias: true,
+                    alpha: true,
+                    powerPreference: "high-performance" 
+                });
+                // Note: Size will be updated in start()
+                this.container.appendChild(this.renderer.domElement);
+
+                // Add Grid
+                const grid = new THREE.GridHelper(20, 20, 0x273149, 0x151C29);
+                this.scene.add(grid);
+            }
+
+            setupLights() {
+                const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+                this.scene.add(ambient);
+
+                const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+                sun.position.set(5, 10, 5);
+                this.scene.add(sun);
+            }
+
+            setupControls() {
+                this.orbit = new OrbitControls(this.camera, this.renderer.domElement);
+                this.orbit.enableDamping = true;
+                this.orbit.dampingFactor = 0.05;
+
+                this.transform = new TransformControls(this.camera, this.renderer.domElement);
+                this.scene.add(this.transform);
+
+                this.transform.addEventListener('dragging-changed', (event) => {
+                    this.orbit.enabled = !event.value;
+                });
+            }
+
             start() {
-                document.getElementById('welcome-screen').classList.add('hidden');
+                document.getElementById('welcome-screen').style.display = 'none';
                 document.getElementById('app-container').classList.remove('hidden');
+                
+                // CRITICAL FIX: The model might not show if resize isn't called after the container is visible
+                this.onWindowResize();
+                
+                // Add initial cube
                 this.addObject('box');
-                this.animation.updateTimelineSize();
             }
 
             addObject(type) {
-                let geo;
-                if (type === 'box') geo = new THREE.BoxGeometry(2,2,2);
-                else if (type === 'sphere') geo = new THREE.SphereGeometry(1.2, 32, 32);
-                else if (type === 'cylinder') geo = new THREE.CylinderGeometry(1, 1, 2, 32);
-                else if (type === 'torus') geo = new THREE.TorusGeometry(1, 0.4, 16, 100);
-                else geo = new THREE.PlaneGeometry(5, 5);
-
-                const mat = new THREE.MeshStandardMaterial({ color: 0x7C83FF, roughness: 0.5, metalness: 0.2 });
+                const geo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+                const mat = new THREE.MeshStandardMaterial({ 
+                    color: 0x7C83FF,
+                    roughness: 0.4,
+                    metalness: 0.2
+                });
                 const mesh = new THREE.Mesh(geo, mat);
-                mesh.userData.id = 'obj_' + Math.random().toString(36).substr(2, 9);
-                mesh.name = type.charAt(0).toUpperCase() + type.slice(1);
+                mesh.name = "Box";
+                mesh.userData.id = Math.random().toString(36).substr(2, 9);
+                
                 this.scene.add(mesh);
                 this.objects.set(mesh.userData.id, mesh);
                 this.selectObject(mesh);
-                this.ui.updateSceneTree();
-            }
-
-            addLight(type) {
-                const light = new THREE.PointLight(0xffffff, 50, 100);
-                light.position.set(2, 5, 2);
-                light.userData.id = 'light_' + Math.random().toString(36).substr(2, 9);
-                light.name = "Point Light";
-                
-                const helper = new THREE.PointLightHelper(light, 0.5);
-                light.add(helper);
-                
-                this.scene.add(light);
-                this.objects.set(light.userData.id, light);
-                this.selectObject(light);
-                this.ui.updateSceneTree();
+                this.updateHierarchy();
             }
 
             selectObject(obj) {
                 this.selected = obj;
                 if (obj) {
                     this.transform.attach(obj);
-                    document.getElementById('prop-controls').classList.remove('hidden');
-                    document.getElementById('prop-empty').classList.add('hidden');
-                    document.getElementById('prop-name').value = obj.name;
                 } else {
                     this.transform.detach();
-                    document.getElementById('prop-controls').classList.add('hidden');
-                    document.getElementById('prop-empty').classList.remove('hidden');
                 }
-                this.ui.updateSceneTree();
+                this.updateHierarchy();
+            }
+
+            setTool(mode) {
+                this.transform.setMode(mode);
+                document.querySelectorAll('.sf-sidebar .sf-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById(`tool-${mode}`).classList.add('active');
             }
 
             deleteSelected() {
@@ -890,320 +428,46 @@
                 this.scene.remove(this.selected);
                 this.objects.delete(this.selected.userData.id);
                 this.selectObject(null);
-                this.ui.updateSceneTree();
             }
 
-            duplicateSelected() {
-                if (!this.selected) return;
-                const clone = this.selected.clone();
-                clone.userData.id = 'obj_' + Math.random().toString(36).substr(2, 9);
-                clone.position.x += 2;
-                this.scene.add(clone);
-                this.objects.set(clone.userData.id, clone);
-                this.selectObject(clone);
-                this.ui.updateSceneTree();
+            updateHierarchy() {
+                const list = document.getElementById('scene-tree');
+                list.innerHTML = '';
+                this.objects.forEach(obj => {
+                    const li = document.createElement('li');
+                    li.className = `flex items-center gap-2 p-1.5 rounded cursor-pointer text-[10px] ${this.selected === obj ? 'bg-[var(--accent)] text-white' : 'hover:bg-[var(--border)] text-[var(--text-secondary)]'}`;
+                    li.innerHTML = `<i data-lucide="box" class="w-3"></i> ${obj.name}`;
+                    li.onclick = () => this.selectObject(obj);
+                    list.appendChild(li);
+                });
+                lucide.createIcons();
             }
 
-            setTool(t) {
-                this.transform.setMode(t);
-                document.querySelectorAll('.sf-sidebar .sf-btn').forEach(b => b.classList.remove('active'));
-                document.getElementById('tool-' + t)?.classList.add('active');
-            }
-
-            setView(v) {
-                const dist = 10;
-                if (v === 'top') { this.camera.position.set(0, dist, 0); }
-                else if (v === 'front') { this.camera.position.set(0, 0, dist); }
-                else if (v === 'right') { this.camera.position.set(dist, 0, 0); }
-                else { this.camera.position.set(dist, dist, dist); }
-                this.camera.lookAt(0,0,0);
-            }
-
-            frameSelected() {
-                if (this.selected) this.controls.target.copy(this.selected.position);
-            }
-
-            resetTransform() {
-                if (this.selected) {
-                    this.selected.position.set(0,0,0);
-                    this.selected.rotation.set(0,0,0);
-                    this.selected.scale.set(1,1,1);
-                }
+            onWindowResize() {
+                const w = this.container.clientWidth;
+                const h = this.container.clientHeight;
+                
+                this.camera.aspect = w / h;
+                this.camera.updateProjectionMatrix();
+                
+                this.renderer.setSize(w, h);
+                this.renderer.setPixelRatio(window.devicePixelRatio);
             }
 
             animate() {
                 requestAnimationFrame(() => this.animate());
-                const delta = this.clock.getDelta();
-                this.controls.update();
-                this.animation.update(delta);
+                this.orbit.update();
                 this.renderer.render(this.scene, this.camera);
-                this.updateStats();
-            }
-
-            updateStats() {
-                let polys = 0, verts = 0;
-                this.objects.forEach(obj => {
-                    if (obj.geometry) {
-                        polys += obj.geometry.index ? obj.geometry.index.count / 3 : obj.geometry.attributes.position.count / 3;
-                        verts += obj.geometry.attributes.position.count;
-                    }
-                });
-                document.getElementById('poly-count').innerText = `Polygons: ${Math.round(polys)}`;
-                document.getElementById('vert-count').innerText = `Vertices: ${verts}`;
-            }
-
-            project = {
-                setDirty() { 
-                    document.getElementById('save-status').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-[var(--warning)]"></span> Modified';
-                },
-                save() {
-                    const data = { objects: [] };
-                    window.app.objects.forEach(o => data.objects.push({ name: o.name, pos: o.position.toArray() }));
-                    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url; a.download = 'project.shapeforge'; a.click();
-                    document.getElementById('save-status').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-[var(--success)]"></span> Saved';
-                },
-                exportGLTF() {
-                    const exporter = new GLTFExporter();
-                    exporter.parse(window.app.scene, (gltf) => {
-                        const blob = new Blob([JSON.stringify(gltf)], { type: 'application/json' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url; a.download = 'scene.gltf'; a.click();
-                    });
-                },
-                newProject() {
-                    if (confirm("Create new project? Current work will be lost.")) location.reload();
-                }
-            }
-
-            ui = {
-                setTab(t) {
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('border-b-2', 'border-[var(--accent)]', 'text-[var(--text-primary)]'));
-                    document.getElementById('tab-' + t).classList.add('border-b-2', 'border-[var(--accent)]', 'text-[var(--text-primary)]');
-                    document.getElementById('panel-scene').classList.add('hidden');
-                    document.getElementById('panel-props').classList.add('hidden');
-                    document.getElementById('panel-materials').classList.add('hidden');
-                    document.getElementById('panel-' + t).classList.remove('hidden');
-                },
-                updateSceneTree() {
-                    const tree = document.getElementById('scene-tree');
-                    tree.innerHTML = '';
-                    window.app.objects.forEach(obj => {
-                        const li = document.createElement('li');
-                        li.className = `flex items-center gap-2 p-2 rounded cursor-pointer text-xs ${window.app.selected === obj ? 'bg-[var(--accent)] text-white' : 'hover:bg-[var(--border)]'}`;
-                        li.innerHTML = `<i data-lucide="${obj instanceof THREE.Light ? 'sun' : 'box'}" class="w-3"></i> ${obj.name}`;
-                        li.onclick = () => window.app.selectObject(obj);
-                        tree.appendChild(li);
-                    });
-                    lucide.createIcons();
-                },
-                toggleInspector() {
-                    document.getElementById('inspector-panel').classList.toggle('open');
-                },
-                updateInspector() {
-                    if (window.app.selected) {
-                        document.getElementById('prop-name').value = window.app.selected.name;
-                    }
-                }
             }
         }
 
         window.app = new ShapeForgeApp();
-
     </script>
+    
+    <footer class="fixed bottom-0 left-0 right-0 pointer-events-none z-[100] flex justify-center pb-1">
+        <div class="text-[8px] text-[var(--text-secondary)] opacity-50 bg-black/40 px-2 py-0.5 rounded-full backdrop-blur-sm">
+            Built: UI Layout & Renderer Link. Next: Core transformation logic.
+        </div>
+    </footer>
 </body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ShapeForge 3D Studio - Phase 9</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-        :root {
-            --bg-primary: #080B12;
-            --bg-secondary: #0E131D;
-            --panel: #151C29;
-            --border: #273149;
-            --text-primary: #F2F5FF;
-            --text-secondary: #8D98AE;
-            --accent: #7C83FF;
-            --accent-glow: rgba(124, 131, 255, 0.4);
-            --danger: #FF4757;
-            --warning: #FFB86C;
-            --success: #50FA7B;
-            --timeline-height: 200px;
-        }
-
-        * {
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            box-sizing: border-box;
-            user-select: none;
-        }
-
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-            overscroll-behavior: none;
-            touch-action: manipulation;
-        }
-
-        input, textarea, select {
-            user-select: text;
-            -webkit-user-select: text;
-        }
-
-        /* SCROLLBARS */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg-primary); }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
-
-        .sf-panel {
-            background: var(--panel);
-            border: 1px solid var(--border);
-        }
-
-        .sf-btn {
-            height: 40px;
-            min-width: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            transition: all 0.15s ease;
-            cursor: pointer;
-            color: var(--text-secondary);
-        }
-        .sf-btn:hover:not(:disabled) { background: var(--border); color: var(--text-primary); }
-        .sf-btn:active:not(:disabled) { transform: scale(0.96); }
-        .sf-btn.active { background: var(--accent); color: white; }
-        .sf-btn:disabled { opacity: 0.2; cursor: not-allowed; }
-
-        .sf-accent-btn { background: var(--accent); color: white; border: none; }
-        .sf-accent-btn:hover { background: #6b72f5; color: white; }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            min-width: 200px;
-            z-index: 1000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            padding: 4px;
-        }
-        
-        .menu-item:hover > .dropdown-menu { display: block; }
-        .menu-btn {
-            width: 100%;
-            text-align: left;
-            padding: 8px 12px;
-            font-size: 12px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: var(--text-secondary);
-        }
-        .menu-btn:hover { background: var(--border); color: var(--text-primary); }
-
-        .sf-sidebar { width: 56px; flex-shrink: 0; }
-        .sf-inspector { width: 300px; flex-shrink: 0; }
-
-        @media (max-width: 768px) {
-            .sf-sidebar {
-                width: 100%;
-                height: 56px;
-                position: fixed;
-                bottom: var(--timeline-height);
-                left: 0;
-                z-index: 50;
-                flex-direction: row !important;
-                justify-content: space-around;
-                padding: 0;
-            }
-            .sf-inspector {
-                position: fixed;
-                right: -300px;
-                top: 56px;
-                bottom: calc(56px + var(--timeline-height));
-                transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 100;
-            }
-            .sf-inspector.open { right: 0; }
-        }
-
-        #viewport-container {
-            flex-grow: 1;
-            position: relative;
-            background: #05070a;
-            touch-action: none;
-        }
-
-        .mode-selector {
-            position: absolute;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            background: rgba(14, 19, 29, 0.9);
-            border: 1px solid var(--border);
-            padding: 4px;
-            border-radius: 8px;
-            backdrop-filter: blur(12px);
-            z-index: 40;
-        }
-
-        .mode-btn {
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            transition: 0.2s;
-        }
-        .mode-btn.active { background: var(--accent); color: white; }
-
-        .sf-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            z-index: 2000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(6px);
-        }
-        .sf-modal.open { display: flex; }
-
-        #timeline-panel {
-            height: var(--timeline-height);
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            transition: height 0.3
+</html></html>
