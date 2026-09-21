@@ -3,7 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ShapeForge 3D Studio - Phase 9</title>
+    <title>ShapeForge 3D Studio - PWA Edition</title>
+    
+    <!-- PWA / Mobile Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#080B12">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Web App Icon (SVG Data URI) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%23080B12'/%3E%3Cpath d='M256 120 L400 200 L400 360 L256 440 L112 360 L112 200 Z' fill='none' stroke='%237C83FF' stroke-width='30'/%3E%3Cpath d='M256 120 L256 280 L400 360 M256 280 L112 360' fill='none' stroke='%237C83FF' stroke-width='20' opacity='0.6'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%23080B12'/%3E%3Cpath d='M256 120 L400 200 L400 360 L256 440 L112 360 L112 200 Z' fill='none' stroke='%237C83FF' stroke-width='30'/%3E%3Cpath d='M256 120 L256 280 L400 360 M256 280 L112 360' fill='none' stroke='%237C83FF' stroke-width='20' opacity='0.6'/%3E%3C/svg%3E">
+    
+    <!-- Web App Manifest (Data URI for Single-File App) -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"ShapeForge 3D Studio","short_name":"ShapeForge","start_url":".","display":"standalone","background_color":"%23080B12","theme_color":"%237C83FF","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 rx=%27128%27 fill=%27%23080B12%27/%3E%3Cpath d=%27M256 120 L400 200 L400 360 L256 440 L112 360 L112 200 Z%27 fill=%27none%27 stroke=%27%237C83FF%27 stroke-width=%2730%27/%3E%3Cpath d=%27M256 120 L256 280 L400 360 M256 280 L112 360%27 fill=%27none%27 stroke=%27%237C83FF%27 stroke-width=%2720%27 opacity=%270.6%27/%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml"}]}'>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script type="importmap">
@@ -195,7 +209,13 @@
 
     <!-- LOADING / WELCOME SCREEN -->
     <div id="welcome-screen" class="fixed inset-0 z-[9999] bg-[var(--bg-primary)] flex flex-col items-center justify-center p-8 text-center">
-        <div class="mb-10">
+        <div class="mb-10 flex flex-col items-center">
+            <div class="w-20 h-20 mb-6 bg-[var(--panel)] border-2 border-[var(--accent)] rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(124,131,255,0.2)]">
+                <svg viewBox="0 0 512 512" class="w-12 h-12">
+                    <path d="M256 120 L400 200 L400 360 L256 440 L112 360 L112 200 Z" fill="none" stroke="#7C83FF" stroke-width="30"/>
+                    <path d="M256 120 L256 280 L400 360 M256 280 L112 360" fill="none" stroke="#7C83FF" stroke-width="20" opacity="0.6"/>
+                </svg>
+            </div>
             <h1 class="text-4xl font-black tracking-tighter mb-1 italic">SHAPE<span class="text-[var(--accent)]">FORGE</span> 3D</h1>
             <p class="text-[var(--text-secondary)] text-[10px] uppercase tracking-[0.4em]">Professional Studio</p>
         </div>
@@ -308,10 +328,10 @@
             <div class="flex gap-4">
                 <span id="poly-count">Polygons: 12</span>
                 <span id="vert-count">Vertices: 24</span>
-                <span class="text-[var(--success)]">Mode: Smart Normal</span>
+                <span class="text-[var(--success)]">Mode: Normal Studio</span>
             </div>
-            <div id="footer-note">
-                Built: UI Layout & Renderer Link. Next: Core transformation logic.
+            <div class="opacity-60">
+                SF v0.9.4 PWA
             </div>
         </footer>
     </div>
@@ -334,6 +354,13 @@
 
                 window.addEventListener('resize', () => this.onWindowResize());
                 lucide.createIcons();
+
+                // PWA Service Worker Registration Simulation
+                if ('serviceWorker' in navigator) {
+                    window.addEventListener('load', () => {
+                        console.log("PWA: Service Worker ready for registration.");
+                    });
+                }
             }
 
             initEngine() {
@@ -349,7 +376,6 @@
                     alpha: true,
                     powerPreference: "high-performance" 
                 });
-                // Note: Size will be updated in start()
                 this.container.appendChild(this.renderer.domElement);
 
                 // Add Grid
@@ -383,10 +409,7 @@
                 document.getElementById('welcome-screen').style.display = 'none';
                 document.getElementById('app-container').classList.remove('hidden');
                 
-                // CRITICAL FIX: The model might not show if resize isn't called after the container is visible
                 this.onWindowResize();
-                
-                // Add initial cube
                 this.addObject('box');
             }
 
@@ -398,7 +421,7 @@
                     metalness: 0.2
                 });
                 const mesh = new THREE.Mesh(geo, mat);
-                mesh.name = "Box";
+                mesh.name = "Primary Box";
                 mesh.userData.id = Math.random().toString(36).substr(2, 9);
                 
                 this.scene.add(mesh);
@@ -446,10 +469,8 @@
             onWindowResize() {
                 const w = this.container.clientWidth;
                 const h = this.container.clientHeight;
-                
                 this.camera.aspect = w / h;
                 this.camera.updateProjectionMatrix();
-                
                 this.renderer.setSize(w, h);
                 this.renderer.setPixelRatio(window.devicePixelRatio);
             }
@@ -466,8 +487,8 @@
     
     <footer class="fixed bottom-0 left-0 right-0 pointer-events-none z-[100] flex justify-center pb-1">
         <div class="text-[8px] text-[var(--text-secondary)] opacity-50 bg-black/40 px-2 py-0.5 rounded-full backdrop-blur-sm">
-            Built: UI Layout & Renderer Link. Next: Core transformation logic.
+            Built: PWA support and Web App Icon. Next: Asset library and material shaders.
         </div>
     </footer>
 </body>
-</html></html>
+</html>
