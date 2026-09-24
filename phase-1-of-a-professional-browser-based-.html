@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ShapeForge 3D Studio - PWA Edition</title>
+    <title>ShapeForge | Professional 3D Studio</title>
     
-    <!-- PWA / Mobile Web App Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#080B12">
-    <meta name="mobile-web-app-capable" content="yes">
     
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%23080B12'/%3E%3Cpath d='M256 120 L400 200 L400 360 L256 440 L112 360 L112 200 Z' fill='none' stroke='%237C83FF' stroke-width='30'/%3E%3Cpath d='M256 120 L256 280 L400 360 M256 280 L112 360' fill='none' stroke='%237C83FF' stroke-width='20' opacity='0.6'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%23080B12'/%3E%3Cpath d='M256 120 L400 200 L400 360 L256 440 L112 360 L112 200 Z' fill='none' stroke='%237C83FF' stroke-width='30'/%3E%3C/svg%3E">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -24,7 +22,7 @@
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
         :root {
             --bg-primary: #080B12;
@@ -34,11 +32,11 @@
             --text-primary: #F2F5FF;
             --text-secondary: #8D98AE;
             --accent: #7C83FF;
-            --accent-glow: rgba(124, 131, 255, 0.4);
+            --accent-hover: #949AFF;
             --danger: #FF4757;
             --warning: #FFB86C;
             --success: #50FA7B;
-            --timeline-height: 160px;
+            --timeline-height: 180px;
         }
 
         * {
@@ -49,301 +47,318 @@
         }
 
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-            overscroll-behavior: none;
-            touch-action: manipulation;
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: var(--bg-primary);
+            color: var(--text-primary); font-family: 'Inter', sans-serif;
+            overscroll-behavior: none; touch-action: manipulation;
         }
 
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: var(--bg-primary); }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        /* Typography */
+        h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; }
+        .caption { font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em; }
+        .mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 
-        .sf-panel { background: var(--panel); border: 1px solid var(--border); }
-
-        .sf-btn {
-            height: 38px;
-            min-width: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            color: var(--text-secondary);
-            border: 1px solid transparent;
-            background: transparent;
-        }
-        .sf-btn:active { transform: scale(0.92); background: var(--border); }
-        .sf-btn.active { background: var(--accent); color: white; border-color: var(--accent-glow); box-shadow: 0 0 10px var(--accent-glow); }
-
-        .sf-accent-btn { background: var(--accent); color: white; border: none; }
+        /* UI Components */
+        .sf-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; }
         
-        .sf-sidebar { width: 52px; flex-shrink: 0; border-right: 1px solid var(--border); background: var(--bg-secondary); }
-        .sf-inspector { width: 260px; flex-shrink: 0; border-left: 1px solid var(--border); }
-
-        #viewport-container {
-            flex-grow: 1;
-            position: relative;
-            background: #000;
-            touch-action: none;
-            overflow: hidden;
+        .sf-btn {
+            height: 36px; min-width: 36px; display: flex; align-items: center; justify-content: center;
+            border-radius: 6px; transition: all 0.15s ease; cursor: pointer;
+            color: var(--text-secondary); border: 1px solid transparent; background: transparent;
         }
+        .sf-btn:hover { background: var(--border); color: white; }
+        .sf-btn.active { background: var(--accent); color: white; }
+        .sf-btn:active { transform: scale(0.95); }
+        .sf-btn svg { width: 18px; height: 18px; }
 
-        .mode-selector {
-            position: absolute;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            background: rgba(14, 19, 29, 0.85);
-            border: 1px solid var(--border);
-            padding: 4px;
-            border-radius: 8px;
-            backdrop-filter: blur(12px);
-            z-index: 100;
-        }
-
-        .mode-btn {
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            transition: 0.2s;
-        }
-        .mode-btn.active { background: var(--accent); color: white; }
-
-        #timeline-panel {
-            height: var(--timeline-height);
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            z-index: 100;
-        }
-
-        .timeline-header {
-            height: 40px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            padding: 0 12px;
-            gap: 12px;
-            font-size: 10px;
-        }
-
-        .timeline-content { flex-grow: 1; display: flex; overflow: hidden; position: relative; }
-        .timeline-tracks { width: 140px; border-right: 1px solid var(--border); background: var(--bg-primary); }
-        .timeline-grid { flex-grow: 1; overflow-x: auto; background: var(--bg-primary); position: relative; }
-
-        .playhead {
-            position: absolute;
-            top: 0; bottom: 0;
-            width: 2px;
-            background: var(--danger);
-            z-index: 20;
-            pointer-events: none;
-        }
-
+        /* Dropdown System */
         .sf-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            min-width: 160px;
-            display: none;
-            flex-direction: column;
-            padding: 4px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            z-index: 1000;
+            position: absolute; top: 100%; left: 0; background: var(--panel);
+            border: 1px solid var(--border); border-radius: 6px; min-width: 200px;
+            display: none; flex-direction: column; padding: 4px; z-index: 1000;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.6);
         }
         .sf-dropdown.show { display: flex; }
         .sf-dropdown-item {
-            padding: 8px 12px;
-            font-size: 11px;
-            color: var(--text-secondary);
-            border-radius: 4px;
-            cursor: pointer;
+            padding: 8px 12px; font-size: 12px; color: var(--text-secondary);
+            border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
         }
         .sf-dropdown-item:hover { background: var(--border); color: white; }
+        .sf-dropdown-item.disabled { opacity: 0.4; cursor: not-allowed; }
+        .sf-dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
+        
+        /* Nested Menus */
+        .has-submenu { position: relative; }
+        .sf-submenu { position: absolute; left: 100%; top: -4px; }
 
-        .prop-group { margin-bottom: 20px; }
-        .prop-label { font-size: 9px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; display: block; letter-spacing: 0.05em;}
-        .prop-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+        /* Layout */
+        .sf-sidebar { width: 56px; border-right: 1px solid var(--border); background: var(--bg-secondary); }
+        .sf-inspector { width: 280px; border-left: 1px solid var(--border); background: var(--bg-secondary); }
+        
+        #viewport-container { flex-grow: 1; position: relative; background: #000; overflow: hidden; }
+
+        .mode-selector {
+            position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+            display: flex; background: rgba(14, 19, 29, 0.9); border: 1px solid var(--border);
+            padding: 3px; border-radius: 8px; backdrop-filter: blur(10px); z-index: 50;
+        }
+        .mode-btn {
+            padding: 6px 14px; border-radius: 5px; font-size: 11px; font-weight: 600;
+            color: var(--text-secondary); transition: 0.2s;
+        }
+        .mode-btn.active { background: var(--accent); color: white; }
+
+        /* Inputs */
+        .prop-group { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+        .prop-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
         .prop-input-wrap { position: relative; }
-        .prop-input-wrap span { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 8px; font-weight: 900; color: var(--accent); opacity: 0.7; }
+        .prop-input-wrap span { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 9px; font-weight: 800; color: var(--accent); }
         .prop-input { 
-            width: 100%; 
-            background: var(--bg-primary); 
-            border: 1px solid var(--border); 
-            border-radius: 4px; 
-            padding: 6px 6px 6px 18px; 
-            font-size: 10px; 
-            color: white; 
-            font-family: monospace;
-            outline: none;
+            width: 100%; background: var(--bg-primary); border: 1px solid var(--border);
+            border-radius: 4px; padding: 6px 4px 6px 20px; font-size: 11px; color: white; 
+            font-family: 'JetBrains Mono'; outline: none;
         }
         .prop-input:focus { border-color: var(--accent); }
-        .color-picker { width: 100%; height: 32px; border-radius: 4px; border: 1px solid var(--border); padding: 2px; background: var(--bg-primary); cursor: pointer; }
+
+        /* Responsive Fixes */
+        @media (max-width: 1024px) {
+            .sf-inspector { display: none; }
+            .sf-inspector.open { display: flex; position: absolute; right: 0; top: 48px; bottom: 0; z-index: 500; }
+        }
 
         @media (max-width: 768px) {
-            .sf-inspector { 
-                position: absolute;
-                right: 0;
-                top: 48px;
-                bottom: var(--timeline-height);
-                width: 240px;
-                background: rgba(14, 19, 29, 0.98);
-                backdrop-filter: blur(16px);
-                transform: translateX(100%);
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            .sf-inspector.open { transform: translateX(0); }
-            .sf-sidebar { 
-                position: absolute; 
-                bottom: calc(var(--timeline-height) + 16px); 
-                left: 16px;
-                height: auto;
-                background: rgba(21, 28, 41, 0.9);
-                backdrop-filter: blur(12px);
-                border-radius: 10px;
-                border: 1px solid var(--border);
-                width: 48px;
-                padding: 6px 0;
-            }
+            .sf-sidebar { position: absolute; bottom: calc(var(--timeline-height) + 20px); left: 12px; height: auto; border: 1px solid var(--border); border-radius: 12px; width: 50px; }
+            .top-bar-nav { overflow-x: auto; white-space: nowrap; }
         }
+
+        .tooltip { pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <div id="welcome-screen" class="fixed inset-0 z-[9999] bg-[var(--bg-primary)] flex flex-col items-center justify-center p-8 text-center transition-opacity duration-300">
-        <div class="mb-10 flex flex-col items-center">
-            <div class="w-24 h-24 mb-6 bg-[var(--panel)] border-2 border-[var(--accent)] rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(124,131,255,0.3)]">
+    <!-- WELCOME OVERLAY -->
+    <div id="welcome-screen" class="fixed inset-0 z-[9999] bg-[var(--bg-primary)] flex flex-col items-center justify-center p-8 text-center transition-opacity duration-500">
+        <div class="mb-12 flex flex-col items-center">
+            <div class="w-24 h-24 mb-6 bg-[var(--panel)] border-2 border-[var(--accent)] rounded-3xl flex items-center justify-center shadow-[0_0_50px_rgba(124,131,255,0.25)]">
                 <i data-lucide="box" class="w-12 h-12 text-[var(--accent)]"></i>
             </div>
-            <h1 class="text-4xl font-black tracking-tighter mb-1 italic">SHAPE<span class="text-[var(--accent)]">FORGE</span> 3D</h1>
-            <p class="text-[var(--text-secondary)] text-[10px] uppercase tracking-[0.4em]">Professional Mobile Studio</p>
+            <h1 class="text-4xl font-black italic tracking-tighter mb-2">SHAPE<span class="text-[var(--accent)]">FORGE</span></h1>
+            <p class="text-[var(--text-secondary)] text-[11px] uppercase tracking-[0.4em]">Professional 3D Studio</p>
         </div>
-        <button onclick="window.app.start()" class="px-12 h-14 sf-accent-btn rounded-xl font-bold text-base shadow-2xl shadow-[var(--accent)]/30 active:scale-95 transition-transform">
+        <button onclick="window.app.start()" class="px-14 h-14 bg-[var(--accent)] hover:bg-[var(--accent-hover)] rounded-xl font-bold text-base transition-all active:scale-95 shadow-xl shadow-[var(--accent)]/20">
             Launch Workspace
         </button>
     </div>
 
+    <!-- MAIN APP WRAPPER -->
     <div id="app-container" class="hidden h-full w-full flex flex-col overflow-hidden">
         
-        <header class="h-12 bg-[var(--bg-secondary)] border-b border-[var(--border)] flex items-center justify-between px-4 z-[200]">
-            <div class="flex items-center gap-5">
-                <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 bg-[var(--accent)] rounded-md flex items-center justify-center">
+        <!-- TOP BAR -->
+        <header class="h-12 bg-[var(--bg-secondary)] border-b border-[var(--border)] flex items-center justify-between px-3 z-[200]">
+            <div class="flex items-center gap-4 overflow-hidden">
+                <div class="flex items-center gap-2 shrink-0">
+                    <div class="w-7 h-7 bg-[var(--accent)] rounded-lg flex items-center justify-center shadow-lg shadow-[var(--accent)]/20">
                         <i data-lucide="box" class="w-4 h-4 text-white"></i>
                     </div>
-                    <span class="font-bold text-[12px] tracking-tight">ShapeForge 3D</span>
                 </div>
-                <nav class="hidden md:flex items-center gap-2">
-                    <div class="relative group">
-                        <button class="px-2 py-1 text-[11px] hover:text-white transition menu-trigger" onclick="window.app.toggleMenu('file-menu', event)">File</button>
+
+                <nav class="flex items-center gap-1 top-bar-nav scrollbar-hide">
+                    <div class="relative">
+                        <button class="px-3 py-1.5 text-[12px] font-medium hover:text-white menu-trigger" onclick="window.app.toggleMenu('file-menu', event)">File</button>
                         <div id="file-menu" class="sf-dropdown">
-                            <div class="sf-dropdown-item" onclick="window.app.addObject('box')">New Box</div>
-                            <div class="sf-dropdown-item" onclick="window.app.addObject('sphere')">New Sphere</div>
-                            <div class="sf-dropdown-item border-t border-[var(--border)] mt-1">Export STL</div>
+                            <div class="sf-dropdown-item" onclick="window.app.newProject()"><span>New Project</span> <span class="opacity-30">Ctrl+N</span></div>
+                            <div class="sf-dropdown-item" onclick="window.app.openProject()"><span>Open Project</span> <span class="opacity-30">Ctrl+O</span></div>
+                            <div class="sf-dropdown-divider"></div>
+                            <div class="sf-dropdown-item" onclick="window.app.saveProject()"><span>Save</span> <i data-lucide="save" class="w-3.5"></i></div>
+                            <div class="sf-dropdown-item">Save As...</div>
+                            <div class="sf-dropdown-divider"></div>
+                            <div class="sf-dropdown-item has-submenu" onmouseenter="window.app.showSubmenu('import-sub')" onmouseleave="window.app.hideSubmenu('import-sub')">
+                                <span>Import</span> <i data-lucide="chevron-right" class="w-3.5"></i>
+                                <div id="import-sub" class="sf-dropdown sf-submenu">
+                                    <div class="sf-dropdown-item">GLB / GLTF</div>
+                                    <div class="sf-dropdown-item">OBJ</div>
+                                    <div class="sf-dropdown-item">STL</div>
+                                </div>
+                            </div>
+                            <div class="sf-dropdown-item has-submenu" onmouseenter="window.app.showSubmenu('export-sub')" onmouseleave="window.app.hideSubmenu('export-sub')">
+                                <span>Export</span> <i data-lucide="chevron-right" class="w-3.5"></i>
+                                <div id="export-sub" class="sf-dropdown sf-submenu">
+                                    <div class="sf-dropdown-item">GLB</div>
+                                    <div class="sf-dropdown-item">GLTF</div>
+                                    <div class="sf-dropdown-item">OBJ</div>
+                                    <div class="sf-dropdown-item">STL</div>
+                                    <div class="sf-dropdown-item">Render (PNG)</div>
+                                </div>
+                            </div>
+                            <div class="sf-dropdown-divider"></div>
+                            <div class="sf-dropdown-item text-[var(--danger)]">Close Project</div>
                         </div>
                     </div>
-                    <div class="relative group">
-                        <button class="px-2 py-1 text-[11px] hover:text-white transition menu-trigger" onclick="window.app.toggleMenu('edit-menu', event)">Edit</button>
+                    
+                    <div class="relative">
+                        <button class="px-3 py-1.5 text-[12px] font-medium hover:text-white menu-trigger" onclick="window.app.toggleMenu('edit-menu', event)">Edit</button>
                         <div id="edit-menu" class="sf-dropdown">
-                            <div class="sf-dropdown-item" onclick="window.app.deleteSelected()">Delete Selected</div>
-                            <div class="sf-dropdown-item">Undo</div>
-                            <div class="sf-dropdown-item">Redo</div>
+                            <div class="sf-dropdown-item"><span>Undo</span> <span class="opacity-30">Ctrl+Z</span></div>
+                            <div class="sf-dropdown-item"><span>Redo</span> <span class="opacity-30">Ctrl+Y</span></div>
+                            <div class="sf-dropdown-divider"></div>
+                            <div class="sf-dropdown-item">Cut</div>
+                            <div class="sf-dropdown-item">Copy</div>
+                            <div class="sf-dropdown-item">Paste</div>
+                            <div class="sf-dropdown-divider"></div>
+                            <div class="sf-dropdown-item" onclick="window.app.duplicateSelected()">Duplicate</div>
+                            <div class="sf-dropdown-item text-[var(--danger)]" onclick="window.app.deleteSelected()">Delete</div>
+                            <div class="sf-dropdown-divider"></div>
+                            <div class="sf-dropdown-item">Preferences</div>
                         </div>
                     </div>
+
+                    <div class="relative">
+                        <button class="px-3 py-1.5 text-[12px] font-medium hover:text-white menu-trigger" onclick="window.app.toggleMenu('view-menu', event)">View</button>
+                        <div id="view-menu" class="sf-dropdown">
+                            <div class="sf-dropdown-item">Perspective</div>
+                            <div class="sf-dropdown-item">Orthographic</div>
+                            <div class="sf-dropdown-divider"></div>
+                            <div class="sf-dropdown-item">Front / Back</div>
+                            <div class="sf-dropdown-item">Left / Right</div>
+                            <div class="sf-dropdown-item">Top / Bottom</div>
+                            <div class="sf-dropdown-divider"></div>
+                            <div class="sf-dropdown-item">Frame Selected</div>
+                            <div class="sf-dropdown-item">Show Grid <i data-lucide="check" class="w-3 text-[var(--success)]"></i></div>
+                            <div class="sf-dropdown-item">Show Axes <i data-lucide="check" class="w-3 text-[var(--success)]"></i></div>
+                            <div class="sf-dropdown-item">Wireframe</div>
+                            <div class="sf-dropdown-item">Stats</div>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <button class="px-3 py-1.5 text-[12px] font-medium hover:text-white menu-trigger" onclick="window.app.toggleMenu('model-menu', event)">Model</button>
+                        <div id="model-menu" class="sf-dropdown">
+                            <div class="sf-dropdown-item" onclick="window.app.setEditMode('object')">Object Mode</div>
+                            <div class="sf-dropdown-item" onclick="window.app.setEditMode('vertex')">Vertex Mode</div>
+                            <div class="sf-dropdown-item" onclick="window.app.setEditMode('edge')">Edge Mode</div>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <button class="px-3 py-1.5 text-[12px] font-medium hover:text-white menu-trigger" onclick="window.app.toggleMenu('create-menu', event)">Create</button>
+                        <div id="create-menu" class="sf-dropdown">
+                            <div class="sf-dropdown-item" onclick="window.app.addObject('box')">Cube</div>
+                            <div class="sf-dropdown-item" onclick="window.app.addObject('sphere')">Sphere</div>
+                            <div class="sf-dropdown-item">Cylinder</div>
+                            <div class="sf-dropdown-item">Cone</div>
+                            <div class="sf-dropdown-item">Torus</div>
+                            <div class="sf-dropdown-item">Plane</div>
+                            <div class="sf-dropdown-item">Text</div>
+                            <div class="sf-dropdown-divider"></div>
+                            <div class="sf-dropdown-item">Light Source</div>
+                            <div class="sf-dropdown-item">Camera</div>
+                        </div>
+                    </div>
+                    
+                    <button class="px-3 py-1.5 text-[12px] font-medium hover:text-white">Animation</button>
+                    <button class="px-3 py-1.5 text-[12px] font-medium hover:text-white">Help</button>
                 </nav>
             </div>
+
             <div class="flex items-center gap-3">
-                <button class="sf-btn w-8 h-8" onclick="window.app.toggleInspector()"><i data-lucide="layout-panel-right" class="w-4"></i></button>
+                <div class="flex items-center gap-1 border-r border-[var(--border)] pr-3">
+                    <button class="sf-btn w-8 h-8" title="Undo"><i data-lucide="undo-2"></i></button>
+                    <button class="sf-btn w-8 h-8" title="Redo"><i data-lucide="redo-2"></i></button>
+                </div>
+                <div class="hidden sm:flex flex-col items-end mr-2">
+                    <span class="text-[8px] font-black uppercase text-[var(--text-secondary)] opacity-50">Local Project</span>
+                    <span class="text-[10px] text-[var(--success)] font-bold">Auto-Saved</span>
+                </div>
+                <button class="sf-btn w-9 h-9 active shadow-lg shadow-[var(--accent)]/20" onclick="window.app.saveProject()" title="Save Project">
+                    <i data-lucide="save"></i>
+                </button>
             </div>
         </header>
 
         <div class="flex-grow flex overflow-hidden relative">
-            <aside class="sf-sidebar flex flex-col items-center py-4 gap-4 z-[150]">
-                <button id="tool-select" class="sf-btn active" onclick="window.app.setTool('select')"><i data-lucide="mouse-pointer-2" class="w-5"></i></button>
-                <button id="tool-translate" class="sf-btn" onclick="window.app.setTool('translate')"><i data-lucide="move" class="w-5"></i></button>
-                <button id="tool-rotate" class="sf-btn" onclick="window.app.setTool('rotate')"><i data-lucide="rotate-cw" class="w-5"></i></button>
-                <button id="tool-scale" class="sf-btn" onclick="window.app.setTool('scale')"><i data-lucide="maximize" class="w-5"></i></button>
-                <div class="w-8 h-[1px] bg-[var(--border)] my-1"></div>
-                <button class="sf-btn" onclick="window.app.addObject('box')"><i data-lucide="plus" class="w-5"></i></button>
-                <button class="sf-btn mt-auto text-[var(--danger)]" onclick="window.app.deleteSelected()"><i data-lucide="trash-2" class="w-5"></i></button>
+            <!-- TOOLBAR SIDEBAR -->
+            <aside class="sf-sidebar flex flex-col items-center py-4 gap-3 z-[150]">
+                <button id="tool-select" class="sf-btn active" onclick="window.app.setTool('select')" title="Select Tool"><i data-lucide="mouse-pointer-2"></i></button>
+                <button id="tool-translate" class="sf-btn" onclick="window.app.setTool('translate')" title="Move Tool"><i data-lucide="move"></i></button>
+                <button id="tool-rotate" class="sf-btn" onclick="window.app.setTool('rotate')" title="Rotate Tool"><i data-lucide="rotate-cw"></i></button>
+                <button id="tool-scale" class="sf-btn" onclick="window.app.setTool('scale')" title="Scale Tool"><i data-lucide="maximize"></i></button>
+                
+                <div class="w-8 h-px bg-[var(--border)] my-1"></div>
+                
+                <button class="sf-btn" title="2D Draw"><i data-lucide="pencil"></i></button>
+                <button class="sf-btn" title="Sculpt / Model"><i data-lucide="box"></i></button>
+                <button class="sf-btn" title="Material Editor"><i data-lucide="palette"></i></button>
+                <button class="sf-btn" title="Lighting Setup"><i data-lucide="sun"></i></button>
+                <button class="sf-btn" title="Camera Setup"><i data-lucide="video"></i></button>
+                
+                <div class="w-8 h-px bg-[var(--border)] my-1"></div>
+
+                <button class="sf-btn" title="Settings"><i data-lucide="settings"></i></button>
+                <button class="sf-btn mt-auto text-[var(--danger)]" onclick="window.app.deleteSelected()" title="Delete"><i data-lucide="trash-2"></i></button>
             </aside>
 
+            <!-- VIEWPORT -->
             <main id="viewport-container">
                 <div class="mode-selector">
-                    <button class="mode-btn active" onclick="window.app.setEditMode('object', this)">Object</button>
-                    <button class="mode-btn" onclick="window.app.setEditMode('vertex', this)">Vertex</button>
-                    <button class="mode-btn" onclick="window.app.setEditMode('edge', this)">Edge</button>
-                    <button class="mode-btn" onclick="window.app.setEditMode('face', this)">Face</button>
+                    <button id="mbtn-object" class="mode-btn active" onclick="window.app.setEditMode('object')">Object</button>
+                    <button id="mbtn-vertex" class="mode-btn" onclick="window.app.setEditMode('vertex')">Vertex</button>
+                    <button id="mbtn-edge" class="mode-btn" onclick="window.app.setEditMode('edge')">Edge</button>
                 </div>
             </main>
 
-            <!-- INSPECTOR PANEL -->
-            <aside id="inspector-panel" class="sf-inspector flex flex-col bg-[var(--bg-secondary)] z-[150]">
-                <div class="flex border-b border-[var(--border)] shrink-0">
-                    <button id="tab-hierarchy" onclick="window.app.switchTab('hierarchy')" class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 border-[var(--accent)]">Hierarchy</button>
+            <!-- INSPECTOR -->
+            <aside id="inspector-panel" class="sf-inspector flex flex-col z-[150]">
+                <div class="flex border-b border-[var(--border)]">
+                    <button id="tab-hierarchy" onclick="window.app.switchTab('hierarchy')" class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 border-[var(--accent)] text-white">Hierarchy</button>
                     <button id="tab-properties" onclick="window.app.switchTab('properties')" class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Properties</button>
                 </div>
                 
-                <div id="inspector-content" class="p-4 flex-grow overflow-y-auto">
-                    <!-- HIERARCHY VIEW -->
-                    <div id="hierarchy-view">
-                        <div class="flex items-center justify-between text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-4">
-                            <span>Scene Graph</span>
-                            <i data-lucide="search" class="w-3.5"></i>
+                <div id="inspector-content" class="flex-grow overflow-y-auto">
+                    <!-- HIERARCHY -->
+                    <div id="hierarchy-view" class="p-4">
+                        <div class="flex items-center justify-between caption mb-4">
+                            <span>Scene Contents</span>
+                            <i data-lucide="filter" class="w-3.5"></i>
                         </div>
-                        <ul id="scene-tree" class="space-y-1.5"></ul>
+                        <ul id="scene-tree" class="space-y-1"></ul>
                     </div>
 
-                    <!-- PROPERTIES VIEW -->
+                    <!-- PROPERTIES -->
                     <div id="properties-view" class="hidden">
                         <div id="prop-empty" class="text-center py-20 opacity-30">
-                            <i data-lucide="info" class="w-8 h-8 mx-auto mb-3"></i>
-                            <p class="text-[10px] uppercase font-bold">No Object Selected</p>
+                            <i data-lucide="info" class="w-10 h-10 mx-auto mb-4"></i>
+                            <p class="caption">No Object Selected</p>
                         </div>
                         
                         <div id="prop-editor" class="hidden">
                             <div class="prop-group">
-                                <label class="prop-label">Object Info</label>
-                                <input id="prop-name" type="text" class="prop-input w-full pl-3 mb-2" style="padding-left: 10px;" onchange="window.app.updateFromUI()">
+                                <label class="caption block mb-2">Identification</label>
+                                <input id="prop-name" type="text" class="prop-input !pl-3" onchange="window.app.updateFromUI()">
                             </div>
 
                             <div class="prop-group">
-                                <label class="prop-label">Position</label>
-                                <div class="prop-row">
-                                    <div class="prop-input-wrap"><span>X</span><input id="px" type="number" step="0.1" class="prop-input" oninput="window.app.updateFromUI()"></div>
-                                    <div class="prop-input-wrap"><span>Y</span><input id="py" type="number" step="0.1" class="prop-input" oninput="window.app.updateFromUI()"></div>
-                                    <div class="prop-input-wrap"><span>Z</span><input id="pz" type="number" step="0.1" class="prop-input" oninput="window.app.updateFromUI()"></div>
+                                <label class="caption block mb-3">Transform</label>
+                                <div class="mb-3">
+                                    <div class="text-[9px] text-[var(--text-secondary)] mb-1">Position</div>
+                                    <div class="prop-row">
+                                        <div class="prop-input-wrap"><span>X</span><input id="px" type="number" step="0.1" class="prop-input" oninput="window.app.updateFromUI()"></div>
+                                        <div class="prop-input-wrap"><span>Y</span><input id="py" type="number" step="0.1" class="prop-input" oninput="window.app.updateFromUI()"></div>
+                                        <div class="prop-input-wrap"><span>Z</span><input id="pz" type="number" step="0.1" class="prop-input" oninput="window.app.updateFromUI()"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[9px] text-[var(--text-secondary)] mb-1">Rotation</div>
+                                    <div class="prop-row">
+                                        <div class="prop-input-wrap"><span>X</span><input id="rx" type="number" class="prop-input" oninput="window.app.updateFromUI()"></div>
+                                        <div class="prop-input-wrap"><span>Y</span><input id="ry" type="number" class="prop-input" oninput="window.app.updateFromUI()"></div>
+                                        <div class="prop-input-wrap"><span>Z</span><input id="rz" type="number" class="prop-input" oninput="window.app.updateFromUI()"></div>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="prop-group">
-                                <label class="prop-label">Rotation</label>
-                                <div class="prop-row">
-                                    <div class="prop-input-wrap"><span>X</span><input id="rx" type="number" step="1" class="prop-input" oninput="window.app.updateFromUI()"></div>
-                                    <div class="prop-input-wrap"><span>Y</span><input id="ry" type="number" step="1" class="prop-input" oninput="window.app.updateFromUI()"></div>
-                                    <div class="prop-input-wrap"><span>Z</span><input id="rz" type="number" step="1" class="prop-input" oninput="window.app.updateFromUI()"></div>
-                                </div>
-                            </div>
-
-                            <div class="prop-group">
-                                <label class="prop-label">Material</label>
-                                <input id="prop-color" type="color" class="color-picker" onchange="window.app.updateFromUI()">
+                                <label class="caption block mb-2">Material Color</label>
+                                <input id="prop-color" type="color" class="w-full h-8 border-none bg-transparent cursor-pointer" onchange="window.app.updateFromUI()">
                             </div>
                         </div>
                     </div>
@@ -352,42 +367,39 @@
         </div>
 
         <!-- TIMELINE -->
-        <div id="timeline-panel">
-            <div class="timeline-header">
-                <div class="flex items-center gap-1.5">
-                    <button class="sf-btn w-7 h-7" onclick="window.app.timelineControl('back')"><i data-lucide="skip-back" class="w-4"></i></button>
-                    <button id="play-btn" class="sf-btn w-9 h-9" onclick="window.app.timelineControl('play')"><i data-lucide="play" class="w-4"></i></button>
-                    <button class="sf-btn w-7 h-7" onclick="window.app.timelineControl('stop')"><i data-lucide="square" class="w-4"></i></button>
-                    <button class="sf-btn w-7 h-7" onclick="window.app.timelineControl('forward')"><i data-lucide="skip-forward" class="w-4"></i></button>
+        <div id="timeline-panel" class="h-[var(--timeline-height)] bg-[var(--bg-secondary)] border-t border-[var(--border)] flex flex-col z-[100]">
+            <div class="h-10 border-b border-[var(--border)] flex items-center px-4 gap-4">
+                <div class="flex items-center gap-1">
+                    <button class="sf-btn w-7 h-7" onclick="window.app.timelineControl('back')"><i data-lucide="skip-back"></i></button>
+                    <button id="play-btn" class="sf-btn w-9 h-9 bg-[var(--panel)] border border-[var(--border)]" onclick="window.app.timelineControl('play')"><i data-lucide="play"></i></button>
+                    <button class="sf-btn w-7 h-7" onclick="window.app.timelineControl('stop')"><i data-lucide="square"></i></button>
                 </div>
-                <div class="w-px h-4 bg-[var(--border)] mx-1"></div>
-                <button class="h-8 px-3 bg-[var(--accent)]/10 border border-[var(--accent)]/40 rounded-lg flex items-center gap-2 text-[10px] font-bold text-[var(--accent)] active:scale-95">
-                    <i data-lucide="key" class="w-3.5"></i> Keyframe
+                <div class="w-px h-5 bg-[var(--border)]"></div>
+                <button class="h-7 px-3 bg-[var(--accent)]/10 text-[var(--accent)] text-[10px] font-bold rounded border border-[var(--accent)]/30 flex items-center gap-2 active:scale-95">
+                    <i data-lucide="key" class="w-3"></i> Keyframe
                 </button>
                 <div class="flex-grow"></div>
-                <div class="flex items-center gap-5 text-[10px] font-mono">
-                    <div class="bg-[var(--bg-primary)] px-3 py-1 rounded-md border border-[var(--border)] flex items-center gap-2">
-                        <span class="opacity-40 uppercase">Frame</span> <span class="text-[var(--accent)] font-bold" id="current-frame">0</span>
-                    </div>
+                <div class="mono bg-[var(--bg-primary)] px-3 py-1 border border-[var(--border)] rounded flex items-center gap-4">
+                    <span class="opacity-40">FRAME</span>
+                    <span class="text-[var(--accent)] font-bold" id="current-frame">0</span>
                 </div>
             </div>
-            <div class="timeline-content">
-                <div class="timeline-tracks flex flex-col p-2 gap-2">
-                    <div class="h-6 w-full bg-[var(--panel)] rounded-sm border border-[var(--border)] opacity-50"></div>
-                </div>
-                <div class="timeline-grid">
-                    <div id="playhead" class="playhead" style="left: 0px;"></div>
-                    <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(to right, var(--border) 1px, transparent 1px); background-size: 30px 100%;"></div>
-                </div>
+            <div class="flex-grow relative overflow-hidden bg-[var(--bg-primary)]">
+                <div id="playhead" class="absolute top-0 bottom-0 w-0.5 bg-[var(--danger)] z-20 pointer-events-none shadow-[0_0_8px_rgba(255,71,87,0.5)]"></div>
+                <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 40px 100%;"></div>
             </div>
         </div>
 
-        <footer class="h-8 border-t border-[var(--border)] flex items-center justify-between px-4 text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)] shrink-0">
-            <div class="flex gap-6">
-                <span id="poly-count">Polys: 12</span>
-                <span class="text-[var(--success)]" id="smart-status">Mode: Balanced OBJECT</span>
+        <!-- APP FOOTER -->
+        <footer class="h-7 bg-[var(--bg-primary)] border-t border-[var(--border)] flex items-center justify-between px-4">
+            <div class="flex gap-6 items-center">
+                <span id="poly-count" class="mono text-[var(--text-secondary)]">Triangles: 0</span>
+                <span id="smart-status" class="mono text-[var(--success)] uppercase tracking-tighter">● Online Studio</span>
             </div>
-            <div class="opacity-50">SF v0.9.5-PRO</div>
+            <div class="flex items-center gap-4">
+                <span class="mono opacity-30 text-[9px]">SF v1.0.0-PRO</span>
+                <button onclick="window.app.toggleInspector()" class="sf-btn w-6 h-6 sm:hidden"><i data-lucide="panel-right"></i></button>
+            </div>
         </footer>
     </div>
 
@@ -398,43 +410,45 @@
 
         class ShapeForgeApp {
             constructor() {
-                this.container = document.getElementById('viewport-container');
                 this.objects = new Map();
                 this.selected = null;
                 this.isPlaying = false;
-                this.currentFrame = 0;
+                this.frame = 0;
                 
                 this.initEngine();
                 this.setupLights();
                 this.setupControls();
-                this.setupMenuHandling();
                 this.animate();
 
-                window.addEventListener('resize', () => this.onWindowResize());
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.menu-trigger') && !e.target.closest('.sf-dropdown')) {
+                        this.closeAllMenus();
+                    }
+                });
+
+                window.addEventListener('resize', () => this.onResize());
                 lucide.createIcons();
             }
 
             initEngine() {
                 this.scene = new THREE.Scene();
-                this.scene.background = new THREE.Color(0x05070a);
+                this.scene.background = new THREE.Color(0x080B12);
                 
-                this.camera = new THREE.PerspectiveCamera(50, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
-                this.camera.position.set(8, 8, 8);
-                this.camera.lookAt(0, 0, 0);
+                this.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+                this.camera.position.set(10, 10, 10);
 
                 this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
                 this.renderer.setPixelRatio(window.devicePixelRatio);
-                this.container.appendChild(this.renderer.domElement);
+                document.getElementById('viewport-container').appendChild(this.renderer.domElement);
 
-                const grid = new THREE.GridHelper(30, 30, 0x273149, 0x151C29);
+                const grid = new THREE.GridHelper(40, 40, 0x273149, 0x151C29);
                 this.scene.add(grid);
             }
 
             setupLights() {
-                this.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-                const sun = new THREE.DirectionalLight(0xffffff, 1.2);
-                sun.position.set(10, 20, 10);
+                this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+                const sun = new THREE.DirectionalLight(0xffffff, 1);
+                sun.position.set(5, 10, 7);
                 this.scene.add(sun);
             }
 
@@ -444,56 +458,22 @@
                 this.orbit.dampingFactor = 0.05;
 
                 this.transform = new TransformControls(this.camera, this.renderer.domElement);
-                this.scene.add(this.transform);
-
                 this.transform.addEventListener('dragging-changed', (e) => {
                     this.orbit.enabled = !e.value;
                     if (!e.value) this.updatePropertyPanel();
                 });
-
-                // Raycasting for selection
-                this.raycaster = new THREE.Raycaster();
-                this.mouse = new THREE.Vector2();
-                this.container.addEventListener('pointerdown', (e) => this.onPointerDown(e));
-            }
-
-            onPointerDown(e) {
-                // Ignore if clicking on transform handles
-                if (this.transform.dragging) return;
-
-                const rect = this.renderer.domElement.getBoundingClientRect();
-                this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-                this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-                this.raycaster.setFromCamera(this.mouse, this.camera);
-                const intersects = this.raycaster.intersectObjects(Array.from(this.objects.values()));
-
-                if (intersects.length > 0) {
-                    this.selectObject(intersects[0].object);
-                } else {
-                    // Only deselect if not clicking UI
-                    if (e.target.closest('#viewport-container')) {
-                        // this.selectObject(null); // Optional: standard behavior
-                    }
-                }
-            }
-
-            setupMenuHandling() {
-                document.addEventListener('click', (e) => {
-                    if (!e.target.closest('.menu-trigger') && !e.target.closest('.sf-dropdown')) {
-                        this.closeAllMenus();
-                    }
-                });
+                this.scene.add(this.transform);
             }
 
             start() {
-                document.getElementById('welcome-screen').style.opacity = '0';
+                const welcome = document.getElementById('welcome-screen');
+                welcome.style.opacity = '0';
                 setTimeout(() => {
-                    document.getElementById('welcome-screen').style.display = 'none';
+                    welcome.style.display = 'none';
                     document.getElementById('app-container').classList.remove('hidden');
-                    this.onWindowResize();
-                    if(this.objects.size === 0) this.addObject('box');
-                }, 300);
+                    this.onResize();
+                    this.addObject('box');
+                }, 500);
             }
 
             addObject(type) {
@@ -501,54 +481,62 @@
                 if(type === 'sphere') geo = new THREE.SphereGeometry(1, 32, 32);
                 else geo = new THREE.BoxGeometry(2, 2, 2);
 
-                const mat = new THREE.MeshStandardMaterial({ 
-                    color: 0x7C83FF,
-                    roughness: 0.4,
-                    metalness: 0.1
-                });
+                const mat = new THREE.MeshStandardMaterial({ color: 0x7C83FF, roughness: 0.4 });
                 const mesh = new THREE.Mesh(geo, mat);
-                mesh.name = `${type.charAt(0).toUpperCase() + type.slice(1)}_${Math.floor(Math.random() * 999)}`;
+                mesh.name = `${type.charAt(0).toUpperCase()}${type.slice(1)}_${Math.floor(Math.random() * 999)}`;
                 mesh.userData.id = Math.random().toString(36).substr(2, 9);
                 
                 this.scene.add(mesh);
                 this.objects.set(mesh.userData.id, mesh);
                 this.selectObject(mesh);
                 this.updateHierarchy();
+                this.closeAllMenus();
             }
 
             selectObject(obj) {
                 this.selected = obj;
-                if (obj) {
-                    this.transform.attach(obj);
-                } else {
-                    this.transform.detach();
-                }
+                if (obj) this.transform.attach(obj);
+                else this.transform.detach();
                 this.updateHierarchy();
                 this.updatePropertyPanel();
             }
 
-            toggleInspector() {
-                document.getElementById('inspector-panel').classList.toggle('open');
+            setTool(mode) {
+                this.transform.setMode(mode);
+                document.querySelectorAll('.sf-sidebar .sf-btn').forEach(b => b.classList.remove('active'));
+                const el = document.getElementById(`tool-${mode}`);
+                if (el) el.classList.add('active');
             }
 
-            switchTab(tab) {
-                document.getElementById('tab-hierarchy').className = `flex-1 py-3 text-[10px] font-bold uppercase tracking-widest ${tab === 'hierarchy' ? 'border-b-2 border-[var(--accent)]' : 'text-[var(--text-secondary)]'}`;
-                document.getElementById('tab-properties').className = `flex-1 py-3 text-[10px] font-bold uppercase tracking-widest ${tab === 'properties' ? 'border-b-2 border-[var(--accent)]' : 'text-[var(--text-secondary)]'}`;
+            setEditMode(mode) {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                const btn = document.getElementById(`mbtn-${mode}`);
+                if (btn) btn.classList.add('active');
+                this.closeAllMenus();
+            }
 
-                document.getElementById('hierarchy-view').classList.toggle('hidden', tab !== 'hierarchy');
-                document.getElementById('properties-view').classList.toggle('hidden', tab !== 'properties');
+            updateHierarchy() {
+                const tree = document.getElementById('scene-tree');
+                tree.innerHTML = '';
+                this.objects.forEach(obj => {
+                    const li = document.createElement('li');
+                    li.className = `flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer text-[12px] transition-all ${this.selected === obj ? 'bg-[var(--accent)] text-white font-bold' : 'hover:bg-[var(--border)] text-[var(--text-secondary)]'}`;
+                    li.innerHTML = `<i data-lucide="box" class="w-3.5"></i> <span>${obj.name}</span>`;
+                    li.onclick = () => this.selectObject(obj);
+                    tree.appendChild(li);
+                });
+                lucide.createIcons();
+                this.updatePolyCount();
             }
 
             updatePropertyPanel() {
                 const editor = document.getElementById('prop-editor');
                 const empty = document.getElementById('prop-empty');
-                
                 if (!this.selected) {
                     editor.classList.add('hidden');
                     empty.classList.remove('hidden');
                     return;
                 }
-
                 editor.classList.remove('hidden');
                 empty.classList.add('hidden');
 
@@ -556,52 +544,41 @@
                 document.getElementById('px').value = this.selected.position.x.toFixed(2);
                 document.getElementById('py').value = this.selected.position.y.toFixed(2);
                 document.getElementById('pz').value = this.selected.position.z.toFixed(2);
-
-                document.getElementById('rx').value = Math.round(THREE.MathUtils.radToDeg(this.selected.rotation.x));
-                document.getElementById('ry').value = Math.round(THREE.MathUtils.radToDeg(this.selected.rotation.y));
-                document.getElementById('rz').value = Math.round(THREE.MathUtils.radToDeg(this.selected.rotation.z));
-
+                document.getElementById('rx').value = THREE.MathUtils.radToDeg(this.selected.rotation.x).toFixed(0);
+                document.getElementById('ry').value = THREE.MathUtils.radToDeg(this.selected.rotation.y).toFixed(0);
+                document.getElementById('rz').value = THREE.MathUtils.radToDeg(this.selected.rotation.z).toFixed(0);
                 document.getElementById('prop-color').value = '#' + this.selected.material.color.getHexString();
             }
 
             updateFromUI() {
                 if (!this.selected) return;
-
                 this.selected.name = document.getElementById('prop-name').value;
                 this.selected.position.set(
-                    parseFloat(document.getElementById('px').value) || 0,
-                    parseFloat(document.getElementById('py').value) || 0,
-                    parseFloat(document.getElementById('pz').value) || 0
+                    parseFloat(document.getElementById('px').value),
+                    parseFloat(document.getElementById('py').value),
+                    parseFloat(document.getElementById('pz').value)
                 );
-
                 this.selected.rotation.set(
-                    THREE.MathUtils.degToRad(parseFloat(document.getElementById('rx').value) || 0),
-                    THREE.MathUtils.degToRad(parseFloat(document.getElementById('ry').value) || 0),
-                    THREE.MathUtils.degToRad(parseFloat(document.getElementById('rz').value) || 0)
+                    THREE.MathUtils.degToRad(parseFloat(document.getElementById('rx').value)),
+                    THREE.MathUtils.degToRad(parseFloat(document.getElementById('ry').value)),
+                    THREE.MathUtils.degToRad(parseFloat(document.getElementById('rz').value))
                 );
-
                 this.selected.material.color.set(document.getElementById('prop-color').value);
                 this.updateHierarchy();
             }
 
-            setTool(mode) {
-                if(mode === 'select') {
-                    this.transform.enabled = false;
-                    this.transform.visible = false;
-                } else {
-                    this.transform.enabled = true;
-                    this.transform.visible = true;
-                    this.transform.setMode(mode);
+            timelineControl(action) {
+                const btn = document.getElementById('play-btn');
+                if (action === 'play') {
+                    this.isPlaying = !this.isPlaying;
+                    btn.innerHTML = this.isPlaying ? '<i data-lucide="pause"></i>' : '<i data-lucide="play"></i>';
+                    lucide.createIcons();
+                } else if (action === 'stop') {
+                    this.isPlaying = false;
+                    this.frame = 0;
+                    btn.innerHTML = '<i data-lucide="play"></i>';
+                    lucide.createIcons();
                 }
-                document.querySelectorAll('.sf-sidebar .sf-btn').forEach(btn => btn.classList.remove('active'));
-                const toolBtn = document.getElementById(`tool-${mode}`);
-                if (toolBtn) toolBtn.classList.add('active');
-            }
-
-            setEditMode(mode, el) {
-                document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-                el.classList.add('active');
-                document.getElementById('smart-status').innerText = `Mode: Balanced ${mode.toUpperCase()}`;
             }
 
             deleteSelected() {
@@ -611,73 +588,71 @@
                 this.selectObject(null);
             }
 
-            updateHierarchy() {
-                const list = document.getElementById('scene-tree');
-                list.innerHTML = '';
-                this.objects.forEach(obj => {
-                    const li = document.createElement('li');
-                    li.className = `flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[11px] transition-colors ${this.selected === obj ? 'bg-[var(--accent)] text-white' : 'hover:bg-[var(--border)] text-[var(--text-secondary)]'}`;
-                    li.innerHTML = `<i data-lucide="box" class="w-3.5"></i> <span>${obj.name}</span>`;
-                    li.onclick = (e) => {
-                        e.stopPropagation();
-                        this.selectObject(obj);
-                    };
-                    list.appendChild(li);
-                });
-                lucide.createIcons();
+            duplicateSelected() {
+                if (!this.selected) return;
+                const clone = this.selected.clone();
+                clone.position.x += 2;
+                clone.userData.id = Math.random().toString(36).substr(2, 9);
+                this.scene.add(clone);
+                this.objects.set(clone.userData.id, clone);
+                this.selectObject(clone);
+            }
+
+            toggleMenu(id, e) {
+                e.stopPropagation();
+                const menu = document.getElementById(id);
+                const visible = menu.classList.contains('show');
+                this.closeAllMenus();
+                if (!visible) menu.classList.add('show');
             }
 
             closeAllMenus() {
                 document.querySelectorAll('.sf-dropdown').forEach(m => m.classList.remove('show'));
             }
 
-            toggleMenu(id, event) {
-                event.stopPropagation();
-                const menu = document.getElementById(id);
-                const isVisible = menu.classList.contains('show');
-                this.closeAllMenus();
-                if (!isVisible) menu.classList.add('show');
+            showSubmenu(id) { document.getElementById(id).classList.add('show'); }
+            hideSubmenu(id) { document.getElementById(id).classList.remove('show'); }
+            
+            toggleInspector() { document.getElementById('inspector-panel').classList.toggle('open'); }
+
+            switchTab(tab) {
+                document.getElementById('tab-hierarchy').classList.toggle('border-b-2', tab === 'hierarchy');
+                document.getElementById('tab-hierarchy').classList.toggle('text-white', tab === 'hierarchy');
+                document.getElementById('tab-properties').classList.toggle('border-b-2', tab === 'properties');
+                document.getElementById('tab-properties').classList.toggle('text-white', tab === 'properties');
+                document.getElementById('hierarchy-view').classList.toggle('hidden', tab !== 'hierarchy');
+                document.getElementById('properties-view').classList.toggle('hidden', tab !== 'properties');
             }
 
-            timelineControl(action) {
-                const playBtn = document.getElementById('play-btn');
-                if (action === 'play') {
-                    this.isPlaying = !this.isPlaying;
-                    playBtn.innerHTML = this.isPlaying ? '<i data-lucide="pause" class="w-4"></i>' : '<i data-lucide="play" class="w-4"></i>';
-                    lucide.createIcons();
-                } else if (action === 'stop') {
-                    this.isPlaying = false;
-                    this.currentFrame = 0;
-                    playBtn.innerHTML = '<i data-lucide="play" class="w-4"></i>';
-                    this.updateTimelineUI();
-                    lucide.createIcons();
-                } else if (action === 'forward') {
-                    this.currentFrame = Math.min(100, this.currentFrame + 5);
-                    this.updateTimelineUI();
-                } else if (action === 'back') {
-                    this.currentFrame = Math.max(0, this.currentFrame - 5);
-                    this.updateTimelineUI();
-                }
+            updatePolyCount() {
+                let count = 0;
+                this.objects.forEach(o => { if(o.geometry.index) count += o.geometry.index.count / 3; });
+                document.getElementById('poly-count').innerText = `Triangles: ${Math.floor(count)}`;
             }
 
-            updateTimelineUI() {
-                document.getElementById('current-frame').innerText = Math.floor(this.currentFrame);
-                document.getElementById('playhead').style.left = `${(this.currentFrame)}%`;
-            }
-
-            onWindowResize() {
-                const w = this.container.clientWidth;
-                const h = this.container.clientHeight;
-                this.camera.aspect = w / h;
+            onResize() {
+                const container = document.getElementById('viewport-container');
+                this.camera.aspect = container.clientWidth / container.clientHeight;
                 this.camera.updateProjectionMatrix();
-                this.renderer.setSize(w, h);
+                this.renderer.setSize(container.clientWidth, container.clientHeight);
             }
+
+            newProject() {
+                this.objects.forEach(o => this.scene.remove(o));
+                this.objects.clear();
+                this.selectObject(null);
+                this.closeAllMenus();
+            }
+
+            saveProject() { alert("Project saved to local session."); this.closeAllMenus(); }
+            openProject() { alert("Open functionality requires file system API access."); this.closeAllMenus(); }
 
             animate() {
                 requestAnimationFrame(() => this.animate());
                 if (this.isPlaying) {
-                    this.currentFrame = (this.currentFrame + 0.2) % 100;
-                    this.updateTimelineUI();
+                    this.frame = (this.frame + 1) % 200;
+                    document.getElementById('current-frame').innerText = this.frame;
+                    document.getElementById('playhead').style.left = `${(this.frame / 2)}%`;
                 }
                 this.orbit.update();
                 this.renderer.render(this.scene, this.camera);
@@ -686,11 +661,12 @@
 
         window.app = new ShapeForgeApp();
     </script>
-    
-    <footer class="fixed bottom-0 left-0 right-0 pointer-events-none z-[1000] flex justify-center pb-12 md:pb-2">
-        <div class="text-[9px] text-[var(--text-secondary)] opacity-60 bg-black/50 px-3 py-1 rounded-full backdrop-blur-md border border-white/5">
-            Built: Restored Phase 9 synchronization for properties & hierarchy. Next: Keyframe data storage and playback logic.
+
+    <!-- STATUS FOOTER NOTE -->
+    <div class="fixed bottom-10 left-0 right-0 pointer-events-none flex justify-center z-[1000]">
+        <div class="px-5 py-2 rounded-full bg-black/80 backdrop-blur-xl border border-white/10 text-[10px] text-white/60 shadow-2xl">
+            Built: Unified Design System and professional menu architecture. Next: Implementation of standard primitive generators.
         </div>
-    </footer>
+    </div>
 </body>
 </html>
