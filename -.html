@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Aura Mobile OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        * { 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-touch-callout: none; 
+            box-sizing: border-box;
+        }
+        html, body { 
+            overscroll-behavior: none; 
+            touch-action: manipulation; 
+            background: #000;
+            font-family: 'Inter', sans-serif;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            color: white;
+            overflow: hidden;
+        }
+        button, a, [role="button"], canvas { 
+            -webkit-user-select: none; 
+            user-select: none; 
+            touch-action: manipulation; 
+            cursor: pointer; 
+        }
+        input, textarea { 
+            -webkit-user-select: text; 
+            user-select: text; 
+            font-size: 16px; 
+        }
+
+        .glass {
+            background: rgba(20, 20, 25, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .app-window {
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+            background: #0f0f14;
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .app-window.open {
+            transform: translateY(0);
+        }
+
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .status-bar {
+            height: 44px;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        #game-canvas {
+            touch-action: none;
+            width: 100%;
+            height: 100%;
+            background: #05050a;
+        }
+
+        .wallpaper {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            z-index: -1;
+            transition: background 0.5s ease;
+        }
+
+        .terminal-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .dock {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            height: 70px;
+            border-radius: 24px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 40;
+        }
+
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wallpaper" id="wallpaper"></div>
+    
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div id="clock">12:00</div>
+        <div class="flex items-center gap-2">
+            <span>📶</span>
+            <span>🔋</span>
+        </div>
+    </div>
+
+    <!-- Main Desktop -->
+    <main id="desktop" class="h-full w-full pt-16 px-6 grid grid-cols-4 grid-rows-6 gap-y-8 gap-x-4 content-start">
+        <!-- Icons populated by JS -->
+    </main>
+
+    <!-- App Layer -->
+    <div id="app-container">
+        <!-- App Windows dynamically created here -->
+    </div>
+
+    <!-- Dock -->
+    <div class="dock glass">
+        <button onclick="closeCurrentApp()" class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-2xl" aria-label="Home">🏠</button>
+        <button onclick="openApp('browser')" class="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center text-2xl" aria-label="Browser">🌐</button>
+        <button onclick="openApp('notes')" class="w-12 h-12 rounded-2xl bg-yellow-500/20 flex items-center justify-center text-2xl" aria-label="Notes">📝</button>
+        <button onclick="openApp('game')" class="w-12 h-12 rounded-2xl bg-red-500/20 flex items-center justify-center text-2xl" aria-label="Game">🎮</button>
+    </div>
+
+    <!-- UI Overlay / Footer -->
+    <div class="fixed bottom-2 left-0 right-0 text-center z-50 pointer-events-none">
+        <span class="text-[10px] text-white/30 uppercase tracking-widest bg-black/50 px-2 py-1 rounded-full border border-white/5 backdrop-blur-sm">
+            Built: Aura Mobile OS with windowing system and dodge game. Next: Add multi-tasking app switcher.
+        </span>
+    </div>
+
+    <script>
+        // --- System State ---
+        const apps = [
+            { id: 'notes', name: 'Notes', icon: '📝', color: 'bg-yellow-500' },
+            { id: 'game', name: 'Nebula', icon: '🎮', color: 'bg-purple-600' },
+            { id: 'terminal', name: 'Shell', icon: '⌨️', color: 'bg-slate-800' },
+            { id: 'browser', name: 'Aura Web', icon: '🌐', color: 'bg-blue-600' },
+            { id: 'settings', name: 'Settings', icon: '⚙️', color: 'bg-gray-500' },
+            { id: 'calculator', name: 'Calc', icon: '🔢', color: 'bg-orange-500' },
+            { id: 'photos', name: 'Gallery', icon: '🖼️', color: 'bg-emerald-500' },
+            { id: 'camera', name: 'Camera', icon: '📷', color: 'bg-zinc-700' }
+        ];
+
+        let currentApp = null;
+        let gameLoopActive = false;
+
+        // --- Core OS Logic ---
+        function initOS() {
+            const desktop = document.getElementById('desktop');
+            apps.forEach(app => {
+                const btn = document.createElement('button');
+                btn.className = 'desktop-icon focus:scale-95 transition-transform';
+                btn.onclick = () => openApp(app.id);
+                btn.innerHTML = `
+                    <div class="w-14 h-14 ${app.color} rounded-2xl shadow-lg flex items-center justify-center text-3xl">
+                        ${app.icon}
+                    </div>
+                    <span class="text-xs font-medium text-white/90">${app.name}</span>
+                `;
+                desktop.appendChild(btn);
+            });
+
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('clock').innerText = time;
+        }
+
+        function openApp(appId) {
+            if (currentApp) closeCurrentApp();
+
+            const container = document.getElementById('app-container');
+            const app = apps.find(a => a.id === appId);
+            
+            const appWin = document.createElement('div');
+            appWin.id = `app-${appId}`;
+            appWin.className = 'app-window flex flex-col overflow-hidden';
+            
+            appWin.innerHTML = `
+                <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 glass">
+                    <h2 class="text-lg font-bold flex items-center gap-2">
+                        <span>${app.icon}</span> ${app.name}
+                    </h2>
+                    <button onclick="closeCurrentApp()" class="p-2 bg-white/10 rounded-full w-8 h-8 flex items-center justify-center text-sm">✕</button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 safe-bottom" id="content-${appId}">
+                    ${renderAppContent(appId)}
+                </div>
+            `;
+
+            container.appendChild(appWin);
+            setTimeout(() => {
+                appWin.classList.add('open');
+                currentApp = appId;
+                postOpen(appId);
+            }, 50);
+        }
+
+        function closeCurrentApp() {
+            if (!currentApp) return;
+            const appWin = document.getElementById(`app-${currentApp}`);
+            appWin.classList.remove('open');
+            gameLoopActive = false;
+            setTimeout(() => {
+                appWin.remove();
+                currentApp = null;
+            }, 400);
+        }
+
+        // --- App Templates ---
+        function renderAppContent(id) {
+            switch(id) {
+                case 'notes':
+                    const saved = localStorage.getItem('aura_notes') || '';
+                    return `
+                        <textarea id="note-input" class="w-full h-full bg-transparent border-none text-white/80 focus:ring-0 resize-none leading-relaxed" placeholder="Start typing...">${saved}</textarea>
+                        <div class="fixed bottom-24 right-6">
+                            <button onclick="saveNotes()" class="bg-blue-600 px-4 py-2 rounded-full font-bold shadow-xl">Save</button>
+                        </div>
+                    `;
+                case 'game':
+                    return `
+                        <div class="relative w-full h-full rounded-xl overflow-hidden border border-white/10">
+                            <canvas id="game-canvas"></canvas>
+                            <div id="game-ui" class="absolute top-4 left-4 pointer-events-none">
+                                <div class="text-xs uppercase tracking-widest text-white/50">Score</div>
+                                <div id="score" class="text-2xl font-bold">0</div>
+                            </div>
+                            <div id="game-overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center p-8 text-center">
+                                <h3 class="text-2xl font-bold mb-2">NEBULA DODGE</h3>
+                                <p class="text-white/60 mb-6 text-sm">Difficulty: NORMAL<br>Tap left/right to move.</p>
+                                <button onclick="startGame()" class="bg-purple-600 w-full py-3 rounded-xl font-bold">START MISSION</button>
+                            </div>
+                        </div>
+                    `;
+                case 'terminal':
+                    return `
+                        <div class="terminal-text text-green-400">
+                            <div class="mb-2">Aura OS Terminal v1.0.4</div>
+                            <div class="mb-2">Type 'help' for commands.</div>
+                            <div id="terminal-log"></div>
+                            <div class="flex gap-2">
+                                <span class="text-blue-400">root@aura:~$</span>
+                                <input type="text" id="term-input" class="flex-1 bg-transparent border-none outline-none p-0 text-green-400" autofocus>
+                            </div>
+                        </div>
+                    `;
+                case 'browser':
+                    return `
+                        <div class="flex flex-col h-full">
+                            <div class="flex gap-2 mb-4">
+                                <input id="url-bar" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm" value="https://aura.os">
+                                <button onclick="alert('Navigating to ' + document.getElementById('url-bar').value)" class="bg-blue-600 px-4 rounded-lg text-xs">GO</button>
+                            </div>
+                            <div class="flex-1 bg-white/5 rounded-xl flex items-center justify-center flex-col text-center p-6">
+                                <div class="text-4xl mb-4">🌐</div>
+                                <p class="text-sm text-white/40">Secure browsing active. No history is being recorded.</p>
+                            </div>
+                        </div>
+                    `;
+                case 'settings':
+                    return `
+                        <div class="space-y-6">
+                            <section>
+                                <h3 class="text-xs font-bold text-white/30 uppercase mb-3">Personalization</h3>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button onclick="setWall('linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)')" class="h-12 rounded-lg border border-white/10 bg-blue-900"></button>
+                                    <button onclick="setWall('linear-gradient(45deg, #2c3e50, #000000)')" class="h-12 rounded-lg border border-white/10 bg-slate-800"></button>
+                                    <button onclick="setWall('linear-gradient(to right, #8e2de2, #4a00e0)')" class="h-12 rounded-lg border border-white/10 bg-purple-900"></button>
+                                    <button onclick="setWall('linear-gradient(to bottom, #11998e, #38ef7d)')" class="h-12 rounded-lg border border-white/10 bg-emerald-900"></button>
+                                </div>
+                            </section>
+                            <section>
+                                <h3 class="text-xs font-bold text-white/30 uppercase mb-3">System Info</h3>
+                                <div class="glass p-4 rounded-xl space-y-2 text-sm">
+                                    <div class="flex justify-between"><span>Kernel</span><span class="text-white/60">Aura-4.2-v8</span></div>
+                                    <div class="flex justify-between"><span>CPU</span><span class="text-white/60">Virtual Octa-Core</span></div>
+                                    <div class="flex justify-between"><span>Memory</span><span class="text-white/60">82% Free</span></div>
+                                </div>
+                            </section>
+                        </div>
+                    `;
+                default:
+                    return `<div class="flex flex-col items-center justify-center h-full text-white/20">
+                        <span class="text-6xl mb-4">${apps.find(a=>a.id===id).icon}</span>
+                        <p>App module not loaded.</p>
+                    </div>`;
+            }
+        }
+
+        // --- App Specific Scripts ---
+        function postOpen(id) {
+            if (id === 'terminal') {
+                const input = document.getElementById('term-input');
+                input.focus();
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        handleCommand(input.value);
+                        input.value = '';
+                    }
+                });
+            }
+            if (id === 'game') {
+                setupGame();
+            }
+        }
+
+        function saveNotes() {
+            const val = document.getElementById('note-input').value;
+            localStorage.setItem('aura_notes', val);
+            alert("Note saved to storage.");
+        }
+
+        function handleCommand(cmd) {
+            const log = document.getElementById('terminal-log');
+            const entry = document.createElement('div');
+            entry.className = 'mb-1';
+            
+            let response = '';
+            const c = cmd.toLowerCase().trim();
+            if (c === 'help') response = 'Available: help, clear, whoami, sys, motd';
+            else if (c === 'clear') { log.innerHTML = ''; return; }
+            else if (c === 'whoami') response = 'root_aura_user';
+            else if (c === 'sys') response = 'Aura Virtualization v1.2024.0';
+            else if (c === 'motd') response = 'Welcome to the void. Enjoy your stay.';
+            else response = `Command not found: ${cmd}`;
+
+            entry.innerHTML = `<span class="text-blue-400">root@aura:~$</span> ${cmd}<br><span class="text-white/50">${response}</span>`;
+            log.appendChild(entry);
+            log.parentElement.scrollTop = log.parentElement.scrollHeight;
+        }
+
+        function setWall(grad) {
+            document.getElementById('wallpaper').style.background = grad;
+        }
+
+        // --- GAME LOGIC (Normal Difficulty) ---
+        let canvas, ctx, player, meteors, score;
+        function setupGame() {
+            canvas = document.getElementById('game-canvas');
+            ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+
+        function startGame() {
+            document.getElementById('game-overlay').classList.add('hidden');
+            player = { x: canvas.width / 2, y: canvas.height - 60, size: 25 };
+            meteors = [];
+            score = 0;
+            gameLoopActive = true;
+            
+            // Touch control
+            canvas.addEventListener('touchstart', (e) => {
+                const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+                if (touchX < canvas.width / 2) player.x -= 30;
+                else player.x += 30;
+                player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameLoop() {
+            if (!gameLoopActive) return;
+
+            // Clear
+            ctx.fillStyle = '#05050a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Spawn meteors (Normal Difficulty)
+            if (Math.random() < 0.04) {
+                meteors.push({
+                    x: Math.random() * canvas.width,
+                    y: -20,
+                    size: 15 + Math.random() * 20,
+                    speed: 3 + Math.random() * 4 // Moderate speed
+                });
+            }
+
+            // Update & Draw Meteors
+            ctx.fillStyle = '#ff4d4d';
+            for (let i = meteors.length - 1; i >= 0; i--) {
+                meteors[i].y += meteors[i].speed;
+                ctx.beginPath();
+                ctx.arc(meteors[i].x, meteors[i].y, meteors[i].size/2, 0, Math.PI*2);
+                ctx.fill();
+
+                // Collision
+                const dx = player.x + player.size/2 - meteors[i].x;
+                const dy = player.y + player.size/2 - meteors[i].y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                if (dist < player.size/2 + meteors[i].size/2) {
+                    gameOver();
+                    return;
+                }
+
+                if (meteors[i].y > canvas.height) {
+                    meteors.splice(i, 1);
+                    score++;
+                    document.getElementById('score').innerText = score;
+                }
+            }
+
+            // Draw Player
+            ctx.fillStyle = '#7c3aed';
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+            ctx.strokeStyle = '#fff';
+            ctx.strokeRect(player.x, player.y, player.size, player.size);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            gameLoopActive = false;
+            const overlay = document.getElementById('game-overlay');
+            overlay.innerHTML = `
+                <h3 class="text-3xl font-bold mb-2 text-red-500">MISSION FAILED</h3>
+                <p class="text-white/60 mb-6">Your score: ${score}</p>
+                <button onclick="startGame()" class="bg-purple-600 w-full py-3 rounded-xl font-bold">RETRY</button>
+            `;
+            overlay.classList.remove('hidden');
+        }
+
+        // Initialize OS on load
+        window.onload = initOS;
+    </script>
+</body>
+</html>
